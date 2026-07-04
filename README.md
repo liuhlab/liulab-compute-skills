@@ -13,11 +13,15 @@ Current skills:
   guidance), safety rules, and a config preflight
   (`scripts/check-hpc-config.sh`) that makes agents refuse HPC requests on
   machines whose `~/.ssh/config` isn't set up.
-- **`lab-jupyter`** — start or reuse a Jupyter Lab job on arc/chimera and
-  tunnel it to `http://localhost:<port>` on the local machine.
-- **`lab-containers`** — pull/build/update/smoke-test the lab's Singularity
-  images (`liulab-runtime` envs) on ircbc, where compute nodes have no
-  internet: crane pull on the login node → sbatch build from docker-archive.
+- **`lab-jupyter`** — start or reuse a Jupyter Lab job on either cluster and
+  tunnel it to `http://localhost:<port>` on the local machine: arc/chimera
+  natively (`zhoulab_gpu_priority` job + `ssh -L`), ircbc inside the lab's
+  Singularity image (via `lab-containers`).
+- **`lab-containers`** — version-check, pull/build/update, and use the lab's
+  Singularity images (`liulab-runtime` envs) on ircbc, where compute nodes
+  have no internet: digest-sidecar update checks, crane pull on the login
+  node → sbatch build from docker-archive, and running commands, pixi-env
+  shells, or Jupyter inside the containers.
 
 ## Security policy (hard rule)
 
@@ -57,9 +61,12 @@ claude plugin install lab-compute@liulab
 
 ## Other agentic tools (Cursor, Codex, Gemini CLI, …)
 
-`git clone` this repo anywhere, then symlink `skills/lab-hpc` into the tool's
-skills directory. Claude Code users should use EITHER the plugin OR a symlink
-into `~/.claude/skills/` — never both (the skill would load twice).
+`git clone` this repo anywhere, then symlink each skill directory
+(`skills/lab-hpc`, `skills/lab-jupyter`, `skills/lab-containers`) — or the
+whole `skills/` tree if the tool supports it — into the tool's skills
+directory. `lab-hpc` is the required base; the other two build on it.
+Claude Code users should use EITHER the plugin OR symlinks into
+`~/.claude/skills/` — never both (the skills would load twice).
 
 ## Updating
 
@@ -76,9 +83,9 @@ set one — update manually.
 Three layers under [tests/](tests/) — see [tests/README.md](tests/README.md):
 
 ```bash
-bash tests/lint.sh              # static: manifests, frontmatter, naming, no-secrets sweep
-bash tests/preflight.sh --live  # this machine's ssh config + login-node reachability
-bash tests/eval.sh --live       # headless claude -p behavior evals (tokens; --live hits the cluster)
+bash tests/lint.sh                      # static: manifests, frontmatter, naming, no-secrets sweep
+bash tests/preflight.sh --live          # this machine's ssh config + login-node reachability
+bash tests/eval.sh [--live] [--only <case>]  # headless claude -p behavior evals (costs tokens; --live submits a real job on arc)
 ```
 
 ## Adding a new skill
@@ -89,5 +96,7 @@ bash tests/eval.sh --live       # headless claude -p behavior evals (tokens; --l
 2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
    `~/.ssh/config` / `~/.claude/compute/personal.md`.
-3. Bump `version` in `.claude-plugin/plugin.json` and push. Installed
-   machines pick it up on `claude plugin marketplace update liulab`.
+3. Run `bash tests/lint.sh`; bump `version` (CalVer `YYYY.M.PATCH`) in
+   `.claude-plugin/plugin.json` and add a `CHANGELOG.md` entry in the same
+   commit; push. Installed machines pick it up on
+   `claude plugin marketplace update liulab`.

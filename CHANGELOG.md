@@ -5,6 +5,64 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.7.1 — 2026-07-05
+
+Coherence pass across the three skills (multi-agent review of the whole
+repo); no cluster facts changed — only structure, routing, and decision
+points.
+
+- `lab-jupyter` restructured into one cluster-parameterized lifecycle
+  (reuse → submit → token → tunnel → cleanup): a parameter table carries the
+  arc/ircbc substitutions (login alias, `squeue --me` vs `squeue -u $USER`,
+  partition, submit source, job-log path, tunnel target) instead of an
+  arc-only procedure with an ircbc paragraph bolted on. Added the missing
+  idle-reservation branch in step 1, provenance-based token lookup in step 3
+  (submitted → grep the job log; reused → `server list`, arc only), and a
+  safe busy-port decision list in step 4 (identify the listener before any
+  kill). `<jupyter>` marked arc-only; partition cost/queue rationale now
+  points at `references/arc-hpc.md` instead of restating it.
+- Jupyter-on-ircbc ownership split codified (also in CLAUDE.md):
+  `lab-jupyter` owns the session lifecycle; `lab-containers` owns the
+  container invocations including the ircbc submit command. Removed
+  `lab-containers`' duplicated tunnel line; its Jupyter block now leads with
+  the lifecycle pointer so agents entering there still reuse-before-submit.
+- `lab-containers` hardening: directive scope line ("ircbc only — do not
+  apply to arc"); §1 says where "update" continues and where to find crane
+  re-fetch; §3 warns that `sbatch --wait` blocks (don't resubmit on a
+  dropped connection) and gates the digest sidecar on exit 0; §4 explains
+  the two-level quoting of the `<check>` slot with an expanded example and
+  gains a smoke-test-failure branch (a bad SIF otherwise looks "up to date"
+  forever); interactive shell uses `-t <time>` like its siblings.
+- `references/ircbc-hpc.md`: deleted the stale "typical batch job" recipe
+  (it lacked the required pixi activation and contradicted `lab-containers`
+  §5); the section now keeps the facts and points at "Using the images".
+- `references/arc-hpc.md`: new "Submitting" H3 so the wrappers/smoke-test/
+  reservation how-tos are no longer nested under "Choosing a partition";
+  `mkdir -p sbatch` guard noted before the reservation script;
+  idle-reservation paragraph now points at `lab-jupyter`.
+- `lab-hpc`: description now includes "login node" (the term users type and
+  evals assert) at no budget cost; cluster choice reframed as **the user's
+  decision** — ask or infer from session context, never auto-route — with
+  per-cluster factors listed and SIF work routed to `lab-containers`
+  (echoed in `lab-jupyter`'s parameter step); quick-reference table slimmed
+  (partition detail moved to a bullet; `ircbc-transfer`'s
+  no-`/share`-mount caveat surfaced); hard-rules parenthetical covers
+  chimera `CPU****` aliases; step-0 personal.md wording made precise.
+- ircbc facts re-verified 2026-07-05: `$HOME` auto-binds inside the SIFs
+  (noted in `lab-containers` §5) and local → `/share` uploads go directly
+  through the `ircbc` login alias (recorded in `references/ircbc-hpc.md`).
+- Tests: new `jupyter-ircbc` eval case (the seam this review found broken);
+  `reject`/`containers` assertions tightened by dropping terms the prompt
+  itself contains or a wrong plan would also emit; lint now sweeps local
+  ssh-config HostNames (dotted values) like it already did usernames;
+  `check-hpc-config.sh` warns (never fails) when arc per-node aliases are
+  missing.
+- Docs: README skill blurbs updated (lab-jupyter covers both clusters;
+  lab-containers covers version checks and usage), symlink instructions
+  cover all three skills, release steps mention CalVer + CHANGELOG;
+  `templates/personal.md` gains the Jupyter port/launch-path/resources
+  fields the skills actually read.
+
 ## 2026.7.0 — 2026-07-05
 
 - **Switched to CalVer** (`YYYY.M.PATCH`).

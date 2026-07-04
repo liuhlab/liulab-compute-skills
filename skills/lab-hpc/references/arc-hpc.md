@@ -61,6 +61,8 @@ them.
   `sh_gpu 1 --partition zhoulab_gpu_priority` or the reservation sbatch
   below) or a preemptible partition instead.
 
+### Submitting: interactive wrappers, smoke test, reservation
+
 - **Interactive jobs** — cluster-provided wrappers (what the ssh aliases run):
   - `sh_gpu [1-4] [srun/salloc options]` — interactive shell on a GPU node
     (default 1 GPU + 8 cores + 80 GB per GPU; default partition `gpu`).
@@ -74,7 +76,8 @@ them.
   ```
 
 - **Long-lived reservation on the lab partition** (adapted from the repo
-  owner's script; adjust resources and payload):
+  owner's script; adjust resources and payload; run `mkdir -p sbatch` in
+  the submit directory first — the log paths below need it):
 
   ```bash
   #!/bin/bash
@@ -99,7 +102,8 @@ them.
 **Idle-reservation pattern:** if a reserved job already exists and is idle
 (e.g. a Jupyter Lab job that isn't actually computing), it is fine to ssh
 into that job's node and use it directly instead of queueing a new job.
-Check with `squeue --me` first.
+Check with `squeue --me` first. The `lab-jupyter` skill implements this
+reuse-first check, plus the token/tunnel steps, as its standard flow.
 
 ## Storage / code
 

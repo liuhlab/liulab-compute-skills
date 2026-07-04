@@ -35,6 +35,11 @@ Rule of thumb: **download on the login node (through the proxy) directly
 onto `/share`; compute on the compute nodes from local files.** Use the
 transfer node only when the proxy path fails.
 
+**Local → `/share` uploads** (verified 2026-07-05): `rsync`/`scp` from the
+local machine through the `ircbc` login alias straight onto `/share`. Fall
+back to `ircbc-transfer` only if that path fails — it does **not** mount
+`/share`, so data landing there needs a second hop.
+
 **Proxy-env gotcha:** `srun`/`sbatch` from the login node propagate the
 proxy variables into jobs, but compute nodes have no `127.0.0.1:1080`
 tunnel — so anything honoring `http(s)_proxy` fails to fetch, and even
@@ -100,21 +105,12 @@ module load singularity
 
 Environments are built with pixi and published as containers by the
 `liulab-runtime` repo (check its README for current image names and tags).
-Typical batch job:
-
-```bash
-#!/bin/bash
-#SBATCH --job-name=work
-#SBATCH --partition=compute_cpu
-#SBATCH --time=1-00:00:00
-#SBATCH --cpus-per-task=16
-#SBATCH --output=sbatch/%x.%j.log
-
-module load singularity
-# image built beforehand into $LIU_LAB_PACKAGES (see "Getting container
-# images onto ircbc" above — compute nodes cannot pull)
-singularity exec --bind /share/home/<user> "$LIU_LAB_PACKAGES/liulab-runtime_<env>.sif" <command...>
-```
+Verified run/shell/Jupyter patterns inside the images — including the
+required pixi-env activation (`source /app/.pixi/activate-<env>.sh`) and
+bind mounts — are the **`lab-containers`** skill's "Using the images"
+section; use it rather than writing raw `singularity exec` lines. Images
+must be built beforehand into `$LIU_LAB_PACKAGES` (compute nodes cannot
+pull — see above).
 
 Never run modern toolchains (recent Python builds, compiled binaries from
 elsewhere) directly on the host OS — glibc 2.17 will break them.

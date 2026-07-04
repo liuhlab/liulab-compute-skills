@@ -18,9 +18,10 @@ confirm sbatch/srun with the user before submitting) and its
 `references/ircbc-hpc.md` for the underlying facts (network topology,
 `$LIU_LAB_PACKAGES` layout, proxy gotchas).
 
-**Scope:** ircbc is the target — its compute nodes have no internet and all
-real work runs inside SIFs. arc normally needs no SIFs (environments run
-natively via pixi there).
+**Scope: ircbc only.** Its compute nodes have no internet and all real work
+there runs inside SIFs. Do not apply these recipes to arc — arc runs the
+same `liulab-runtime` environments natively via pixi (see `lab-hpc` →
+Choosing a cluster); only consider a SIF on arc if the user explicitly asks.
 
 ## 1. Version check first — never rebuild blindly
 
@@ -33,9 +34,13 @@ ssh ircbc 'ls -lh $LIU_LAB_PACKAGES/liulab-runtime_<env>.sif* 2>/dev/null; \
   echo "remote: $($LIU_LAB_PACKAGES/bin/crane digest ghcr.io/liuhlab/liulab-runtime:<env>)"'
 ```
 
+(If `$LIU_LAB_PACKAGES/bin/crane` is missing, use the re-fetch snippet in §2
+first.)
+
 - **SIF exists, digests match** → up to date; **do not rebuild**. Use it (§5).
 - **SIF exists, digests differ** → tell the user (show the SIF's build date
-  and both digests) and **ask** whether to keep the local image or update.
+  and both digests) and **ask** whether to keep the local image or update
+  (update → continue at §2, pinning the remote digest just printed).
 - **No SIF** → proceed to §2 (still confirm the build job before submitting).
 
 Envs: `default`, `ml`, `align-rna`, `align-dna`, … (liulab-runtime README).
@@ -77,8 +82,15 @@ ssh ircbc 'sbatch --wait -p compute_cpu -t 02:00:00 -c 8 -J sif_<env> \
   rm -f $LIU_LAB_PACKAGES/oci/liulab-runtime_<env>.docker.tar"'
 ```
 
+`--wait` blocks until the build finishes (queue + build, possibly the full
+time limit) — run it in the background or with a long timeout. If the
+connection drops, the job is still running: do **not** resubmit; check
+`ssh ircbc 'squeue -u $USER'` and tail the log instead.
+
 The trailing `rm` deletes the tarball only if the build succeeded. After the
-job succeeds, record the digest sidecar (this is what §1 compares):
+job succeeds (`sbatch --wait` exits 0 — nonzero means the build failed: read
+the log and do NOT write the sidecar), record the digest sidecar (this is
+what §1 compares):
 
 ```bash
 ssh ircbc 'echo <digest> > $LIU_LAB_PACKAGES/liulab-runtime_<env>.sif.digest'
@@ -98,16 +110,27 @@ ssh ircbc 'srun -p compute_cpu -t 10 -J sif_test bash -c "\
     \"source /app/.pixi/activate-<env>.sh && <check>\""'
 ```
 
+The `<check>` / `<command...>` slot (here and in §5) sits two quoting levels
+deep — write any inner double quote as `\\\"`, or keep the payload
+quote-free. Expanded `ml` example of the inner line:
+`\"source /app/.pixi/activate-ml.sh && python -c \\\"import torch, scvi, scanpy, anndata\\\"\"`.
+
 For a fuller Jupyter check, `$LIU_LAB_PACKAGES/bin/test-jupyter-ml.sh` via
 `srun` (ml image; adapt for others).
+
+**If the check fails, tell the user before anything else** — the §3 sidecar
+makes §1 report this SIF as up to date, so ask whether to delete the SIF +
+`.digest` sidecar (shared lab asset — ask first) or investigate. Rebuilding
+from the same pinned digest reproduces the same image; the fix is usually
+upstream in `liulab-runtime`.
 
 ## 5. Using the images (verified patterns — Singularity 3.2.1)
 
 Activation is always `source /app/.pixi/activate-<env>.sh` (fallback:
 `export PATH=/app/.pixi/envs/<env>/bin:$PATH`). Do **not** use
 `singularity run` — the image's Docker entrypoint does not work under this
-old Singularity. `$HOME` is auto-bound; add `--bind /share/lhqlab` (or other
-data dirs) as needed.
+old Singularity. `$HOME` is auto-bound (re-verified 2026-07-05); add
+`--bind /share/lhqlab` (or other data dirs) as needed.
 
 **Run a command** (batch, in a compute job):
 
@@ -122,14 +145,17 @@ ssh ircbc 'srun -p compute_cpu -t <time> -c <cpus> bash -c "\
 (`--rcfile` gives an activated interactive shell and skips the host bashrc):
 
 ```bash
-ssh -t ircbc 'srun -p compute_cpu -t 08:00:00 -c <cpus> --pty bash -c "\
+ssh -t ircbc 'srun -p compute_cpu -t <time> -c <cpus> --pty bash -c "\
   module load singularity && \
   singularity exec --bind /share/lhqlab $LIU_LAB_PACKAGES/liulab-runtime_<env>.sif \
     bash --rcfile /app/.pixi/activate-<env>.sh"'
 ```
 
-**Jupyter Lab in the container** — submit (with user confirmation), then
-tunnel from the local PC through the compute-node alias:
+**Jupyter Lab in the container** — the surrounding session lifecycle (reuse
+an existing Jupyter job first, confirm the sbatch with the user before
+submitting, node/token/tunnel/cleanup) is the `lab-jupyter` skill; this
+skill owns only the ircbc submit command (`<port>`: default 9990 — see
+lab-jupyter):
 
 ```bash
 ssh ircbc 'sbatch -p compute_cpu -t <time> -c <cpus> -J jupyter \
@@ -138,9 +164,8 @@ ssh ircbc 'sbatch -p compute_cpu -t <time> -c <cpus> -J jupyter \
   module load singularity && \
   singularity exec --bind /share/lhqlab $LIU_LAB_PACKAGES/liulab-runtime_<env>.sif \
     bash -c \"source /app/.pixi/activate-<env>.sh && jupyter lab --no-browser --port=<port> --ip=127.0.0.1\""'
-# find the node with: ssh ircbc 'squeue -u $USER'   (Slurm 18.08: no --me)
-ssh -f -N -L <port>:localhost:<port> <cpuNN>      # local PC; cpuNN alias ProxyJumps via ircbc
 ```
 
-Token: `grep -m1 "?token=" $LIU_LAB_PACKAGES/logs/jupyter.<jobid>.log`. See
-the `lab-jupyter` skill for the full tunnel/reuse/cleanup flow.
+The `-o` path above is the token source. Node, token, tunnel, and cleanup:
+follow `lab-jupyter` steps 1–5 — its parameter table carries the ircbc
+squeue form, log path, and tunnel target.

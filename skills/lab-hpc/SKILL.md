@@ -4,12 +4,12 @@ description: >-
   Lab HPC clusters (arc/chimera GPU cluster, ircbc CPU cluster) and the lab's
   remote-compute workflow. Use whenever a task involves ssh to a lab server,
   running or testing code on a remote machine, Slurm jobs (sbatch, srun,
-  squeue, salloc), GPU/CPU compute nodes, the zhoulab_gpu_priority partition,
-  transferring files to a cluster, or syncing code local -> GitHub -> remote.
-  Consult BEFORE the first ssh or
-  Slurm command of any session touching these clusters. Covers host aliases,
-  which cluster to pick, safety rules, and per-user config via ~/.ssh/config
-  and ~/.claude/compute/personal.md.
+  squeue, salloc), GPU/CPU compute or login nodes, the zhoulab_gpu_priority
+  partition, transferring files to a cluster, or syncing code local ->
+  GitHub -> remote. Consult BEFORE the first ssh or Slurm command of any
+  session. Covers host aliases, which cluster to pick, safety rules (never
+  run compute on a login node), and per-user config (~/.ssh/config,
+  personal.md).
 ---
 
 # Lab HPC clusters & remote-compute workflow
@@ -38,8 +38,10 @@ that gets committed.
    improvise around it — never ask for or use raw IPs, passwords, or keys;
    SSH setup is out of scope for this skill and must never be automated or
    stored.
-2. If `~/.claude/compute/personal.md` exists, **read it now** — it overrides
-   every default below (usernames, code directories, reservation notes).
+2. If `~/.claude/compute/personal.md` exists, **read it now** — it carries
+   the user's per-cluster usernames, code dirs, and reservation/sbatch
+   notes, and takes precedence over the defaults in this skill and its
+   references.
 3. All lab hosts are reached through conventional **aliases in each user's
    own `~/.ssh/config`**: `arc` / `chimera-login`, `chimera-transfer`,
    `chimera-gpu`, `chimera-cpu`, `ircbc`, `ircbc-transfer`, `cpu01`…`cpu08`,
@@ -51,8 +53,8 @@ that gets committed.
 - **Never run compute on a login node.** For anything heavy, get a Slurm
   compute job first, then ssh/run on the allocated node. Ask before assuming
   a node is available.
-- Compute nodes (`GPU****` aliases on chimera, `cpu01`–`cpu08` on ircbc) are
-  reachable **only while the user holds a Slurm job on them**.
+- Compute nodes (`GPU****`/`CPU****` aliases on chimera, `cpu01`–`cpu08` on
+  ircbc) are reachable **only while the user holds a Slurm job on them**.
 - If ssh to `ircbc` (or its compute/transfer nodes) hangs or times out:
   **stop and tell the user to check the VPN** (atrust app, managed manually
   by the user). Never try to work around it.
@@ -68,26 +70,36 @@ that gets committed.
 - Repos generally use the **same directory name** locally and remotely.
 - `git` and `gh` are already authenticated on local machines and all remotes.
 
-## Choosing a cluster
+## Choosing a cluster — the user's call
 
-- **GPU work, or anything needing a modern OS/glibc** → `arc_hpc` (aka
-  chimera / ARC). See `references/arc-hpc.md`.
-- **CPU-only batch work** → `ircbc_hpc`, ALWAYS inside Singularity with the
-  lab's `ghcr.io` containers (the bare OS is CentOS 7, glibc 2.17 — modern
-  binaries will not run on it). Images are built by the `liulab-runtime`
-  repo. See `references/ircbc-hpc.md`.
+Cluster choice is complex (task, project, where the data lives) — **never
+decide it silently**. If the session context doesn't already pin it down
+(the user named a cluster, personal.md or the project says so, or the data
+already lives on one), **ask the user**. Per-cluster factors:
+
+- **`arc_hpc`** (aka chimera / ARC) — GPUs; modern OS/glibc; envs run
+  natively via pixi. See `references/arc-hpc.md`.
+- **`ircbc_hpc`** — CPU-only in practice; work ALWAYS runs inside
+  Singularity with the lab's `ghcr.io` containers (the bare OS is CentOS 7,
+  glibc 2.17 — modern binaries will not run on it); pull/build/use the SIFs
+  with the **`lab-containers`** skill. See `references/ircbc-hpc.md`.
 - Environments are managed with **pixi** and shipped as `ghcr.io` containers
-  (see the `liulab-runtime` repo); on ircbc consume them via Singularity.
+  by the `liulab-runtime` repo — on arc they normally run natively via pixi
+  (no SIFs needed); on ircbc always consume them via Singularity.
 
 ## Quick reference
 
 | Cluster | Login alias | Transfer alias | Get a compute node | Code dir |
 |---|---|---|---|---|
-| arc_hpc (chimera) | `arc` / `chimera-login` | `chimera-transfer` | Prefer `sbatch`/`salloc` on `zhoulab_gpu_priority` (free, usually available) or the preemptible partitions; `ssh chimera-gpu` / `ssh chimera-cpu` (interactive shared queues) often wait long | `/large_storage/zhoulab/<user>/pkg` |
-| ircbc_hpc | `ircbc` | `ircbc-transfer` | Slurm job → ssh `cpu01`…`cpu08` | `/share/home/<user>/src` |
+| arc_hpc (chimera) | `arc` / `chimera-login` | `chimera-transfer` | `sbatch`/`salloc` on `zhoulab_gpu_priority` | `/large_storage/zhoulab/<user>/pkg` |
+| ircbc_hpc | `ircbc` | `ircbc-transfer` (no `/share` mount — copy onward after landing; see `references/ircbc-hpc.md`) | Slurm job → ssh `cpu01`…`cpu08` | `/share/home/<user>/src` |
 
-`<user>` = the per-cluster username from `~/.ssh/config` /
-`~/.claude/compute/personal.md`.
+- `<user>` = the per-cluster username from `~/.ssh/config` /
+  `~/.claude/compute/personal.md`.
+- arc: prefer `zhoulab_gpu_priority` (free, usually available) or the free
+  preemptible partitions; interactive `ssh chimera-gpu` / `ssh chimera-cpu`
+  (shared queues) often wait long — cost/queue detail in
+  `references/arc-hpc.md`.
 
 ## Deep detail
 

@@ -75,6 +75,23 @@ for u in $users; do
   fi
 done
 ok "no local ssh-config usernames leaked (checked $(echo "$users" | wc -l | tr -d ' ') names)"
+# Hostnames likewise come from THIS machine's ssh config at test time — the
+# repo may reference hosts only by alias. Only dotted values are swept
+# (single-label names are indistinguishable from alias vocabulary); wildcards
+# and public forges are skipped; IP-valued HostNames also trip the IP sweep.
+hosts=$(awk 'tolower($1)=="hostname"{print $2}' ~/.ssh/config 2>/dev/null \
+        | grep '\.' | grep -v '[*?%]' \
+        | grep -viE '^(localhost|127\.0\.0\.1|github\.com|gitlab\.com|bitbucket\.org)$' \
+        | sort -u)
+hcount=0
+for h in $hosts; do
+  hcount=$((hcount + 1))
+  hre=$(printf '%s' "$h" | sed 's/[][\.^$*+?(){}|]/\\&/g')
+  if SWEEP "(^|[^a-zA-Z0-9._-])$hre([^a-zA-Z0-9._-]|\$)"; then
+    err "local ssh-config hostname '$h' appears in the repo (above)"
+  fi
+done
+ok "no local ssh-config hostnames leaked (checked $hcount names)"
 
 echo "== check-hpc-config.sh self-test =="
 out=$(bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)

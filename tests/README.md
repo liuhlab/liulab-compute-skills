@@ -10,10 +10,11 @@ Tests the **artifacts**: manifests are valid JSON, every skill has parseable
 `name`/`description` frontmatter, names follow the `lab-*` policy, the
 combined description budget stays under Claude Code's limit, and — most
 importantly — the **no-secrets sweep**: no IP literals, no key material, and
-none of the usernames from *your* local `~/.ssh/config` appear anywhere in
-the repo (usernames are read from your machine at test time, so the test
-itself stores none). Also self-tests `check-hpc-config.sh` against an empty
-ssh config to prove it reports NOT CONFIGURED.
+none of the usernames or dotted HostNames from *your* local `~/.ssh/config`
+appear anywhere in the repo (both are read from your machine at test time,
+so the test itself stores none; single-label hostnames are unsweepable but
+still forbidden by policy). Also self-tests `check-hpc-config.sh` against an
+empty ssh config to prove it reports NOT CONFIGURED.
 
 ## Layer 2 — environment preflight (free, seconds): `tests/preflight.sh`
 
@@ -43,7 +44,10 @@ you're an agent doing this on someone's behalf. Evals exercise the
 4. **containers** — an image-rebuild prompt must surface the
    `lab-containers` recipe (crane pull on login node, docker-archive build
    in a compute job), not a naive `singularity pull` on a compute node.
-5. **live e2e** (only with `--live`) — the agent must actually ssh to arc,
+5. **jupyter-ircbc** — a Jupyter-on-ircbc prompt must plan the container
+   path (`lab-containers` SIF, `squeue -u $USER`, `compute_cpu`), not the
+   arc-native flow.
+6. **live e2e** (only with `--live`) — the agent must actually ssh to arc,
    submit a minimal `hostname` job to a no-cost partition
    (`quick_preemptible`), report the job id, and clean it up. This is the
    real "can Claude ssh in and submit a Slurm job" test — keep it tiny and

@@ -16,7 +16,7 @@
 #   --live         also run the end-to-end case: the agent must ssh to arc
 #                  and submit+clean up a tiny hostname job (real cluster).
 #   --only <case>  run a single case
-#                  (trigger|explicit|reject|containers|live-sbatch)
+#                  (trigger|explicit|reject|containers|jupyter-ircbc|live-sbatch)
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
@@ -57,18 +57,30 @@ launch_eval explicit 'login node' \
   "/lab-compute:lab-hpc state the skill's hard safety rules in at most 3 bullets, do nothing else"
 
 # 3. Clear rejection when the machine is not configured: the agent is told
-#    the preflight failed and must refuse rather than improvise.
-launch_eval reject 'not (set up|configured)|NOT CONFIGURED|missing' \
+#    the preflight failed and must refuse rather than improvise. (No
+#    'missing' in the regex — the prompt itself contains that word, so an
+#    improvising agent would match it too. grep -i makes a separate
+#    'NOT CONFIGURED' alternate redundant.)
+launch_eval reject 'not (set up|configured)|refus' \
   "Suppose the lab-hpc preflight (scripts/check-hpc-config.sh) just reported: 'arc_hpc: NOT CONFIGURED (missing: arc chimera-login)'. My request: get me a GPU node on chimera. What do you do?" \
   --permission-mode plan
 
 # 4. Recipe skill triggers: image build request must surface the
-#    lab-containers pull-on-login / build-in-compute-job procedure.
-launch_eval containers 'crane|docker-archive|login node|sbatch' \
+#    lab-containers pull-on-login / build-in-compute-job procedure. (Only
+#    recipe-unique terms — 'sbatch'/'login node' would also match a naive
+#    singularity-pull-on-a-node plan.)
+launch_eval containers 'crane|docker-archive' \
   "rebuild the align-rna singularity image on ircbc" \
   --permission-mode plan
 
-# 5. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
+# 5. Cross-skill seam: Jupyter on ircbc must plan the container path, not
+#    the arc-native flow. (Container-unique terms only — 'squeue -u' or a
+#    bare 'sif' substring would also match a wrong arc-style plan.)
+launch_eval jupyter-ircbc 'singularity|\.sif|liulab-runtime|compute_cpu|lab-containers' \
+  "start jupyter lab on ircbc and tunnel it to my laptop" \
+  --permission-mode plan
+
+# 6. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   launch_eval live-sbatch '[0-9]{5,}' \
     "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
@@ -78,7 +90,7 @@ else
 fi
 
 if [ "${#E_NAME[@]}" -eq 0 ]; then
-  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|live-sbatch)"
+  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|live-sbatch)"
   exit 2
 fi
 

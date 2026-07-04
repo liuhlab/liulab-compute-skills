@@ -70,8 +70,15 @@ check_cluster() {
 }
 
 ok=1
-check_cluster arc_hpc arc \
-  arc chimera-login chimera-transfer chimera-gpu chimera-cpu && ok=0
+if check_cluster arc_hpc arc \
+  arc chimera-login chimera-transfer chimera-gpu chimera-cpu; then
+  ok=0
+  # Warn-only: lab-jupyter tunnels also need per-node aliases (GPU****/
+  # CPU****-style names, usually one wildcard Host block). Probe a shaped
+  # name; explicit per-node entries may not match the probe, so never fail.
+  alias_configured GPU0001 || alias_configured CPU0001 || \
+    echo "arc_hpc: WARNING (no GPU****/CPU****-style node aliases found — lab-jupyter tunnels need them)"
+fi
 check_cluster ircbc_hpc ircbc \
   ircbc ircbc-transfer cpu01 cpu02 cpu03 cpu04 cpu05 cpu06 cpu07 cpu08 && ok=0
 
