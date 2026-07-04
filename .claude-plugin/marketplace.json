@@ -1,0 +1,11 @@
+{
+  "name": "liulab",
+  "owner": { "name": "Hanqing Liu", "email": "hanqing_liu@sioc.ac.cn" },
+  "plugins": [
+    {
+      "name": "lab-compute",
+      "source": "./",
+      "description": "Liu Lab HPC clusters and remote-compute workflow"
+    }
+  ]
+}
