@@ -35,12 +35,22 @@ Rule of thumb: **download on the login node (through the proxy) directly
 onto `/share`; compute on the compute nodes from local files.** Use the
 transfer node only when the proxy path fails.
 
+**Proxy-env gotcha:** `srun`/`sbatch` from the login node propagate the
+proxy variables into jobs, but compute nodes have no `127.0.0.1:1080`
+tunnel — so anything honoring `http(s)_proxy` fails to fetch, and even
+`curl http://127.0.0.1:<port>` probes of on-node services get misrouted
+into the dead proxy. In job scripts either
+`unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY all_proxy`
+(there is no internet to reach anyway) or use `curl --noproxy '*'` for
+localhost traffic.
+
 ## Lab package store: `$LIU_LAB_PACKAGES`
 
 Shared images/tools live in `/share/lhqlab/liulab_data/packages`, exposed as
 the env var `LIU_LAB_PACKAGES` (exported in users' shell profiles):
 
-- `bin/` — static helper binaries (e.g. `crane` for registry pulls)
+- `bin/` — static helper binaries (`crane` for registry pulls) and smoke-test
+  scripts (`test-jupyter-ml.sh` — Jupyter-in-SIF check, run it via `srun`)
 - `oci/` — docker-archive tarballs pulled from registries
 - `*.sif` — built Singularity images
 - `logs/` — build-job logs
