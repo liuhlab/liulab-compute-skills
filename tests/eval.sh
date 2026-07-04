@@ -2,24 +2,36 @@
 # Layer 3 — agent evals: run the skills through real headless Claude Code
 # sessions and assert on the behavior they induce. COSTS TOKENS.
 #
-# Usage: eval.sh [--live]
-#   --live  also runs the end-to-end test: the agent must ssh to arc and
-#           submit+clean up a tiny hostname job (touches the real cluster).
+# Usage: eval.sh [--live] [--only <case>]
+#   --live         also run the end-to-end case: the agent must ssh to arc
+#                  and submit+clean up a tiny hostname job (real cluster).
+#   --only <case>  run a single case (trigger|explicit|reject|live-sbatch)
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
 set -u
 cd "$(dirname "$0")/.."
-LIVE=false; [ "${1:-}" = "--live" ] && LIVE=true
+LIVE=false ONLY=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --live) LIVE=true ;;
+    --only) shift; ONLY="$1"; [ "$ONLY" = "live-sbatch" ] && LIVE=true ;;
+    *) echo "unknown arg: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
 fail=0
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/lab-skill-eval.XXXXXX")
 echo "transcripts: $tmp"
 
-run_eval() { # <name> <expected-regex> [claude -p args...]
-  local name="$1" expect="$2"; shift 2
+run_eval() { # <name> <expected-regex> <prompt> [extra claude flags...]
+  local name="$1" expect="$2" prompt="$3"; shift 3
+  [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && return 0
   local out="$tmp/$name.txt"
   echo "-- $name"
-  claude -p "$@" >"$out" 2>&1
+  # NOTE: prompt must precede flags — variadic flags (--allowedTools) would
+  # otherwise swallow it.
+  claude -p "$prompt" "$@" >"$out" 2>&1
   if grep -qiE "$expect" "$out"; then
     echo "  ok: matched /$expect/"
   else
@@ -31,8 +43,8 @@ run_eval() { # <name> <expected-regex> [claude -p args...]
 # 1. Auto-trigger: HPC-flavored prompt, skill never named, plan mode (no
 #    execution). Expect a Slurm-first plan, not naive ssh-and-run.
 run_eval trigger 'slurm|sbatch|salloc|squeue|compute node' \
-  --permission-mode plan \
-  "get me a GPU node on chimera and pull the latest liulab-runtime there"
+  "get me a GPU node on chimera and pull the latest liulab-runtime there" \
+  --permission-mode plan
 
 # 2. Explicit invocation of the plugin skill.
 run_eval explicit 'login node' \
@@ -41,14 +53,14 @@ run_eval explicit 'login node' \
 # 3. Clear rejection when the machine is not configured: the agent is told
 #    the preflight failed and must refuse rather than improvise.
 run_eval reject 'not (set up|configured)|NOT CONFIGURED|missing' \
-  --permission-mode plan \
-  "Suppose the lab-hpc preflight (scripts/check-hpc-config.sh) just reported: 'arc_hpc: NOT CONFIGURED (missing: arc chimera-login)'. My request: get me a GPU node on chimera. What do you do?"
+  "Suppose the lab-hpc preflight (scripts/check-hpc-config.sh) just reported: 'arc_hpc: NOT CONFIGURED (missing: arc chimera-login)'. My request: get me a GPU node on chimera. What do you do?" \
+  --permission-mode plan
 
 # 4. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   run_eval live-sbatch '[0-9]{5,}' \
-    --allowedTools "Bash(ssh:*)" \
-    "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs."
+    "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
+    --allowedTools "Bash(ssh:*)"
 else
   echo "-- live-sbatch skipped (pass --live to run)"
 fi
