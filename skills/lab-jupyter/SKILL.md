@@ -1,20 +1,31 @@
 ---
 name: lab-jupyter
 description: >-
-  Start (or reuse) an interactive Jupyter Lab on the lab's arc/chimera HPC
-  cluster and tunnel it to the local machine. Use when the user wants
-  Jupyter Lab / a notebook on the cluster, an ssh tunnel or port forward to
-  a compute node, to reconnect to a running Jupyter job, or to work
-  interactively on a GPU node from a local browser. Handles: finding an
-  existing idle Jupyter job, submitting a new Slurm job that runs Jupyter,
-  locating the node and token, and opening ssh -L localhost tunnels.
+  Start (or reuse) an interactive Jupyter Lab on a lab HPC cluster and
+  tunnel it to the local machine. Use when the user wants Jupyter Lab / a
+  notebook on the cluster, an ssh tunnel or port forward to a compute node,
+  to reconnect to a running Jupyter job, or to work interactively on a GPU
+  node from a local browser. Cluster-aware: on arc/chimera the standard flow
+  is a zhoulab_gpu_priority Slurm job + ssh -L tunnel (always confirm the
+  sbatch script with the user first); ircbc is not yet supported by this
+  skill.
 ---
 
 # Jupyter Lab on the cluster + local tunnel
 
-Get a Jupyter Lab running on an arc/chimera compute node and reachable at
+Get a Jupyter Lab running on a cluster compute node and reachable at
 `http://localhost:<port>` on the local machine. Follow the `lab-hpc` skill's
 rules (preflight, no compute on login nodes, aliases from `~/.ssh/config`).
+
+## Cluster support — check this first
+
+- **arc_hpc (chimera)** — supported; the standard flow is below: a Slurm job
+  on the lab's `zhoulab_gpu_priority` partition running Jupyter, then an
+  `ssh -L` tunnel from the local machine.
+- **ircbc_hpc** — **not yet covered by this skill.** Setup there is more
+  involved (CentOS 7, Singularity-only environments, VPN). If the user asks
+  for Jupyter on ircbc, say so plainly and work it out with them
+  interactively — do not improvise a flow from the arc instructions.
 
 **Per-user inputs** (read `~/.claude/compute/personal.md` first):
 
@@ -42,23 +53,29 @@ ssh <node> 'ss -tln | grep -E "127\.0\.0\.1:<port>"'
 If yes → skip to step 3 with that node. Reusing an idle reserved job is the
 lab's preferred pattern; never scancel someone's reservation to make room.
 
-## 2. Submit a Jupyter job
+## 2. Submit a Jupyter job (arc)
 
-Pick a partition per the `lab-hpc` arc reference: `zhoulab_gpu_priority`
-(lab-reserved, long-lived, GPU, no extra cost, usually available) is the
-default choice; `cpu_preemptible` for a no-GPU session that tolerates
-requeueing. Avoid the shared `gpu`/`cpu` partitions — they queue long and
-the GPU ones bill extra. Always set `--time`.
+**Resources are the user's call — ask, don't assume.** Get explicit values
+for `--cpus-per-task`, memory (`--mem-per-cpu` or `--mem`), `--gpus`, and
+`--time` (personal.md may carry the user's usual defaults). Partition:
+`zhoulab_gpu_priority` is the standard choice (lab-reserved, no extra cost,
+usually available); `cpu_preemptible` only for a no-GPU session that
+tolerates requeueing. Avoid the shared `gpu`/`cpu` partitions — long queues,
+and the GPU ones bill extra.
+
+**Always show the user the exact sbatch command/script and get their
+confirmation BEFORE submitting.** Example shape:
 
 ```bash
 ssh arc 'mkdir -p sbatch && sbatch --job-name=jupyter \
-  --partition=zhoulab_gpu_priority --time=2-00:00:00 \
-  --cpus-per-task=24 --mem-per-cpu=6G --gpus=1 \
+  --partition=zhoulab_gpu_priority --time=<time> \
+  --cpus-per-task=<cpus> --mem-per-cpu=<mem> --gpus=<gpus> \
   --output=sbatch/jupyter.%j.log --error=sbatch/jupyter.%j.log \
   --wrap "<jupyter> lab --no-browser --port=<port>"'
 ```
 
-Wait until it runs, and get the node:
+After the user approves and it is submitted, wait until it runs and get the
+node:
 
 ```bash
 ssh arc 'squeue -j <jobid> -h -o "%T %N"'   # poll until RUNNING

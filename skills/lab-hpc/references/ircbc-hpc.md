@@ -1,6 +1,7 @@
-# ircbc_hpc — CPU-only cluster (old OS; Singularity required)
+# ircbc_hpc — CPU cluster (old OS; module + Singularity required)
 
-CPU-only Slurm cluster running **CentOS 7 with glibc 2.17**. Modern binaries
+Slurm cluster running **CentOS 7 (kernel 3.10, glibc 2.17)** with an old
+**Slurm 18.08** — expect missing newer sbatch/srun flags. Modern binaries
 will NOT run on the bare OS — always run real work inside **Singularity**
 with the lab's `ghcr.io` container images. All hosts below are
 **`~/.ssh/config` aliases** — resolve usernames/hostnames from that file (see
@@ -22,17 +23,48 @@ retry in a loop, do not try alternate routes, do not attempt to fix the VPN.
 - **Compute nodes:** `cpu01`…`cpu08`, ProxyJump through `ircbc`. Reachable
   **only while the user holds a Slurm job on them**.
 
-## Running work: Singularity + lab containers
+## Slurm on ircbc — how to submit (verified 2026-07-04)
+
+No accounting/QOS caps are exposed (`sacctmgr` returns nothing); no
+`--account` needed. `DefaultTime`/`MaxTime` are unlimited — set `--time`
+anyway so runaway jobs die.
+
+| Partition | Nodes | Per node | Notes |
+|---|---|---|---|
+| `compute_cpu` (default) | `cpu01`–`cpu08` | 56 CPUs, ~100 GB | **MaxNodes=2 per job.** The workhorse partition. |
+| `compute_fat` | 2 fat nodes | 160 CPUs, ~1–2 TB | Big-memory jobs. |
+| `compute_gpu_2080` | 2 nodes | 4× RTX 2080 | Both nodes were **drained** when checked — treat this cluster as CPU-only in practice. |
+
+Quick interactive check / smoke test:
+
+```bash
+ssh ircbc 'srun -p compute_cpu -t 10 bash -lc "hostname"'
+```
+
+## Running work: `module load singularity` + lab containers
+
+Singularity is **not on PATH** — it ships as an OpenHPC module
+(`singularity/3.2.1`, available on login and compute nodes; note it is an
+old 3.x — very new image features may not work):
+
+```bash
+module load singularity
+```
 
 Environments are built with pixi and published as containers by the
 `liulab-runtime` repo (check its README for current image names and tags).
-Typical usage on a compute node:
+Typical batch job:
 
 ```bash
-# pull once (creates a .sif file)
-singularity pull docker://ghcr.io/liuhlab/<image>:<tag>
+#!/bin/bash
+#SBATCH --job-name=work
+#SBATCH --partition=compute_cpu
+#SBATCH --time=1-00:00:00
+#SBATCH --cpus-per-task=16
+#SBATCH --output=sbatch/%x.%j.log
 
-# run commands inside the container (bind your code/data dirs as needed)
+module load singularity
+# pull once beforehand: singularity pull docker://ghcr.io/liuhlab/<image>:<tag>
 singularity exec --bind /share/home/<user> <image>_<tag>.sif <command...>
 ```
 
