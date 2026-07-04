@@ -66,7 +66,8 @@ ssh ircbc 'sbatch -p compute_cpu -t 02:00:00 -c 8 -J sif_build \
 
 No accounting/QOS caps are exposed (`sacctmgr` returns nothing); no
 `--account` needed. `DefaultTime`/`MaxTime` are unlimited — set `--time`
-anyway so runaway jobs die.
+anyway so runaway jobs die. Slurm 18.08 flag gotchas: `squeue --me` does not
+exist (use `squeue -u $USER`); expect other modern flags to be missing too.
 
 | Partition | Nodes | Per node | Notes |
 |---|---|---|---|
