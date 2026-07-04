@@ -9,7 +9,12 @@ follows the open Agent Skills standard.
 Current skills:
 
 - **`lab-hpc`** — the two lab clusters (arc/chimera GPU, ircbc CPU), the
-  local → GitHub → remote workflow, Slurm usage, safety rules.
+  local → GitHub → remote workflow, Slurm usage (partitions, cost/queue
+  guidance), safety rules, and a config preflight
+  (`scripts/check-hpc-config.sh`) that makes agents refuse HPC requests on
+  machines whose `~/.ssh/config` isn't set up.
+- **`lab-jupyter`** — start or reuse a Jupyter Lab job on arc/chimera and
+  tunnel it to `http://localhost:<port>` on the local machine.
 
 ## Security policy (hard rule)
 
@@ -62,6 +67,16 @@ claude plugin marketplace update liulab
 (or `git pull` for clone-based installs). Background auto-update of private
 marketplaces would require a `GITHUB_TOKEN` env var; we deliberately don't
 set one — update manually.
+
+## Testing
+
+Three layers under [tests/](tests/) — see [tests/README.md](tests/README.md):
+
+```bash
+bash tests/lint.sh              # static: manifests, frontmatter, naming, no-secrets sweep
+bash tests/preflight.sh --live  # this machine's ssh config + login-node reachability
+bash tests/eval.sh --live       # headless claude -p behavior evals (tokens; --live hits the cluster)
+```
 
 ## Adding a new skill
 

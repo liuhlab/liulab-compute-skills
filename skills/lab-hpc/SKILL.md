@@ -22,18 +22,30 @@ each user's own machine and is resolved at run time (step 0 below). Never
 write such details into this skill, into any repo, or into command output
 that gets committed.
 
-## Step 0 — resolve per-user details (always do this first)
+## Step 0 — preflight & per-user details (always do this first)
 
-1. If `~/.claude/compute/personal.md` exists, **read it now** — it overrides
+1. **Preflight — verify this machine is configured.** Run the bundled check
+   (path relative to this skill's directory):
+
+   ```bash
+   bash scripts/check-hpc-config.sh          # add --live to also test ssh
+   ```
+
+   It reports, per cluster, `CONFIGURED` or `NOT CONFIGURED (missing: …)`
+   based on the user's own `~/.ssh/config`. **If the cluster the task needs
+   is NOT CONFIGURED, refuse the HPC request clearly**: say this machine
+   isn't set up for that cluster, list the missing ssh aliases, and point
+   the user to the repo README's "Per-user config" section. Do NOT
+   improvise around it — never ask for or use raw IPs, passwords, or keys;
+   SSH setup is out of scope for this skill and must never be automated or
+   stored.
+2. If `~/.claude/compute/personal.md` exists, **read it now** — it overrides
    every default below (usernames, code directories, reservation notes).
-2. All lab hosts are reached through conventional **aliases in each user's
+3. All lab hosts are reached through conventional **aliases in each user's
    own `~/.ssh/config`**: `arc` / `chimera-login`, `chimera-transfer`,
    `chimera-gpu`, `chimera-cpu`, `ircbc`, `ircbc-transfer`, `cpu01`…`cpu08`,
    plus per-node compute aliases. Read `~/.ssh/config` to resolve hostnames
    and usernames — never hardcode them, never record them anywhere.
-3. If an alias you need is missing from `~/.ssh/config`, **stop and ask the
-   user**. Setting up SSH access (hosts, keys, credentials) is out of scope
-   for this skill and must never be automated or stored.
 
 ## Hard rules (safety)
 
@@ -69,7 +81,7 @@ that gets committed.
 
 | Cluster | Login alias | Transfer alias | Get a compute node | Code dir |
 |---|---|---|---|---|
-| arc_hpc (chimera) | `arc` / `chimera-login` | `chimera-transfer` | `ssh chimera-gpu` or `ssh chimera-cpu` (drops into an interactive Slurm job), or `sbatch` to `zhoulab_gpu_priority` | `/large_storage/zhoulab/<user>/pkg` |
+| arc_hpc (chimera) | `arc` / `chimera-login` | `chimera-transfer` | Prefer `sbatch`/`salloc` on `zhoulab_gpu_priority` (free, usually available) or the preemptible partitions; `ssh chimera-gpu` / `ssh chimera-cpu` (interactive shared queues) often wait long | `/large_storage/zhoulab/<user>/pkg` |
 | ircbc_hpc | `ircbc` | `ircbc-transfer` | Slurm job → ssh `cpu01`…`cpu08` | `/share/home/<user>/src` |
 
 `<user>` = the per-cluster username from `~/.ssh/config` /
