@@ -38,7 +38,11 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`, `live-sbatch`.
   Run one with `--only <case>` (`--only live-sbatch` implies `--live`, which
-  submits and cleans up a real tiny Slurm job on arc).
+  submits and cleans up a real tiny Slurm job on arc). Cases run
+  concurrently. Each case is a full `claude -p` session — prefer `--only`,
+  and **ask the user before running the full suite or `--live`**. Evals hit
+  the *installed* plugin: push + `claude plugin update` first, or you're
+  testing the previous version.
 - Evals assert loose key phrases on `claude -p` transcripts; on failure read
   the transcript path printed before concluding the skill is broken. In
   `eval.sh`, the prompt must come **before** flags — variadic
@@ -50,7 +54,10 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 
 1. Edit skills; run `bash tests/lint.sh`.
 2. Bump `version` in `.claude-plugin/plugin.json` and add a `CHANGELOG.md`
-   entry (same commit).
+   entry (same commit). Versioning is **CalVer `YYYY.M.PATCH`** (e.g.
+   `2026.7.0`): year, month without zero-padding (keeps semver parsers
+   happy), then a counter that increments per release within the month and
+   resets when the month changes.
 3. Push. Installed machines pick it up via
    `claude plugin marketplace update liulab` (manual on purpose — no
    `GITHUB_TOKEN` for background auto-update of the private repo).

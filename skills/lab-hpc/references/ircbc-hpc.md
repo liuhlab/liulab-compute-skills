@@ -53,7 +53,13 @@ the env var `LIU_LAB_PACKAGES` (exported in users' shell profiles):
   scripts (`test-jupyter-ml.sh` — Jupyter-in-SIF check, run it via `srun`)
 - `oci/` — transient docker-archive tarballs (deleted after the SIF builds)
 - `*.sif` — built Singularity images
+- `*.sif.digest` — sidecar recording the ghcr.io image digest each SIF was
+  built from (the `lab-containers` skill compares it against
+  `crane digest` for update checks)
 - `logs/` — build-job logs
+
+The whole store is group-writable for `lhqlab` with setgid dirs — keep it
+that way so any lab member can add or update images.
 
 ## Getting container images onto ircbc (no-internet compute nodes)
 

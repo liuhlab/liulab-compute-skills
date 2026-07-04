@@ -5,12 +5,11 @@ description: >-
   remote-compute workflow. Use whenever a task involves ssh to a lab server,
   running or testing code on a remote machine, Slurm jobs (sbatch, srun,
   squeue, salloc), GPU/CPU compute nodes, the zhoulab_gpu_priority partition,
-  Singularity or ghcr.io containers on HPC, transferring files to a cluster,
-  or syncing code local -> GitHub -> remote. Consult BEFORE the first ssh or
+  transferring files to a cluster, or syncing code local -> GitHub -> remote.
+  Consult BEFORE the first ssh or
   Slurm command of any session touching these clusters. Covers host aliases,
-  which cluster to pick, safety rules (never run compute on login nodes;
-  ircbc VPN), and per-user config via ~/.ssh/config and
-  ~/.claude/compute/personal.md.
+  which cluster to pick, safety rules, and per-user config via ~/.ssh/config
+  and ~/.claude/compute/personal.md.
 ---
 
 # Lab HPC clusters & remote-compute workflow

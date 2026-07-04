@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 # Layer 3 — agent evals: run the skills through real headless Claude Code
-# sessions and assert on the behavior they induce. COSTS TOKENS.
+# sessions and assert on the behavior they induce. COSTS TOKENS (one full
+# claude -p session per case) and several minutes of wall time.
+#
+# Agents/automation: prefer a targeted `--only <case>` run; ASK the user
+# before running the full suite or anything with --live (touches the real
+# cluster). Cases run CONCURRENTLY, so a full run's wall time is roughly the
+# slowest single case.
+#
+# NOTE: evals exercise the INSTALLED plugin (plugin cache), not this working
+# tree — push + `claude plugin update lab-compute@liulab` first, or results
+# reflect the previous version.
 #
 # Usage: eval.sh [--live] [--only <case>]
 #   --live         also run the end-to-end case: the agent must ssh to arc
@@ -21,56 +31,67 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-fail=0
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/lab-skill-eval.XXXXXX")
 echo "transcripts: $tmp"
 
-run_eval() { # <name> <expected-regex> <prompt> [extra claude flags...]
+declare -a E_NAME E_EXPECT E_PID
+
+launch_eval() { # <name> <expected-regex> <prompt> [extra claude flags...]
   local name="$1" expect="$2" prompt="$3"; shift 3
   [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && return 0
-  local out="$tmp/$name.txt"
-  echo "-- $name"
+  echo "-- $name: launched"
   # NOTE: prompt must precede flags — variadic flags (--allowedTools) would
   # otherwise swallow it.
-  claude -p "$prompt" "$@" >"$out" 2>&1
-  if grep -qiE "$expect" "$out"; then
-    echo "  ok: matched /$expect/"
-  else
-    echo "  FAIL: no match for /$expect/ — transcript: $out"
-    fail=1
-  fi
+  claude -p "$prompt" "$@" >"$tmp/$name.txt" 2>&1 &
+  E_NAME+=("$name"); E_EXPECT+=("$expect"); E_PID+=($!)
 }
 
 # 1. Auto-trigger: HPC-flavored prompt, skill never named, plan mode (no
 #    execution). Expect a Slurm-first plan, not naive ssh-and-run.
-run_eval trigger 'slurm|sbatch|salloc|squeue|compute node' \
+launch_eval trigger 'slurm|sbatch|salloc|squeue|compute node' \
   "get me a GPU node on chimera and pull the latest liulab-runtime there" \
   --permission-mode plan
 
 # 2. Explicit invocation of the plugin skill.
-run_eval explicit 'login node' \
+launch_eval explicit 'login node' \
   "/lab-compute:lab-hpc state the skill's hard safety rules in at most 3 bullets, do nothing else"
 
 # 3. Clear rejection when the machine is not configured: the agent is told
 #    the preflight failed and must refuse rather than improvise.
-run_eval reject 'not (set up|configured)|NOT CONFIGURED|missing' \
+launch_eval reject 'not (set up|configured)|NOT CONFIGURED|missing' \
   "Suppose the lab-hpc preflight (scripts/check-hpc-config.sh) just reported: 'arc_hpc: NOT CONFIGURED (missing: arc chimera-login)'. My request: get me a GPU node on chimera. What do you do?" \
   --permission-mode plan
 
 # 4. Recipe skill triggers: image build request must surface the
 #    lab-containers pull-on-login / build-in-compute-job procedure.
-run_eval containers 'crane|docker-archive|login node|sbatch' \
+launch_eval containers 'crane|docker-archive|login node|sbatch' \
   "rebuild the align-rna singularity image on ircbc" \
   --permission-mode plan
 
 # 5. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
-  run_eval live-sbatch '[0-9]{5,}' \
+  launch_eval live-sbatch '[0-9]{5,}' \
     "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
     --allowedTools "Bash(ssh:*)"
 else
-  echo "-- live-sbatch skipped (pass --live to run)"
+  [ -z "$ONLY" ] && echo "-- live-sbatch skipped (pass --live to run)"
 fi
+
+if [ "${#E_NAME[@]}" -eq 0 ]; then
+  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|live-sbatch)"
+  exit 2
+fi
+
+fail=0
+for i in "${!E_NAME[@]}"; do
+  wait "${E_PID[$i]}"
+  if grep -qiE "${E_EXPECT[$i]}" "$tmp/${E_NAME[$i]}.txt"; then
+    echo "ok: ${E_NAME[$i]} matched /${E_EXPECT[$i]}/"
+  else
+    echo "FAIL: ${E_NAME[$i]} no match for /${E_EXPECT[$i]}/ — transcript: $tmp/${E_NAME[$i]}.txt"
+    fail=1
+  fi
+done
 
 echo
 if [ $fail -eq 0 ]; then echo "EVAL PASS"; else echo "EVAL FAIL (see $tmp)"; fi

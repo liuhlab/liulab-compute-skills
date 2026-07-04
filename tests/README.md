@@ -26,7 +26,12 @@ timeout usually means the VPN is down).
 ## Layer 3 — agent evals (costs tokens; `--live` touches the cluster): `tests/eval.sh`
 
 Tests the **behavior the skill induces** in a real headless Claude Code
-session (`claude -p`), with grep-able assertions on the transcript:
+session (`claude -p`), with grep-able assertions on the transcript. Cases
+run **concurrently** (full-suite wall time ≈ slowest case, a couple of
+minutes). Each case is a full agent session, so: prefer `--only <case>` for
+targeted checks, and **ask before running the full suite or `--live`** if
+you're an agent doing this on someone's behalf. Evals exercise the
+*installed* plugin — push + `claude plugin update` first.
 
 1. **trigger** — an HPC prompt that never names the skill must produce a
    Slurm-first plan (plan mode, nothing executes).

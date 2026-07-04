@@ -1,7 +1,29 @@
 # Changelog
 
 Versions track `version` in `.claude-plugin/plugin.json`. Bump the version
-and add an entry here in the same commit.
+and add an entry here in the same commit. Versioning is CalVer
+`YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
+adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
+
+## 2026.7.0 — 2026-07-05
+
+- **Switched to CalVer** (`YYYY.M.PATCH`).
+- `lab-containers` expanded:
+  - Digest-based version checks: each SIF gets a `.sif.digest` sidecar;
+    never rebuild blindly — compare against `crane digest` and ask the user
+    when the remote is newer.
+  - Pulls are now pinned to the checked digest.
+  - New "Using the images" section (verified on-cluster): run commands,
+    interactive pixi-env shells from the local PC (`bash --rcfile`
+    activation; `singularity run` documented as broken under Singularity
+    3.2.1), and Jupyter-in-container with the local tunnel.
+- `lab-jupyter`: ircbc is now supported via the Singularity-image flow
+  (points at lab-containers for the submit recipe).
+- `$LIU_LAB_PACKAGES` store made group-writable with setgid dirs so all
+  `lhqlab` members can add/update images; documented in the ircbc reference.
+- `tests/eval.sh`: cases now run concurrently (full suite ≈ slowest case);
+  added guidance to prefer `--only` and ask before full/`--live` runs; noted
+  that evals exercise the installed plugin, not the working tree.
 
 ## 0.5.0 — 2026-07-05
 

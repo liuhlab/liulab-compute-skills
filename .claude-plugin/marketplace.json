@@ -1,5 +1,6 @@
 {
   "name": "liulab",
+  "description": "Liu Lab shared agent skills (HPC compute, containers, Jupyter)",
   "owner": { "name": "Hanqing Liu", "email": "hanqing_liu@sioc.ac.cn" },
   "plugins": [
     {

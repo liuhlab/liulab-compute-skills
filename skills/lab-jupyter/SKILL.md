@@ -5,10 +5,10 @@ description: >-
   tunnel it to the local machine. Use when the user wants Jupyter Lab / a
   notebook on the cluster, an ssh tunnel or port forward to a compute node,
   to reconnect to a running Jupyter job, or to work interactively on a GPU
-  node from a local browser. Cluster-aware: on arc/chimera the standard flow
-  is a zhoulab_gpu_priority Slurm job + ssh -L tunnel (always confirm the
-  sbatch script with the user first); ircbc is not yet supported by this
-  skill.
+  node from a local browser. Cluster-aware: arc/chimera = zhoulab_gpu_priority
+  Slurm job + ssh -L tunnel; ircbc = Jupyter inside the lab's Singularity
+  image (lab-containers). Always confirm the sbatch script with the user
+  first.
 ---
 
 # Jupyter Lab on the cluster + local tunnel
@@ -22,10 +22,14 @@ rules (preflight, no compute on login nodes, aliases from `~/.ssh/config`).
 - **arc_hpc (chimera)** — supported; the standard flow is below: a Slurm job
   on the lab's `zhoulab_gpu_priority` partition running Jupyter, then an
   `ssh -L` tunnel from the local machine.
-- **ircbc_hpc** — **not yet covered by this skill.** Setup there is more
-  involved (CentOS 7, Singularity-only environments, VPN). If the user asks
-  for Jupyter on ircbc, say so plainly and work it out with them
-  interactively — do not improvise a flow from the arc instructions.
+- **ircbc_hpc** — supported via the lab's Singularity images: Jupyter runs
+  inside `liulab-runtime_<env>.sif` in a `compute_cpu` job (no GPU there),
+  and the tunnel goes through a `cpu01`…`cpu08` alias. Use the
+  **`lab-containers`** skill's "Jupyter Lab in the container" recipe for the
+  submit command, and mind the ircbc gotchas (VPN; unset proxy vars in jobs;
+  `curl --noproxy` for on-node probes; `squeue -u $USER`, not `--me`). The
+  reuse-first, confirm-before-sbatch, and tunnel/cleanup steps below apply
+  the same way.
 
 **Per-user inputs** (read `~/.claude/compute/personal.md` first):
 
