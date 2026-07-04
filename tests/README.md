@@ -44,3 +44,8 @@ session (`claude -p`), with grep-able assertions on the transcript:
 Evals are non-deterministic; assertions are deliberately loose (key phrases,
 not exact text). A failure means "read the transcript in the temp dir", not
 necessarily "the skill is broken".
+
+> Note: Claude Code ships a native eval framework — `claude plugin eval`
+> (cases under `evals/**/case.yaml`, scored graders, no-plugin baseline
+> arm). As of 2026-07 it is early-access-gated; once it's generally
+> available, migrate these layer-3 cases to it and retire `eval.sh`.

@@ -58,9 +58,11 @@ else err "combined descriptions ${total_desc} chars exceed the 1536-char listing
 echo "== no-secrets sweep =="
 # Publishable tree only (what git tracks + working copies), minus this test.
 SWEEP() { grep -rnE "$1" --exclude-dir=.git --exclude-dir=.claude --exclude=lint.sh . ; }
-if SWEEP '([0-9]{1,3}\.){3}[0-9]{1,3}'; then
+# 0.0.0.0 / 127.0.0.1 are well-known non-secret addresses (used in the
+# "bind to localhost only" safety instructions) — everything else flags.
+if SWEEP '([0-9]{1,3}\.){3}[0-9]{1,3}' | grep -vE '0\.0\.0\.0|127\.0\.0\.1'; then
   err "IPv4-looking literal found (above)"
-else ok "no IP literals"; fi
+else ok "no IP literals (0.0.0.0/127.0.0.1 exempt)"; fi
 if SWEEP 'Identity[F]ile|BEGIN [A-Z ]*PRIVATE[ ]KEY|ssh-(rsa|ed25519)[ ]AAAA'; then
   err "key material / IdentityFile reference found (above)"
 else ok "no key material"; fi
