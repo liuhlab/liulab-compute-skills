@@ -5,6 +5,21 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.7.2 — 2026-07-05
+
+- **Repo is now public** (full git history swept for IPs, usernames,
+  hostnames, and key material first — clean). README/CLAUDE.md reworded:
+  the security policy is what makes publicness safe; install prereqs no
+  longer mention org access; dropped the private-marketplace
+  `GITHUB_TOKEN` note.
+- **Human-facing docs site** (MkDocs Material) under `docs/` +
+  `mkdocs.yml`: index (what/install/update), basic-usage page, and one
+  page per skill — concise end-user prose, distinct from the agent-facing
+  SKILL.md files. Deployed to GitHub Pages from the `gh-pages` branch by
+  `.github/workflows/docs.yml` (`mkdocs gh-deploy`, theme pinned `<10`) on
+  pushes to main touching the docs.
+- `tests/lint.sh`: sweep now excludes the gitignored `site/` build output.
+
 ## 2026.7.1 — 2026-07-05
 
 Coherence pass across the three skills (multi-agent review of the whole

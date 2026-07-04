@@ -1,0 +1,29 @@
+# Build the MkDocs site and push it to the gh-pages branch (served by
+# GitHub Pages). Runs on pushes to main that touch the docs.
+name: docs
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - .github/workflows/docs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install "mkdocs-material<10"
+      - run: mkdocs gh-deploy --force

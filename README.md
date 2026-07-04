@@ -1,10 +1,13 @@
 # liulab-compute-skills
 
-Private Liu Lab repo of [Agent Skills](https://agentskills.io) for the
-lab's HPC/remote-compute setup, packaged as a Claude Code **plugin
-marketplace** (marketplace `liulab`, plugin `lab-compute`). Other agentic
-tools (Cursor, Codex, Gemini CLI, …) can consume the same skills — SKILL.md
-follows the open Agent Skills standard.
+Liu Lab's [Agent Skills](https://agentskills.io) for the lab's
+HPC/remote-compute setup, packaged as a Claude Code **plugin marketplace**
+(marketplace `liulab`, plugin `lab-compute`). Other agentic tools (Cursor,
+Codex, Gemini CLI, …) can consume the same skills — SKILL.md follows the
+open Agent Skills standard.
+
+**Docs:** <https://liuhlab.github.io/liulab-compute-skills/> — human-readable
+guide (what this is, install, usage, one page per skill).
 
 Current skills:
 
@@ -25,20 +28,17 @@ Current skills:
 
 ## Security policy (hard rule)
 
-This repo must **never** contain connection details or secrets of any kind:
-no IP addresses or hostnames-with-addresses, no usernames, no SSH keys or key
-filenames, no tokens, no passwords, no VPN credentials. Skills refer to hosts
-only by the lab's conventional **ssh alias names** and resolve everything
-else from each user's own `~/.ssh/config` at run time.
+This repo is **public**; what makes that safe is that it must **never**
+contain connection details or secrets of any kind: no IP addresses or
+hostnames, no usernames, no SSH keys or key filenames, no tokens, no
+passwords, no VPN credentials. Skills refer to hosts only by the lab's
+conventional **ssh alias names** and resolve everything else from each
+user's own `~/.ssh/config` at run time (`tests/lint.sh` enforces this).
 
 Setting up SSH access (hosts, keys, accounts, VPN) is **out of scope** for
-this repo — get it from a lab admin through a secure channel. Keep the repo
-private regardless.
+this repo — get it from a lab admin through a secure channel.
 
 ## Setup — Claude Code (2 commands)
-
-Prereqs: access to the `liuhlab` GitHub org and a logged-in `gh` (`gh auth
-login`).
 
 ```bash
 claude plugin marketplace add liuhlab/liulab-compute-skills
@@ -72,11 +72,10 @@ Claude Code users should use EITHER the plugin OR symlinks into
 
 ```bash
 claude plugin marketplace update liulab
+claude plugin update lab-compute@liulab
 ```
 
-(or `git pull` for clone-based installs). Background auto-update of private
-marketplaces would require a `GITHUB_TOKEN` env var; we deliberately don't
-set one — update manually.
+(or `git pull` for clone-based installs).
 
 ## Testing
 

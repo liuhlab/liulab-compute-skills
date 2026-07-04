@@ -1,2 +1,5 @@
 # Session-local Claude Code permission settings — never commit
 .claude/settings.local.json
+
+# MkDocs build output
+site/

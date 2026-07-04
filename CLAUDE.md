@@ -4,12 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Private Liu Lab repo of Agent Skills (open standard: `SKILL.md` with
+**Public** Liu Lab repo of Agent Skills (open standard: `SKILL.md` with
 `name` + `description` frontmatter only) packaged as a Claude Code plugin
 marketplace. The **repo root is the plugin** (`.claude-plugin/marketplace.json`
 declares `source: "./"`): marketplace `liulab`, plugin `lab-compute`, skills
 under `skills/<name>/`. One plugin holds all lab skills so they update
-atomically.
+atomically. `docs/` + `mkdocs.yml` are a human-facing MkDocs (Material)
+site, deployed to GitHub Pages by `.github/workflows/docs.yml` on pushes to
+main that touch them — keep those pages concise and end-user-facing (the
+SKILL.md files are for agents; the docs are for people), and remember the
+security policy below applies to `docs/` too (lint sweeps it).
 
 ## Hard security policy (enforced by lint)
 

@@ -56,8 +56,9 @@ if [ "$total_desc" -le 1536 ]; then ok "combined description budget ${total_desc
 else err "combined descriptions ${total_desc} chars exceed the 1536-char listing budget"; fi
 
 echo "== no-secrets sweep =="
-# Publishable tree only (what git tracks + working copies), minus this test.
-SWEEP() { grep -rnE "$1" --exclude-dir=.git --exclude-dir=.claude --exclude=lint.sh . ; }
+# Publishable tree only (what git tracks + working copies), minus this test
+# and the gitignored MkDocs build output (site/).
+SWEEP() { grep -rnE "$1" --exclude-dir=.git --exclude-dir=.claude --exclude-dir=site --exclude=lint.sh . ; }
 # 0.0.0.0 / 127.0.0.1 are well-known non-secret addresses (used in the
 # "bind to localhost only" safety instructions) — everything else flags.
 if SWEEP '([0-9]{1,3}\.){3}[0-9]{1,3}' | grep -vE '0\.0\.0\.0|127\.0\.0\.1'; then
