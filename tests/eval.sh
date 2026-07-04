@@ -5,7 +5,8 @@
 # Usage: eval.sh [--live] [--only <case>]
 #   --live         also run the end-to-end case: the agent must ssh to arc
 #                  and submit+clean up a tiny hostname job (real cluster).
-#   --only <case>  run a single case (trigger|explicit|reject|live-sbatch)
+#   --only <case>  run a single case
+#                  (trigger|explicit|reject|containers|live-sbatch)
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
@@ -56,10 +57,16 @@ run_eval reject 'not (set up|configured)|NOT CONFIGURED|missing' \
   "Suppose the lab-hpc preflight (scripts/check-hpc-config.sh) just reported: 'arc_hpc: NOT CONFIGURED (missing: arc chimera-login)'. My request: get me a GPU node on chimera. What do you do?" \
   --permission-mode plan
 
-# 4. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
+# 4. Recipe skill triggers: image build request must surface the
+#    lab-containers pull-on-login / build-in-compute-job procedure.
+run_eval containers 'crane|docker-archive|login node|sbatch' \
+  "rebuild the align-rna singularity image on ircbc" \
+  --permission-mode plan
+
+# 5. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   run_eval live-sbatch '[0-9]{5,}' \
-    "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
+    "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
     --allowedTools "Bash(ssh:*)"
 else
   echo "-- live-sbatch skipped (pass --live to run)"

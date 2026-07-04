@@ -3,6 +3,21 @@
 Versions track `version` in `.claude-plugin/plugin.json`. Bump the version
 and add an entry here in the same commit.
 
+## 0.5.0 — 2026-07-05
+
+- New `lab-containers` skill: the repeatable SIF pull→build→test recipe for
+  ircbc (crane pull on the login node, sbatch build from docker-archive with
+  the tarball deleted after a successful build, per-env smoke tests
+  mirroring the image's own build checks). The ircbc reference now holds
+  facts only and points at the skill for the procedure.
+- Codified the repo's organizing principle in CLAUDE.md: `lab-hpc` = facts
+  (references), other `lab-*` skills = task recipes that never duplicate
+  facts.
+- New repo-wide hard rule in `lab-hpc`: never submit sbatch/srun work
+  without showing the exact script and getting user confirmation first.
+- Tests: new `containers` eval case; live-sbatch eval prompt carries
+  explicit submission approval to stay compatible with the new rule.
+
 ## 0.4.1 — 2026-07-05
 
 - Added `CLAUDE.md` (repo guidance for Claude Code) and this changelog.

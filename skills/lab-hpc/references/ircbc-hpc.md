@@ -51,26 +51,17 @@ the env var `LIU_LAB_PACKAGES` (exported in users' shell profiles):
 
 - `bin/` — static helper binaries (`crane` for registry pulls) and smoke-test
   scripts (`test-jupyter-ml.sh` — Jupyter-in-SIF check, run it via `srun`)
-- `oci/` — docker-archive tarballs pulled from registries
+- `oci/` — transient docker-archive tarballs (deleted after the SIF builds)
 - `*.sif` — built Singularity images
 - `logs/` — build-job logs
 
 ## Getting container images onto ircbc (no-internet compute nodes)
 
-`singularity pull docker://…` needs network, so split network from compute:
-
-```bash
-# 1. LOGIN node (proxy works; pure download, no compute):
-ssh ircbc 'cd $LIU_LAB_PACKAGES/oci && \
-  $LIU_LAB_PACKAGES/bin/crane pull ghcr.io/liuhlab/liulab-runtime:<env> liulab-runtime_<env>.docker.tar'
-
-# 2. COMPUTE job (local docker-archive → SIF; no network needed):
-ssh ircbc 'sbatch -p compute_cpu -t 02:00:00 -c 8 -J sif_build \
-  -o $LIU_LAB_PACKAGES/logs/sif_build.%j.log --wrap "\
-  module load singularity && \
-  singularity build $LIU_LAB_PACKAGES/liulab-runtime_<env>.sif \
-    docker-archive://$LIU_LAB_PACKAGES/oci/liulab-runtime_<env>.docker.tar"'
-```
+`singularity pull docker://…` needs network, so network and compute are
+split: `crane pull` a docker-archive tarball on the login node, then
+`singularity build` the SIF in a compute job. The full step-by-step recipe
+(inventory, pull, build, per-env smoke test) is the **`lab-containers`**
+skill — use it.
 
 ## Slurm on ircbc — how to submit (verified 2026-07-04)
 

@@ -36,9 +36,9 @@ bash tests/preflight.sh [--live]        # is this machine's ~/.ssh/config set up
 bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS TOKENS
 ```
 
-- Eval cases: `trigger`, `explicit`, `reject`, `live-sbatch`. Run one with
-  `--only <case>` (`--only live-sbatch` implies `--live`, which submits and
-  cleans up a real tiny Slurm job on arc).
+- Eval cases: `trigger`, `explicit`, `reject`, `containers`, `live-sbatch`.
+  Run one with `--only <case>` (`--only live-sbatch` implies `--live`, which
+  submits and cleans up a real tiny Slurm job on arc).
 - Evals assert loose key phrases on `claude -p` transcripts; on failure read
   the transcript path printed before concluding the skill is broken. In
   `eval.sh`, the prompt must come **before** flags — variadic
@@ -59,6 +59,16 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 
 ## Architecture / editing skills
 
+- **Facts vs recipes.** `lab-hpc` holds foundational *facts* (cluster truth,
+  safety rules, `references/`). Task-recipe skills (`lab-jupyter`,
+  `lab-containers`) hold repeatable *procedures* with their own trigger
+  vocabulary; they build on `lab-hpc` and never duplicate cluster facts —
+  they point at the references. New content goes: cluster fact →
+  `references/`; repeatable multi-step procedure → its own `lab-*` skill;
+  one-liner → a bullet in `lab-hpc`.
+- **Repo-wide convention:** skills never submit sbatch/srun work on the
+  user's behalf without showing the exact script and getting confirmation
+  first (stated in `lab-hpc`'s hard rules; keep new recipes consistent).
 - `skills/<name>/SKILL.md` — frontmatter description is the auto-trigger
   signal; keep it keyword-dense. The **combined** description budget across
   all skills is 1536 chars (lint tracks it). Keep bodies lean; long detail

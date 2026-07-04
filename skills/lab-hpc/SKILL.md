@@ -57,6 +57,9 @@ that gets committed.
 - If ssh to `ircbc` (or its compute/transfer nodes) hangs or times out:
   **stop and tell the user to check the VPN** (atrust app, managed manually
   by the user). Never try to work around it.
+- **Never submit sbatch/srun work on the user's behalf without showing the
+  exact script/command and getting their confirmation first** (applies to
+  every skill in this plugin; tiny read-only probes like `squeue` are fine).
 
 ## Development workflow
 

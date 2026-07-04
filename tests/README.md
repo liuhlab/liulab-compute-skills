@@ -35,7 +35,10 @@ session (`claude -p`), with grep-able assertions on the transcript:
 3. **reject** — told the preflight reported NOT CONFIGURED, the agent must
    refuse the HPC request and point at per-user setup instead of
    improvising.
-4. **live e2e** (only with `--live`) — the agent must actually ssh to arc,
+4. **containers** — an image-rebuild prompt must surface the
+   `lab-containers` recipe (crane pull on login node, docker-archive build
+   in a compute job), not a naive `singularity pull` on a compute node.
+5. **live e2e** (only with `--live`) — the agent must actually ssh to arc,
    submit a minimal `hostname` job to a no-cost partition
    (`quick_preemptible`), report the job id, and clean it up. This is the
    real "can Claude ssh in and submit a Slurm job" test — keep it tiny and

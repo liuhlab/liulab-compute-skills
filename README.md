@@ -15,6 +15,9 @@ Current skills:
   machines whose `~/.ssh/config` isn't set up.
 - **`lab-jupyter`** — start or reuse a Jupyter Lab job on arc/chimera and
   tunnel it to `http://localhost:<port>` on the local machine.
+- **`lab-containers`** — pull/build/update/smoke-test the lab's Singularity
+  images (`liulab-runtime` envs) on ircbc, where compute nodes have no
+  internet: crane pull on the login node → sbatch build from docker-archive.
 
 ## Security policy (hard rule)
 
