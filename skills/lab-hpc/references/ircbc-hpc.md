@@ -16,12 +16,51 @@ retry in a loop, do not try alternate routes, do not attempt to fix the VPN.
 
 ## Hosts
 
-- **Login:** `ircbc`. Light work only: editing, git, Slurm commands. **No
-  compute.**
+- **Login:** `ircbc`. Light work only: editing, git, Slurm commands, and
+  network downloads (see below). **No compute.**
 - **File transfer:** `ircbc-transfer` (note: this alias uses a separate,
   shared lab account — whatever is configured in the user's `~/.ssh/config`).
 - **Compute nodes:** `cpu01`…`cpu08`, ProxyJump through `ircbc`. Reachable
   **only while the user holds a Slurm job on them**.
+
+## Network topology (verified 2026-07-04) — plan around this
+
+| Node | Internet | Notes |
+|---|---|---|
+| compute (`cpu01`…) | **none** | Jobs must never assume network. Stage downloads beforehand. |
+| login (`ircbc`) | limited, via **SOCKS proxy** | `socks5h://127.0.0.1:1080` (tunneled from the transfer node); already exported as `http(s)_proxy`/`ALL_PROXY` in the shell profile, so `curl`/`git` just work. Go tools accept it too. |
+| transfer (`ircbc-transfer`) | **full, direct** | Small VM: ~1 TB local disk, few cores, and it does **NOT mount `/share`** — anything fetched there must be copied over afterwards. |
+
+Rule of thumb: **download on the login node (through the proxy) directly
+onto `/share`; compute on the compute nodes from local files.** Use the
+transfer node only when the proxy path fails.
+
+## Lab package store: `$LIU_LAB_PACKAGES`
+
+Shared images/tools live in `/share/lhqlab/liulab_data/packages`, exposed as
+the env var `LIU_LAB_PACKAGES` (exported in users' shell profiles):
+
+- `bin/` — static helper binaries (e.g. `crane` for registry pulls)
+- `oci/` — docker-archive tarballs pulled from registries
+- `*.sif` — built Singularity images
+- `logs/` — build-job logs
+
+## Getting container images onto ircbc (no-internet compute nodes)
+
+`singularity pull docker://…` needs network, so split network from compute:
+
+```bash
+# 1. LOGIN node (proxy works; pure download, no compute):
+ssh ircbc 'cd $LIU_LAB_PACKAGES/oci && \
+  $LIU_LAB_PACKAGES/bin/crane pull ghcr.io/liuhlab/liulab-runtime:<env> liulab-runtime_<env>.docker.tar'
+
+# 2. COMPUTE job (local docker-archive → SIF; no network needed):
+ssh ircbc 'sbatch -p compute_cpu -t 02:00:00 -c 8 -J sif_build \
+  -o $LIU_LAB_PACKAGES/logs/sif_build.%j.log --wrap "\
+  module load singularity && \
+  singularity build $LIU_LAB_PACKAGES/liulab-runtime_<env>.sif \
+    docker-archive://$LIU_LAB_PACKAGES/oci/liulab-runtime_<env>.docker.tar"'
+```
 
 ## Slurm on ircbc — how to submit (verified 2026-07-04)
 
@@ -64,8 +103,9 @@ Typical batch job:
 #SBATCH --output=sbatch/%x.%j.log
 
 module load singularity
-# pull once beforehand: singularity pull docker://ghcr.io/liuhlab/<image>:<tag>
-singularity exec --bind /share/home/<user> <image>_<tag>.sif <command...>
+# image built beforehand into $LIU_LAB_PACKAGES (see "Getting container
+# images onto ircbc" above — compute nodes cannot pull)
+singularity exec --bind /share/home/<user> "$LIU_LAB_PACKAGES/liulab-runtime_<env>.sif" <command...>
 ```
 
 Never run modern toolchains (recent Python builds, compiled binaries from
