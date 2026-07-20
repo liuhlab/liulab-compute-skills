@@ -50,9 +50,21 @@ that gets committed.
 
 ## Hard rules (safety)
 
-- **Never run compute on a login node.** For anything heavy, get a Slurm
-  compute job first, then ssh/run on the allocated node. Ask before assuming
-  a node is available.
+- **Never run heavy work on a login node** (arc, ircbc, or any HPC). Login
+  nodes are shared and for *light* commands only: `cd`, `ls`, file
+  browsing/editing, Slurm control (`squeue`/`sbatch`/`salloc`/`scancel`),
+  small transfers, and `git`/`gh` (fine as long as it isn't a big or
+  parallel operation). Anything heavy — `pixi install`/`pixi run`,
+  builds/compiles, large `wget`/`curl` downloads, data processing, model
+  training/inference — must run inside a Slurm **compute** job: get a node
+  first, then ssh/run on it. Ask before assuming a node is available.
+  - *Exception — staging downloads:* a light network fetch to stage data or
+    images onto shared storage is fine on the login node, and on **ircbc is
+    required there** — its compute nodes have no internet, while its login
+    node reaches out through a SOCKS proxy. On **arc** both login and
+    compute nodes have internet, so fetch from wherever is convenient (still
+    keep heavy pulls off the login node). Details:
+    `references/arc-hpc.md` / `references/ircbc-hpc.md`.
 - Compute nodes (`GPU****`/`CPU****` aliases on chimera, `cpu01`–`cpu08` on
   ircbc) are reachable **only while the user holds a Slurm job on them**.
 - If ssh to `ircbc` (or its compute/transfer nodes) hangs or times out:

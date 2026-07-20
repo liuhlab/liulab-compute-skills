@@ -5,6 +5,21 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.7.3 — 2026-07-20
+
+- **Clarified the #1 hard rule** in `lab-hpc` (login nodes): spelled out
+  light-vs-heavy commands (login = `cd`/`ls`/git/Slurm control/small
+  transfers; heavy `pixi`/builds/big downloads/training → a compute job),
+  with a staging-download exception. Mirrored the wording in the
+  human-facing `docs/skills/lab-hpc.md`.
+- **arc network fact** (`references/arc-hpc.md`): documented that *both*
+  login and compute nodes have direct internet (vs ircbc, whose compute
+  nodes are offline / login goes through a SOCKS proxy) — the rule's
+  exception now points at both references.
+- **personal.md template:** added a prompt to record a persistent
+  interactive job (partition + node alias) so agents reuse it (`ssh
+  <node>`) instead of allocating a fresh job.
+
 ## 2026.7.2 — 2026-07-05
 
 - **Repo is now public** (full git history swept for IPs, usernames,

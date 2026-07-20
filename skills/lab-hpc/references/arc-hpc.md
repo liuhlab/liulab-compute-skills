@@ -21,6 +21,15 @@ them.
   job on it**. Find your nodes with `squeue --me` on the login node, then ssh
   to that node name.
 
+## Network / internet (verified 2026-07-20)
+
+**Both login and compute nodes have direct internet** — no proxy, no
+staging dance (this is the opposite of ircbc, whose compute nodes are
+offline). So `pixi`, `git`, `wget`/`curl`, and package installs all work
+from a compute node. The login-node rule still holds: keep *heavy* downloads
+and installs inside a Slurm job; only light/interactive network commands
+belong on the login node.
+
 ## Slurm on arc — how to submit (verified 2026-07-04)
 
 - **Account:** lab members submit under account `zhoulab` (QOS `normal`).

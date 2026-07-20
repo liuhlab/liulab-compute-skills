@@ -22,7 +22,10 @@ infers it from context, never decides silently.
   actually defines the lab aliases. If not, it refuses the request and
   points you at the setup steps — it will never ask for raw addresses or
   passwords.
-- **No compute on login nodes.** Anything heavy gets a Slurm job first.
+- **No heavy work on login nodes.** Login nodes are for light commands only
+  (browsing, editing, git, Slurm control, small transfers); anything
+  heavy — `pixi`, builds, big downloads, data processing, training — gets a
+  Slurm compute job first.
 - **Show before submit.** Every `sbatch`/`srun` is shown to you for
   approval before it runs.
 - **VPN rule.** If ircbc doesn't respond, the agent stops and tells you to
