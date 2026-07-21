@@ -21,6 +21,10 @@ them.
   job on it**. Find your nodes with `squeue --me` on the login node, then ssh
   to that node name.
 
+**No VPN:** arc is reachable directly — it is **not** behind the atrust VPN
+(that is ircbc only). Do not apply ircbc's VPN rule here: if `ssh arc` hangs,
+it is *not* a VPN problem.
+
 ## Network / internet (verified 2026-07-20)
 
 **Both login and compute nodes have direct internet** — no proxy, no

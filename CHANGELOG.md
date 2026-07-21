@@ -5,6 +5,13 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.7.5 — 2026-07-21
+
+- **arc needs no VPN** (`references/arc-hpc.md`): added an explicit "No VPN"
+  note so agents don't misgeneralize ircbc's atrust-VPN rule to arc — a
+  hanging `ssh arc` is not a VPN problem. (VPN mentions were already scoped
+  to ircbc everywhere; this states the arc side positively.)
+
 ## 2026.7.4 — 2026-07-21
 
 - **Reuse idle interactive jobs instead of `ssh <login>` for work**
