@@ -25,7 +25,12 @@ infers it from context, never decides silently.
 - **No heavy work on login nodes.** Login nodes are for light commands only
   (browsing, editing, git, Slurm control, small transfers); anything
   heavy — `pixi`, builds, big downloads, data processing, training — gets a
-  Slurm compute job first.
+  Slurm compute job first. In particular the agent won't run work as
+  `ssh arc "<command>"`.
+- **Reuse your idle interactive job.** Rather than loading the login node,
+  the agent looks for an interactive Slurm job you already keep running
+  (`squeue`) and `ssh`es onto that node to work; if none exists it offers to
+  start one first. This keeps parallel agents/subagents off the login node.
 - **Show before submit.** Every `sbatch`/`srun` is shown to you for
   approval before it runs.
 - **VPN rule.** If ircbc doesn't respond, the agent stops and tells you to

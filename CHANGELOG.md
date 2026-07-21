@@ -5,6 +5,19 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.7.4 — 2026-07-21
+
+- **Reuse idle interactive jobs instead of `ssh <login>` for work**
+  (`lab-hpc`). Added a "Default execution target" section to `SKILL.md`:
+  before running anything heavier than light Slurm control, check `squeue`
+  (`--me` on arc, `-u $USER` on ircbc) for an existing idle interactive job
+  and `ssh <node-alias>` onto it; create one first (with confirmation) only
+  if none exists. Strengthened the #1 hard rule to name the
+  `ssh arc "<command>"` anti-pattern and call out parallel agents/subagents
+  as the reason it matters. Elevated the idle-reuse notes in both
+  `references/arc-hpc.md` and `references/ircbc-hpc.md`, and mirrored the
+  enforcement bullets in `docs/skills/lab-hpc.md`.
+
 ## 2026.7.3 — 2026-07-20
 
 - **Clarified the #1 hard rule** in `lab-hpc` (login nodes): spelled out
