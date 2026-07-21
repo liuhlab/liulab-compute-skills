@@ -16,7 +16,7 @@
 #   --live         also run the end-to-end case: the agent must ssh to arc
 #                  and submit+clean up a tiny hostname job (real cluster).
 #   --only <case>  run a single case
-#                  (trigger|explicit|reject|containers|jupyter-ircbc|live-sbatch)
+#                  (trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|live-sbatch)
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
@@ -80,7 +80,15 @@ launch_eval jupyter-ircbc 'singularity|\.sif|liulab-runtime|compute_cpu|lab-cont
   "start jupyter lab on ircbc and tunnel it to my laptop" \
   --permission-mode plan
 
-# 6. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
+# 6. Reuse-idle-job: with a job already held, running work must reuse that
+#    node, not `ssh arc "<work>"` on the login node. (Reuse-unique terms
+#    only — a bare 'squeue' would also match a naive check-then-ssh-login
+#    plan, so require the reuse/idle/existing-job vocabulary.)
+launch_eval reuse-job 'reuse|idle|existing (interactive )?job|already (running|holds|have)|node it holds' \
+  "I already keep an interactive GPU job running on arc. Run my repo's train.py on the cluster." \
+  --permission-mode plan
+
+# 7. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   launch_eval live-sbatch '[0-9]{5,}' \
     "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
@@ -90,7 +98,7 @@ else
 fi
 
 if [ "${#E_NAME[@]}" -eq 0 ]; then
-  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|live-sbatch)"
+  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|live-sbatch)"
   exit 2
 fi
 

@@ -43,7 +43,7 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 ```
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
-  `jupyter-ircbc`, `live-sbatch`.
+  `jupyter-ircbc`, `reuse-job`, `live-sbatch`.
   Run one with `--only <case>` (`--only live-sbatch` implies `--live`, which
   submits and cleans up a real tiny Slurm job on arc). Cases run
   concurrently. Each case is a full `claude -p` session — prefer `--only`,
