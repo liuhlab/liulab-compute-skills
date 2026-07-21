@@ -112,14 +112,10 @@ belong on the login node.
   `jupyter` must be on PATH in *your* environment (or use an absolute path;
   see `~/.claude/compute/personal.md`).
 
-**Idle-interactive-job reuse (the default — prefer it over `ssh arc "…"`):**
-if a job already exists and is idle (e.g. a Jupyter/reservation job that
-isn't actually computing), ssh into that job's node and run work there
-instead of hitting the login node or queueing a new job. Discover it with
-`ssh arc 'squeue --me'` (read the NODELIST column; that node name is an ssh
-alias). This is the standard execution target — see the skill's "Default
-execution target" section. The `lab-jupyter` skill implements the same
-reuse-first check plus the token/tunnel steps as its standard flow.
+**Idle-job reuse (default — prefer over `ssh arc "…"`):** if an idle
+Jupyter/reservation job already exists, `ssh` to its node (from `squeue --me`,
+NODELIST column) and run there instead of queueing new. This is the skill's
+"Default execution target" flow; `lab-jupyter` adds the token/tunnel steps.
 
 ## Storage / code
 

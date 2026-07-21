@@ -93,12 +93,10 @@ Quick interactive check / smoke test:
 ssh ircbc 'srun -p compute_cpu -t 10 bash -lc "hostname"'
 ```
 
-**Idle-interactive-job reuse (the default — prefer it over `ssh ircbc "…"`):**
-don't run work on the login node. Discover the user's jobs with
-`ssh ircbc 'squeue -u $USER'` (no `--me` on Slurm 18.08); if an idle job
-already holds a `cpu0X` node, ssh into that node (ProxyJump through `ircbc`)
-and run there. If none exists, allocate one first (with confirmation). See the
-skill's "Default execution target" section.
+**Idle-job reuse (default — prefer over `ssh ircbc "…"`):** find jobs with
+`ssh ircbc 'squeue -u $USER'` (no `--me` on Slurm 18.08); if an idle job holds
+a `cpu0X` node, `ssh` to it (ProxyJump via `ircbc`) and run there rather than
+queueing new. This is the skill's "Default execution target" flow.
 
 ## Running work: `module load singularity` + lab containers
 

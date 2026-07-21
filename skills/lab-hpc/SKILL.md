@@ -51,16 +51,13 @@ that gets committed.
 ## Hard rules (safety)
 
 - **Never run heavy work on a login node** (arc, ircbc, or any HPC). Login
-  nodes are shared and for *light* commands only: `cd`, `ls`, file
-  browsing/editing, Slurm control (`squeue`/`sbatch`/`salloc`/`scancel`),
-  small transfers, and `git`/`gh` (fine as long as it isn't a big or
-  parallel operation). Anything heavy — `pixi install`/`pixi run`,
-  builds/compiles, large `wget`/`curl` downloads, data processing, model
-  training/inference — must run inside a Slurm **compute** job, **not** via
-  `ssh <login-alias> "<command>"`. Get a node first (reuse an idle
-  interactive job if one exists — see next section), then ssh/run on it.
-  This matters most with parallel agents/subagents, which multiply login-node
-  load. Ask before assuming a node is available.
+  nodes are shared and for *light* commands only: `cd`/`ls`, file
+  browse/edit, Slurm control (`squeue`/`sbatch`/`salloc`/`scancel`), small
+  transfers, and non-bulk `git`/`gh`. Anything heavy — `pixi`,
+  builds/compiles, large downloads, data processing, training/inference —
+  runs inside a Slurm **compute** job, **never** via `ssh <login> "<cmd>"`.
+  Get a node first — reuse an idle interactive job if one exists (see next
+  section) — then run there. Ask before assuming a node is available.
   - *Exception — staging downloads:* a light network fetch to stage data or
     images onto shared storage is fine on the login node, and on **ircbc is
     required there** — its compute nodes have no internet, while its login
@@ -77,32 +74,27 @@ that gets committed.
   exact script/command and getting their confirmation first** (applies to
   every skill in this plugin; tiny read-only probes like `squeue` are fine).
 
-## Default execution target — reuse an idle interactive job (not `ssh <login>`)
+## Default execution target — reuse an idle interactive job
 
-Running work as `ssh arc "<command>"` (or `ssh ircbc "<command>"`) executes on
-the **shared login node** — exactly what the Hard rules forbid, and parallel
-agents/subagents make it worse. The default place to run *any* command heavier
-than light Slurm control is an **interactive Slurm job**, and the user usually
-already keeps one idle (a long-lived Jupyter/reservation job). So before you
-run anything on a cluster:
+Never run real work via `ssh arc "<cmd>"` / `ssh ircbc "<cmd>"`: that lands on
+the **shared login node**, which the Hard rules forbid and parallel
+agents/subagents overload. Run anything heavier than light Slurm control
+inside an **interactive Slurm job** — the user usually keeps one idle already
+(a long-lived Jupyter/reservation job). So before running anything:
 
-1. **Look for an existing job** and note the node it holds:
-   - arc: `ssh arc 'squeue --me'`
-   - ircbc: `ssh ircbc 'squeue -u $USER'` (no `--me` on Slurm 18.08)
-   Also check `~/.claude/compute/personal.md` — the user may have recorded a
-   persistent job's partition and node alias there ("reuse it first").
-2. **If an idle interactive job exists, reuse it.** Its Slurm node name doubles
-   as an ssh alias (ProxyJumping through the login node), so `ssh <node-alias>`
-   lands you on the job's node — run your work there. Prefer this over queueing
-   anything new. ("Idle" = holding the node but not actively computing, e.g. a
-   Jupyter job you aren't running cells in.)
-3. **If none exists, create one first** — with confirmation, showing the exact
-   sbatch/salloc (Hard rules) — then use its node. On arc prefer
-   `zhoulab_gpu_priority`; see `references/arc-hpc.md` for the reservation
-   sbatch. `lab-jupyter` implements this reuse-first flow for Jupyter sessions.
+1. **Find an existing job** and note its node (NODELIST column):
+   `ssh arc 'squeue --me'` — on ircbc `squeue -u $USER` (no `--me` on Slurm
+   18.08). Also check `personal.md` for a recorded persistent job.
+2. **Idle job exists → reuse it.** Its node name is an ssh alias (ProxyJump
+   via login), so `ssh <node>` lands on it; run there. Prefer this over
+   queueing new. (Idle = holds the node but isn't computing, e.g. a Jupyter
+   job with no cells running.)
+3. **None exists → create one** — confirm the exact sbatch/salloc first
+   (Hard rules) — then use its node. On arc prefer `zhoulab_gpu_priority`
+   (reservation sbatch in `references/arc-hpc.md`). `lab-jupyter` automates
+   this reuse-first flow for Jupyter.
 
-Only light Slurm control (`squeue`/`sbatch`/`salloc`/`scancel`) and small file
-ops stay on the login node; everything else goes on the job's node.
+Only light Slurm control and small file ops belong on the login node.
 
 ## Development workflow
 

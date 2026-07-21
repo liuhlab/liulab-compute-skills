@@ -70,8 +70,8 @@ ssh <node> 'ss -tln | grep -E "127\.0\.0\.1:<port>"'
   old image — ask whether to cancel and resubmit instead of reusing.)
 - A reservation job is RUNNING but nothing listens on `<port>` (arc) → ask
   the user whether to start Jupyter inside that job by ssh-ing to its node
-  (idle-reservation pattern — `lab-hpc`'s `references/arc-hpc.md`) instead
-  of queueing a duplicate; go to step 2 only if they prefer a fresh job.
+  (idle-job reuse — `lab-hpc`'s "Default execution target") instead of
+  queueing a duplicate; go to step 2 only if they prefer a fresh job.
 - Never scancel someone's reservation to make room.
 
 ## 2. Submit a Jupyter job

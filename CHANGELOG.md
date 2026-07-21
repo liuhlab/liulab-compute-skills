@@ -5,6 +5,17 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.7.6 — 2026-07-21
+
+- **Editorial concision pass (no behavior change).** Tightened the
+  agent-facing text so the LLM-facing instructions are shorter and more
+  consistent. The idle-interactive-job reuse guidance was stated three times
+  with overlapping prose (`lab-hpc` SKILL.md hard rule + its own section,
+  plus both cluster references); made SKILL.md's "Default execution target"
+  the single canonical write-up and reduced the two references to brief,
+  same-worded pointers. Trimmed the login-node hard rule. Aligned
+  `lab-jupyter`'s cross-reference to the new "Default execution target" name.
+
 ## 2026.7.5 — 2026-07-21
 
 - **arc needs no VPN** (`references/arc-hpc.md`): added an explicit "No VPN"
