@@ -3,9 +3,10 @@
 > **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
-Companion to `SKILL.md`'s "Analysing a dataset". Re-read the package the same way when this page
-is next touched. The `uv` invocation and the routing table are in `jobs.md`; submitting, polling,
-recovering and cancelling are in `tasks.md`. Neither is repeated here.
+Companion to `SKILL.md`. Read it whenever a run takes data with the question: `ANALYSIS` needs a
+URI, so the upload comes first, then `submit --data`, then `fetch`. Re-read the package the same
+way when this page is next touched. The `uv` invocation and the routing table are in `jobs.md`;
+submitting, polling, recovering and cancelling are in `tasks.md`. Neither is repeated here.
 
 ## Upload
 
@@ -74,11 +75,12 @@ reporting it.
 
 ## Where the run happens
 
-The client and the key belong to the user's own machine by default, and `SKILL.md` says why. On
-arc — the only cluster where this is possible at all, and only with the user's own key file
-already there — `uv` lives under the user's home, so any remote command needs a login shell.
-`skills/lab-hpc/references/arc-hpc.md` covers that and the transfer hosts, and neither fact is
-repeated here.
+**The default is the user's own machine.** A run started on a cluster needs a live credential on a
+shared node, and the only machine that has to hold one is theirs. Arc is the one cluster where
+running from it is possible at all, and only once the user has installed their own key file there
+— explain that, never do it for them. There, `uv` lives under the user's home, so any remote
+command needs a login shell. `skills/lab-hpc/references/arc-hpc.md` covers that and the transfer
+hosts, and neither fact is repeated here.
 
 On ircbc, stage the data down and upload from the user's own machine. The basis for that is
 narrower than it looks: `lab-hpc` records nothing about this platform. What it records is that

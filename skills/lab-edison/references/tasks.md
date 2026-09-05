@@ -3,9 +3,9 @@
 > **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
-Companion to `SKILL.md`'s "Never block, never lose the run". Re-read the package the same way
-when this page is next touched. `jobs.md` holds the routing table and the ephemeral `uv`
-invocation, and neither is repeated here.
+Companion to `SKILL.md`. Read it whenever a run has to be submitted, polled, recovered, cancelled
+or read back. Re-read the package the same way when this page is next touched. `jobs.md` holds the
+routing table and the ephemeral `uv` invocation, and neither is repeated here.
 
 **`scripts/edison-task.sh` is what you run.** Each section below names its subcommand and then
 the call underneath, so a response can be read and a failure understood; none of it is typed

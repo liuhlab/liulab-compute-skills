@@ -3,8 +3,8 @@
 > **Provenance** — Source: `edison-client` 0.16.1 and the vendor's Kosmos guide · Checked: 2026-09-05 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
-Companion to `SKILL.md`'s Kosmos section. Read it whenever a user says Kosmos. Most of what
-this page is for happens before a run starts, because a run is the expensive part.
+Companion to `SKILL.md`. Read it whenever a user says Kosmos. Most of what this page is for
+happens before a run starts, because a run is the expensive part.
 
 ## What Kosmos is on this platform
 
@@ -39,15 +39,13 @@ an enum member without checking the surface Kosmos actually uses.
 
 ## The rule
 
-**Never start a Kosmos run without the user asking for that run, in those words.** A
-Kosmos run costs roughly two orders of magnitude more than an API task, and the pieces to
-start one are now all named on this page — which makes an accidental start easier from
-here than from the browser, not harder. "Ask Kosmos about X" is a request to help draft
-the objective, not permission to spend.
+`SKILL.md` carries it: never start a run the user has not asked for in those words. This page
+is where it bites — the pieces to start a run are all named above, which makes an accidental
+start easier from here than from the browser, not harder.
 
-Note also that the exact chat invocation is `[unverified]`: nothing here has been run, because
-running it is the charge. Treat the call shape as read from the package, not as a tested
-recipe, and hand the run back to the user unless they have said to start it.
+The exact chat invocation is `[unverified]`: nothing here has been run, because running it is
+the charge. Treat the call shape as read from the package, not as a tested recipe, and hand the
+run back to the user unless they have said to start it.
 
 ## Reading a run that already exists — free
 
@@ -93,7 +91,9 @@ Same source, same date:
 ## Cost
 
 No figures here. The vendor's pricing page did not resolve on 2026-09-05, and the numbers
-in circulation elsewhere are unconfirmed; a wrong price in a skill is worse than none. The
-shape is what matters: two orders of magnitude above a single API task `[unverified]` — no
-source states it — and one objective buys a dozen or more tasks. Send the user to their
-platform balance for the real number.
+in circulation elsewhere are unconfirmed; a wrong price in a skill is worse than none. An
+earlier version of this page put a run at two orders of magnitude above a single API task.
+Nothing sourced that, and the shape is not a multiplier anyway: a run is billed for each
+ordinary task it fans out to, so what it costs is the sum of the tasks it actually calls and
+varies with how many that is — the project counted above bought thirteen. There is no flat
+per-run price. Send the user to their platform balance for the real number.
