@@ -13,7 +13,7 @@ plugin holds that knowledge, in four skills.
 | [lab-hpc](skills/lab-hpc.md) | The two clusters (arc/chimera GPU, ircbc CPU), Slurm, the safety rules, the per-machine setup check. |
 | [lab-jupyter](skills/lab-jupyter.md) | Jupyter Lab on a compute node, tunnelled to your local browser. |
 | [lab-containers](skills/lab-containers.md) | The lab's Singularity images on ircbc: keeping them current, running work inside them. |
-| [lab-edison](skills/lab-edison.md) | Cited answers from the Edison platform, and analysis of a dataset you upload. No cluster. |
+| [lab-edison](skills/lab-edison.md) | The Edison platform: Kosmos for a whole research goal, cited literature answers and data analysis for a single question. No cluster. |
 
 The first three load by themselves when your request touches remote compute. You
 call lab-edison by name, because every run of it costs you money.

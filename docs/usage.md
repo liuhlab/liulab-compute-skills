@@ -38,6 +38,10 @@ too old for modern tools.
 prints your question in full, and only then sends it. You get an answer with
 citations, and the task id that paid for it. No cluster on this path.
 
+For a goal too big for one question, ask about Kosmos. The skill drafts the goal
+with you and checks your data for free, and starts a run only when you ask for
+that run.
+
 ## What the agent will ask you
 
 Which cluster, unless your request already makes it obvious. What the job needs:
