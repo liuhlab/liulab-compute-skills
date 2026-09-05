@@ -51,6 +51,23 @@ declare -a E_NAME E_EXPECT E_DENY E_PID
 # consumes DENY, so it can never leak into the next case.
 DENY=""
 
+# A `--permission-mode plan` session may write its answer to a plan file and print only a
+# one-line pointer to it. Stdout then greps as an empty answer and a CORRECT run fails —
+# observed on `edison-molecules`, whose plan routed to MOLECULES and warned off the retired
+# job while stdout said nothing but "the plan is written to ...". Which way a session goes
+# is not deterministic, so this is a latent false FAIL under all seven plan-mode cases, not
+# a quirk of one. Fold any plan file the transcript names back into the transcript before
+# asserting. Both assertions then read it, which is what we want: a DENY has to see the
+# plan too, or a plan that quietly submits would pass by being written down instead of said.
+fold_plans() { # <transcript>
+  local t="$1" pf
+  grep -oE '/[^[:space:]"'"'"'`]+/plans/[^[:space:]"'"'"'`]+\.md' "$t" | sort -u |
+  while IFS= read -r pf; do
+    [ -f "$pf" ] || continue
+    { printf '\n--- plan file %s ---\n' "$pf"; cat "$pf"; } >>"$t"
+  done
+}
+
 launch_eval() { # <name> <expected-regex> <prompt> [extra claude flags...]
   local name="$1" expect="$2" prompt="$3"; shift 3
   [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && { DENY=""; return 0; }
@@ -161,7 +178,7 @@ if $LIVE; then
   #     file and pipes a heredoc into `uv`, which no command-prefix rule expresses.
   #     The key stays in the environment, never on the command line.
   launch_eval live-edison 'pages [0-9]|et al|doi\.org|doi:|^ *#{0,3} *references *$' \
-    "/lab-compute:lab-edison You have my explicit approval to spend one credit on ONE standard literature run — not the high-reasoning job, not a batch, nothing else. Ask Edison exactly this: 'What is the role of the METTL3 methyltransferase in mRNA modification?' Print the answer exactly as the platform returns it, then stop." \
+    "/lab-compute:lab-edison You have my explicit approval to spend one credit on ONE standard literature run — not the high-reasoning job, not a batch, nothing else. Ask Edison exactly this: 'What is the role of the METTL3 methyltransferase in mRNA modification?' The run takes several minutes: poll it to completion and do not finish your turn until the answer is in hand — reporting that it is 'running in the background' spends the credit and returns nothing. Print the answer exactly as the platform returns it, then stop." \
     --allowedTools "Bash"
 else
   [ -z "$ONLY" ] && echo "-- live cases skipped (pass --live to run)"
@@ -175,6 +192,7 @@ fi
 fail=0
 for i in "${!E_NAME[@]}"; do
   wait "${E_PID[$i]}"
+  fold_plans "$tmp/${E_NAME[$i]}.txt"
   transcript="$tmp/${E_NAME[$i]}.txt"
   if ! grep -qiE "${E_EXPECT[$i]}" "$transcript"; then
     echo "FAIL: ${E_NAME[$i]} no match for /${E_EXPECT[$i]}/ — transcript: $transcript"
