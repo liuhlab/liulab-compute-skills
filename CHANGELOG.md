@@ -5,6 +5,12 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.6 — 2026-09-05
+
+Facts about the Edison platform now carry an owner and a date, and the path
+that spends a credit is a command rather than a rule an agent has to remember.
+Full notes land with the release.
+
 ## 2026.9.5 — 2026-09-05
 
 A case study — one real research question put through `lab-edison` end to end —
