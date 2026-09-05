@@ -73,9 +73,15 @@ reporting it.
 The client and the key belong to the user's own machine by default, and `SKILL.md` says why. On
 arc — the only cluster where this is possible at all, and only with the user's own key file
 already there — `uv` lives under the user's home, so any remote command needs a login shell.
-`skills/lab-hpc/references/arc-hpc.md` covers that and the transfer hosts;
-`skills/lab-hpc/references/ircbc-hpc.md` covers why ircbc cannot reach the platform. Neither
-fact is repeated here.
+`skills/lab-hpc/references/arc-hpc.md` covers that and the transfer hosts, and neither fact is
+repeated here.
+
+On ircbc, stage the data down and upload from the user's own machine. The basis for that is
+narrower than it looks: `lab-hpc` records nothing about this platform. What it records is that
+ircbc's compute nodes have no route to the internet
+(`skills/lab-hpc/references/ircbc-hpc.md`), and that the two hosts there that do have one are a
+doorway and a data mover, neither of them a place to run work. Earlier text here claimed the
+platform cannot be reached from ircbc at all; nothing verifies that.
 
 ## Preparing the data
 

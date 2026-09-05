@@ -50,6 +50,10 @@ Route from the shape of the question — literature, high-reasoning literature, 
 dataset analysis. `references/jobs.md` holds the routing table, the retired chemistry job that
 returns 404, and the ephemeral `uv` invocation. Read it before the first submission.
 
+**Never guess a job-name string.** The client sends any string it is handed, so nothing rejects an
+invented name — and one that happens to exist starts a run the user never asked for. Route from
+the table; when no row fits, say so and ask.
+
 **Show before you spend.** Name the job and print the exact query, then submit — a run the user never saw is a charge they cannot audit.
 
 **Ask, and wait for an answer**, before a high-reasoning literature run, before an analysis run,
@@ -59,8 +63,9 @@ or molecules run needs only the showing above.
 ## Never block, never lose the run
 
 A run takes minutes, and there are two ways to spend a credit and get nothing back, both
-observed: `run_tasks_until_done` blocks one tool call for up to 40 minutes, and moving that
-blocking call into a background task loses it outright — the session ends, the process is killed,
+observed: `run_tasks_until_done` holds one tool call open until the run ends or its default
+timeout expires — `references/tasks.md` has that default — and moving that blocking call into a
+background task loses it outright: the session ends, the process is killed,
 and the task finishes on the platform with nobody holding its id.
 
 So **submit, print the task id, and only then poll.** The id is the receipt for the credit and
@@ -92,9 +97,10 @@ checking the dataset, and reading a run they already started are free, and usual
 poll, fetch what the run produced. `references/datasets.md` has those calls, the collection rule
 for a directory, and where the run may happen. **The default is the user's own machine**, because
 a run started on a cluster needs a live
-credential on a shared node, and the only machine that has to hold one is theirs. Data on arc gets
-staged down first; ircbc cannot reach the platform at all. Running from arc is allowed only once
-the user has installed their own key there — explain that, never do it for them.
+credential on a shared node, and the only machine that has to hold one is theirs. Data on either
+cluster gets staged down and uploaded from the user's own machine; `datasets.md` says what makes
+ircbc the stricter case. Running from arc is allowed only once the user has installed their own
+key there — explain that, never do it for them.
 
 **Confirm before submitting.** Show the exact path going up, the job, and the exact query — then ask,
 and wait. The upload doubles a mistake: a wrong directory goes up before anyone notices it was wrong.

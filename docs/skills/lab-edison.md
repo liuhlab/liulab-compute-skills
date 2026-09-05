@@ -136,9 +136,10 @@ else.
 - **Data on your laptop.** Nothing to arrange. It uploads and runs.
 - **Data on arc.** The skill brings the files down first, then uploads
   from your machine. Your key stays off the shared cluster.
-- **Data on ircbc.** Edison cannot be reached from that cluster at all.
-  Its compute nodes have no route out. The skill says so and stops,
-  rather than hunting for a way around it.
+- **Data on ircbc.** The skill brings the files down here too. Compute
+  nodes there have no route out to the internet. The two hosts that do
+  have one are a doorway and a data mover, and work does not run on
+  either.
 
 You can run Edison on arc, but only after you put the key there
 yourself, in your own session. The skill will not do it for you. It
