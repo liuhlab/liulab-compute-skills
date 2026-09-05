@@ -47,9 +47,9 @@ bash scripts/edison-task.sh fetch <task-id> [--out <dir>] [--storage <id>]
 ```
 
 It prints `HAS_ANSWER:`, the answer, one `FILE:` line per provenance record, and writes the
-notebook and any fetched file into `--out`. Which field of a `FILE:` record carries the storage
-id is not recorded anywhere, so the record is printed whole: read the id out of it and pass it
-back as `--storage`. `datasets.md` has the calls underneath.
+notebook and any fetched file into `--out`. The record is printed whole; the storage id is its
+`data_storage_id` field `[verified]` (also `data_storage.id`). Read the id out of it and pass
+it back as `--storage`. `datasets.md` has the calls underneath.
 
 `get_task` picks the response class from the job name.
 

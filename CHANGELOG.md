@@ -5,6 +5,31 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.8 — 2026-09-05
+
+Docs only, in `lab-edison`. The Kosmos page described a call nobody had ever run.
+Someone ran it, and it failed. This release corrects the page from that live run.
+
+- **The documented way to start a Kosmos run did not work.** It created a project
+  with no persona attached. The chat step then answered a 500, naming no field.
+  The page now passes `persona_id`, and it records the 500 as what you get
+  without one. It also says where a persona id comes from, because no method in
+  the client lists personas.
+- **A Kosmos run has no stop button, and the page now says so.** Nothing cancels
+  a run as a whole. Cancelling its tasks one by one does not work either: the run
+  sends out replacements a minute later. What works is two steps, in order. Queue
+  a message telling the run to stop, then cancel whatever is still going. The
+  page carries both, in that order.
+- **Three more facts the run settled.** A third task name sits behind a run, and
+  the tasks it starts go on to start tasks of their own. A reply from Kosmos is
+  not in the message's `content` field, which is always empty; it rides in the
+  tool call beside it. A stack trace out of `cancel` means the task id is wrong,
+  not that the cancel failed.
+- **The page no longer says it is untested.** The sentence claiming nothing on it
+  had been run is gone. The chat call is marked verified, with the persona fix.
+- **`tasks.md` names the field that holds a storage id**: `data_storage_id`. The
+  page used to say the field was unknown and print the whole record instead.
+
 ## 2026.9.7 — 2026-09-05
 
 Docs only. The four skill pages, the home page and the usage page were rewritten
