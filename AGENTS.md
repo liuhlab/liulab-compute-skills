@@ -15,8 +15,9 @@ commands (`claude plugin …`, `claude -p …`) stay exactly as written.
 `name` + `description` frontmatter only) packaged as a Claude Code plugin
 marketplace. The **repo root is the plugin** (`.claude-plugin/marketplace.json`
 declares `source: "./"`): marketplace `liulab`, plugin `lab-compute`, skills
-under `skills/<name>/`. One plugin holds all lab skills so they update
-atomically. `docs/` + `mkdocs.yml` are a human-facing MkDocs (Material)
+under `skills/<name>/`. One plugin holds every lab skill
+(`docs/adr/0001-repo-root-is-the-plugin.md`). `docs/` + `mkdocs.yml` are a
+human-facing MkDocs (Material)
 site, deployed to GitHub Pages by `.github/workflows/docs.yml` on pushes to
 main that touch them — keep those pages concise and end-user-facing (the
 SKILL.md files are for agents; the docs are for people), and remember the
@@ -57,13 +58,10 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
   `pyproject.toml` and nowhere else — `.github/workflows/ci.yml` invokes the
   task by name, so the local gate and CI cannot drift. Add a step there, not
   in the workflow.
-- The writing gates: vale reads language, markdownlint reads structure.
-  `.vale.ini` scopes the `styles/Lab/` rules per file class, and **every rule
-  is named in every section** — vale's `*` matches `/`, so the sections overlap
-  and an omitted rule inherits rather than defaulting on. Agent-facing prose,
-  `skills/**/*.md` and `AGENTS.md`, carries a 1000-word cap. A cap is a dial,
-  not a law: raise one deliberately, in its own commit, with the reason in the
-  message — never to make a document that ran long fit.
+- The writing gates: vale reads language, markdownlint reads structure. The
+  caps, the per-file-class sections of `.vale.ini` and how to measure against
+  them are in `docs/agents/writing.md`. Read it before writing anything — this
+  file is subject to one of the caps.
 - `tests/preflight.sh` and `tests/eval.sh` deliberately **never run in CI**
   (one reads a real ssh config, the other spends API tokens). The no-secrets
   sweep is also half-blind in CI — its username/hostname checks read the local
@@ -89,32 +87,25 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 1. Edit skills; run `pixi run check`.
 2. Bump `version` in `.claude-plugin/plugin.json` and add a `CHANGELOG.md`
    entry (same commit). Versioning is **CalVer `YYYY.M.PATCH`** (e.g.
-   `2026.7.0`): year, month without zero-padding (keeps semver parsers
-   happy), then a counter that increments per release within the month and
-   resets when the month changes.
+   `2026.7.0`) — `docs/adr/0004-calver-and-manual-updates.md`.
 3. Push. Installed machines pick it up via
-   `claude plugin marketplace update liulab` (manual on purpose — no
-   `GITHUB_TOKEN` for background auto-update of the private repo).
+   `claude plugin marketplace update liulab` — manual on purpose (ADR 0004).
 4. To test locally before/after: `claude plugin update lab-compute@liulab`
    (plain `install` does not upgrade in place).
 
 ## Architecture / editing skills
 
-- **Facts vs recipes.** `lab-hpc` holds foundational *facts* (cluster truth,
-  safety rules, `references/`). Task-recipe skills (`lab-jupyter`,
-  `lab-containers`) hold repeatable *procedures* with their own trigger
-  vocabulary; they build on `lab-hpc` and never duplicate cluster facts —
-  they point at the references. New content goes: cluster fact →
-  `references/`; repeatable multi-step procedure → its own `lab-*` skill;
-  one-liner → a bullet in `lab-hpc`.
+- **Facts vs recipes** (`docs/adr/0002-facts-vs-recipes.md`). New content
+  goes: cluster fact → `lab-hpc/references/`; repeatable multi-step
+  procedure → its own `lab-*` skill; one-liner → a bullet in `lab-hpc`. A
+  recipe never repeats a cluster fact; it points at the reference.
 - **Repo-wide convention:** skills never submit sbatch/srun work on the
   user's behalf without showing the exact script and getting confirmation
   first (stated in `lab-hpc`'s hard rules; keep new recipes consistent).
-- **Ownership split for Jupyter-on-ircbc** (keep it — it prevents the two
-  recipes drifting): `lab-jupyter` owns the session lifecycle (reuse →
-  submit → token → tunnel → cleanup, parameterized per cluster in its
-  table); `lab-containers` owns the container invocations, including the
-  ircbc Jupyter sbatch command. Neither duplicates the other's half.
+- **Ownership split for Jupyter-on-ircbc:** `lab-jupyter` owns the session
+  lifecycle; `lab-containers` owns the container invocations, including the
+  ircbc Jupyter sbatch command. Neither duplicates the other's half — keep it
+  that way (`docs/adr/0003-jupyter-containers-ownership-split.md`).
 - `skills/<name>/SKILL.md` — frontmatter description is the auto-trigger
   signal; keep it keyword-dense. The **combined** description budget across
   all skills is 1536 chars (lint tracks it). Keep bodies lean; long detail
@@ -134,3 +125,13 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 - `templates/` holds per-user onboarding files users copy to their machines
   (`personal.md`, `CLAUDE-stub.md`); they are documentation, not loaded by
   the plugin.
+
+## Read next
+
+| When | Read |
+| --- | --- |
+| Before changing anything | `CONTEXT.md`, then any `docs/adr/` record covering the area |
+| Recording vocabulary or a decision | `docs/agents/domain.md` |
+| Filing or working an issue | `docs/agents/issue-tracker.md` |
+| Labelling someone else's issue | `docs/agents/triage-labels.md` |
+| Writing anything | `docs/agents/writing.md` |
