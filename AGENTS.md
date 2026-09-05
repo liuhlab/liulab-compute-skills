@@ -12,7 +12,8 @@ commands (`claude plugin …`, `claude -p …`) stay exactly as written.
 ## What this repo is
 
 **Public** Liu Lab repo of Agent Skills (open standard: `SKILL.md` with
-`name` + `description` frontmatter only) packaged as a Claude Code plugin
+`name` + `description` frontmatter; `lab-edison` adds Claude Code's
+`disable-model-invocation`) packaged as a Claude Code plugin
 marketplace. The **repo root is the plugin** (`.claude-plugin/marketplace.json`
 declares `source: "./"`): marketplace `liulab`, plugin `lab-compute`, skills
 under `skills/<name>/`. One plugin holds every lab skill
@@ -40,7 +41,7 @@ by policy).
 ## Naming policy
 
 Internal names are `lab-*` (`lab-compute`, `lab-hpc`, `lab-jupyter`,
-`lab-containers`), never `liulab-*`. The lab identity lives only in the
+`lab-containers`, `lab-edison`), never `liulab-*`. The lab identity lives only in the
 repo name, the GitHub org, and the marketplace name `liulab`.
 
 ## Commands
@@ -70,9 +71,11 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   ssh config — so it stays a **local pre-push control**. See `tests/README.md`.
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
-  `jupyter-ircbc`, `reuse-job`, `live-sbatch`.
-  Run one with `--only <case>` (`--only live-sbatch` implies `--live`, which
-  submits and cleans up a real tiny Slurm job on arc). Cases run
+  `jupyter-ircbc`, `reuse-job`, `edison-refuse`, `edison-molecules`,
+  `edison-kosmos`, `live-sbatch`, `live-edison`.
+  Run one with `--only <case>`; any `live-*` name implies `--live`, which
+  submits and cleans up a real tiny Slurm job on arc and spends one of the
+  user's Edison credits. Cases run
   concurrently. Each case is a full `claude -p` session — prefer `--only`,
   and **ask the user before running the full suite or `--live`**. Evals hit
   the *installed* plugin: push + `claude plugin update` first, or you're
@@ -126,6 +129,16 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   toolchain and storage; `arc-slurm.md` / `ircbc-slurm.md` for partitions,
   choosing one, and submitting. The recipe skills carry their own
   `references/` for detail their SKILL.md is too small to hold.
+- `skills/lab-edison/` is the one skill with no cluster in it — the Edison
+  cloud platform — and the one that is **user-invoked only**
+  (`disable-model-invocation: true`, a Claude Code key other agent tools
+  ignore), so it never triggers on its own and never spends a credit
+  unprompted. Its step 0 runs `scripts/check-edison-config.sh` and refuses
+  on a machine with no key. The key lives in a machine-local file beside
+  `personal.md`, never inside it, and is never transmitted, printed or
+  asked for in the conversation. Why it is one skill in this plugin:
+  `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`; why the key
+  file: `docs/adr/0007-edison-key-file-and-never-transmit.md`.
 - Cluster facts in references are **verified on the clusters** and dated —
   don't edit them from memory; re-verify with read-only commands from a
   compute node, which is where the skills say to work and the only place
@@ -146,8 +159,9 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 - Behavior changes to a skill are tested with `tests/eval.sh` (agent evals),
   not just lint — lint only proves the files are well-formed.
 - `templates/` holds per-user onboarding files users copy to their machines
-  (`personal.md`, `CLAUDE-stub.md`); they are documentation, not loaded by
-  the plugin.
+  (`personal.md`, `CLAUDE-stub.md`, `edison.env`); they are documentation,
+  not loaded by the plugin. A filled-in copy of any of them never lands
+  here — lint fails a real Edison key.
 
 ## Read next
 
