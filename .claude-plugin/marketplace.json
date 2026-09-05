@@ -1,12 +1,12 @@
 {
   "name": "liulab",
-  "description": "Liu Lab shared agent skills (HPC compute, containers, Jupyter)",
+  "description": "Liu Lab shared agent skills (HPC compute, containers, Jupyter, Edison)",
   "owner": { "name": "Hanqing Liu", "email": "hanqing_liu@sioc.ac.cn" },
   "plugins": [
     {
       "name": "lab-compute",
       "source": "./",
-      "description": "Liu Lab HPC clusters and remote-compute workflow"
+      "description": "Liu Lab HPC clusters, remote-compute workflow, and the research platforms the lab runs work on"
     }
   ]
 }

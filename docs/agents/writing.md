@@ -17,7 +17,7 @@ targets.
 
 | Files | Cap |
 | --- | --- |
-| `AGENTS.md`, `docs/agents/*`, `skills/**/*.md` | 1000 (`Lab.LengthDoc`) |
+| `AGENTS.md`, `docs/agents/*`, `skills/**/*.md` | 1200 (`Lab.LengthDoc`) |
 | `docs/adr/*` | 400 (`Lab.LengthAdr`) |
 | `CONTEXT.md` | 200 words per glossary entry, checked by conformance |
 | `docs/research/*` | none — a research note is long by nature |

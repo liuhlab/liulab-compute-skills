@@ -17,9 +17,12 @@ other; if you cannot tell which, it is human-facing. See `docs/agents/writing.md
 ### Agent Skill
 
 A directory under `skills/` holding a `SKILL.md` whose frontmatter carries `name` and
-`description` and nothing else — the open Agent Skills standard — plus optional
-`references/` and `scripts/`. The description is the trigger signal an agent matches a
-request against; the body is what it reads once triggered.
+`description` — the open Agent Skills standard — plus optional `references/` and
+`scripts/`. The description is the trigger signal an agent matches a request against; the
+body is what it reads once triggered. One skill here carries a key beyond the standard:
+`lab-edison` sets `disable-model-invocation: true`, which makes it user-invoked only. That
+key is Claude Code's, and other agent tools ignore it and will trigger the skill as they
+would any other. See `docs/adr/0007-edison-key-file-and-never-transmit.md`.
 
 ### Alias
 
@@ -53,17 +56,52 @@ which, the safety rules, and the per-cluster reference pages. Every other skill 
 it and none repeats it. Contrast a task-recipe skill; see
 `docs/adr/0002-facts-vs-recipes.md`.
 
+### Credit
+
+The Edison platform's unit of spend. A submitted task is charged in credits against the
+balance the key belongs to, so a wasted run costs the person whose key it is. The tiers are
+what a skill routes by, never the numbers: literature, precedent and molecules are the
+ordinary tier; high-reasoning literature and analysis cost more and run longer; a batch
+multiplies whichever was picked; a Kosmos run is in a class of its own. No figure appears
+anywhere in this repo. The platform's own billing page is the only current source, and a
+price written into a skill goes stale in silence — so send the user to their balance
+instead of quoting one.
+
 ### Description budget
 
-The combined character count of every skill's frontmatter `description`, capped at 1536
-because that combined text is what an agent reads when it decides which skill to load.
-`tests/lint.sh` reports the running total on every run.
+Room for the trigger text an agent reads when it decides which skill to load. Two limits
+are easily confused. One skill's frontmatter `description` is capped at 1536 characters —
+the platform's limit on a single entry in the skill listing — and the gate fails a
+description longer than that. The other is the share of the model's context window the
+listing occupies: genuinely shared, but across every skill installed on a machine rather
+than the ones in this repo, so no count taken here measures it. The gate prints the total
+of this repo's descriptions as information and fails nothing on it. Keeping each one
+keyword-dense is still the point; that is a judgement, not a threshold.
 
 ### Digest sidecar
 
 A file named `<image>.sif.digest` beside a built SIF, holding the registry digest the image
 was built from. A version check compares it against the registry, so it is written only
 after the build succeeds — an image that failed its smoke test must not have one.
+
+### Edison
+
+FutureHouse's Edison research platform, reached from a lab machine through the
+`edison-client` Python package: cited answers over the published literature, precedent
+searches, chemistry, and a data-analysis agent that runs code on a dataset the user
+uploads. It is a cloud API, and the one thing this repo teaches that has no cluster in it
+at all. `lab-edison` is the skill that drives it — user-invoked only, and in the same
+plugin as the rest. See `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`.
+
+### Edison key file
+
+`~/.claude/compute/edison.env` on the user's own machine, mode 600: one exported assignment
+of the variable the client reads, and nothing else. It sits beside the per-user config and
+never inside it, because a skill reads that file into context and a key placed there would
+land in every transcript. `templates/edison.env` is the blank copy; a filled-in one never
+lands here, and the no-secrets sweep fails a commit that brings one. A skill sources the
+file into the process that needs it and never transmits, prints or asks for its contents.
+See `docs/adr/0007-edison-key-file-and-never-transmit.md`.
 
 ### Eval case
 
@@ -85,6 +123,15 @@ A Slurm job the user already holds that is not currently computing — usually a
 Jupyter or reservation job. It is the default place to run work: reuse it before queueing
 anything new, and never run work through `ssh` to a login alias.
 
+### Kosmos
+
+The Edison platform's heavyweight agent, and the one thing on the platform an agent cannot
+reach: the client package carries no job name for it, so there is nothing to submit. The
+user starts a Kosmos run in a browser themselves. What a skill can do is say so before
+anything is submitted, help draft the research objective, and check the dataset is in a
+state the run can use — worth the care, because a Kosmos run costs far more than an
+ordinary task.
+
 ### liulab-runtime
 
 The lab's environment repo: pixi environments (`default`, `ml`, `align-rna`, and others)
@@ -100,10 +147,10 @@ out to the internet, so staging downloads belong there.
 ### No-secrets sweep
 
 The part of `tests/lint.sh` that greps the whole publishable tree for connection details:
-IP literals (`0.0.0.0` and `127.0.0.1` excepted), key material, and the usernames and
-dotted hostnames it reads out of the local machine's `~/.ssh/config` at run time. Those
-last two are blind on a CI runner that has no ssh config, which is why the sweep stays a
-local pre-push control.
+IP literals (`0.0.0.0` and `127.0.0.1` excepted), key material, an Edison key set to
+anything but the shipped placeholder, and the usernames and dotted hostnames it reads out
+of the local machine's `~/.ssh/config` at run time. Those last two are blind on a CI runner
+that has no ssh config, which is why the sweep stays a local pre-push control.
 
 ### Partition
 
@@ -115,7 +162,8 @@ A named Slurm queue with its own hardware, limits and cost. `zhoulab_gpu_priorit
 `~/.claude/compute/personal.md` on the user's own machine: their per-cluster usernames,
 code directories, ports and reservation notes. A skill reads it at run time and it takes
 precedence over any default in this repo. `templates/personal.md` is the blank copy; a
-filled-in one never lands here.
+filled-in one never lands here. A credential never goes in it — reading it at run time
+means reading it into context, which is why the Edison key file sits beside it.
 
 ### Plugin marketplace
 
@@ -125,9 +173,13 @@ See `docs/adr/0001-repo-root-is-the-plugin.md`.
 
 ### Preflight
 
-Step 0 of `lab-hpc`: `scripts/check-hpc-config.sh` reports, per cluster, whether this
-machine's `~/.ssh/config` carries the aliases the task needs. On a machine that is not
-configured the skill refuses the request rather than improvising around it.
+Step 0 of a skill: a script reporting, condition by condition, whether this machine holds
+what the task needs. `lab-hpc` runs `scripts/check-hpc-config.sh`, which says per cluster
+whether `~/.ssh/config` carries the aliases; `lab-edison` runs
+`scripts/check-edison-config.sh`, which says whether the key file exists, is non-empty, is
+no longer the placeholder and is owner-only — never the key itself. On a machine that is
+not configured the skill refuses the request rather than improvising around it. Each takes
+a flag naming an alternative file, so the gate can drive it against fixtures.
 
 ### Reservation job
 
@@ -148,9 +200,11 @@ environments run natively under pixi.
 
 ### Task-recipe skill
 
-`lab-jupyter` and `lab-containers`: a skill holding one repeatable procedure and its own
-trigger vocabulary. It builds on the core skill and points at the references instead of
-repeating a cluster fact. See `docs/adr/0002-facts-vs-recipes.md`.
+`lab-jupyter`, `lab-containers` and `lab-edison`: a skill holding one repeatable procedure
+and its own trigger vocabulary. The first two build on the core skill and point at its
+references instead of repeating a cluster fact. `lab-edison` has no cluster to defer to, so
+it carries its own facts in its own `references/`. See
+`docs/adr/0002-facts-vs-recipes.md`.
 
 ### Transfer node
 

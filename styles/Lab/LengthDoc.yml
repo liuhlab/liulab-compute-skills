@@ -6,11 +6,19 @@
 # the reason in the commit message. Do not raise it because a document ran long — that is
 # the cap working.
 #
+# Raised 1000 -> 1200 when the repo gained its fourth skill: AGENTS.md has to name one more
+# skill, its invocation rule and four more eval cases, and it was already at exactly 1000.
+# One dial governs all three file classes above, so that raise also handed every SKILL.md
+# 200 words it was not asked for. Nothing spends them today — the longest skill body is
+# well under the old 1000 — and a skill body that starts creeping toward 1200 is a sign the
+# detail belongs in `references/`, not that the cap is right. Split this rule before
+# raising it again for AGENTS.md's sake alone.
+#
 # `metric` rules are summary-scoped: the variables are computed over the whole file and
-# the alert is reported at 1:1. The condition must be floating point — "> 1000.0" and not
-# "> 1000", which vale does not parse.
+# the alert is reported at 1:1. The condition must be floating point — "> 1200.0" and not
+# "> 1200", which vale does not parse.
 extends: metric
-message: "This file is %s words; the cap is 1000. Cut it or split it."
+message: "This file is %s words; the cap is 1200. Cut it or split it."
 level: error
 formula: words
-condition: "> 1000.0"
+condition: "> 1200.0"

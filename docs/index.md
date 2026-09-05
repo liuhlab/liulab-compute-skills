@@ -9,14 +9,16 @@ Lab's HPC clusters correctly and safely.
 When you ask an AI agent to "run this on the cluster" or "start Jupyter on
 a GPU node", it needs lab-specific knowledge it can't guess: which clusters
 exist, how jobs are submitted, what is safe to do. This plugin packages
-that knowledge as three skills that load automatically when your request
-touches remote compute:
+that knowledge as four skills. The first three load on their own when
+your request touches remote compute. The fourth you call by name,
+because every run of it costs you money.
 
 | Skill | What it covers |
 | --- | --- |
 | [lab-hpc](skills/lab-hpc.md) | The foundation: the two clusters (arc/chimera GPU, ircbc CPU), Slurm usage, safety rules, per-machine setup checks. |
 | [lab-jupyter](skills/lab-jupyter.md) | Jupyter Lab on a cluster compute node, tunneled to your local browser. |
 | [lab-containers](skills/lab-containers.md) | The lab's Singularity container images on ircbc: keep them updated and run work inside them. |
+| [lab-edison](skills/lab-edison.md) | Cited answers from the Edison research platform, and analysis of a dataset you upload. No cluster. You ask for it by name. |
 
 The skills come with safety rules built in. An agent using them will:
 
@@ -58,6 +60,11 @@ Then set up your machine once:
    [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/CLAUDE-stub.md)
    to your `~/.claude/CLAUDE.md` so the core safety rules apply even in
    sessions where no skill triggers.
+4. **Edison key (only if you use `lab-edison`)** — copy
+   [`templates/edison.env`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/edison.env)
+   to `~/.claude/compute/edison.env`, paste your own key over the
+   placeholder, and `chmod 600` it. It sits beside `personal.md` and never
+   inside it. Never commit it.
 
 To check the setup, just ask Claude: *"Am I set up for the lab HPC
 clusters?"* — the skill runs its preflight and reports per cluster.
@@ -72,13 +79,18 @@ this repo anywhere, then run the installer:
 python skills/install.py --target all --user
 ```
 
-That links all three skills into every product's user-level skills folder
+That links every skill into every product's user-level skills folder
 (`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
 `~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see
 what would be installed, `--dry-run` to see where, and `--copy` if your
 setup can't follow a symlink. Because they are links, `git pull` updates
-every install at once. `lab-hpc` is the required base; the other two build
-on it.
+every install at once. `lab-hpc` is the base the two cluster skills build
+on. `lab-edison` needs none of them.
+
+One thing does not port. The setting that keeps `lab-edison` from loading
+on its own is Claude Code's, and other products ignore it. There the
+skill can load like any other, so read its
+[page](skills/lab-edison.md) before you use it elsewhere.
 
 !!! warning "Install for your user, not for a project"
     Keep `--user`. A project install writes the links into a folder inside

@@ -25,6 +25,14 @@ Current skills:
   have no internet: digest-sidecar update checks, crane pull on the login
   node → sbatch build from docker-archive, and running commands, pixi-env
   shells, or Jupyter inside the containers.
+- **`lab-edison`** — the FutureHouse Edison research platform: cited
+  literature answers, precedent, molecules, and analysis of a dataset you
+  upload, run through `edison-client` in a throwaway environment. No
+  cluster involved. You invoke it yourself (`disable-model-invocation`),
+  it refuses until your key file `~/.claude/compute/edison.env` is in
+  place (`scripts/check-edison-config.sh`), it shows the job and the
+  query before it spends, and it never transmits the key. Kosmos is
+  browser-only and the skill says so.
 
 ## Security policy (hard rule)
 
@@ -58,6 +66,11 @@ claude plugin install lab-compute@liulab
 3. Append [templates/CLAUDE-stub.md](templates/CLAUDE-stub.md) to your
    `~/.claude/CLAUDE.md` so the two safety rules apply even in sessions where
    the skill doesn't auto-trigger.
+4. Only if you use `lab-edison`: copy
+   [templates/edison.env](templates/edison.env) to
+   `~/.claude/compute/edison.env`, replace the placeholder with your own
+   Edison key, and `chmod 600` it. It goes *beside* `personal.md`, never
+   inside it — skills read `personal.md` into context. Never commit it.
 
 ## Other agentic tools (Cursor, Codex, Gemini CLI, …)
 
@@ -67,12 +80,19 @@ claude plugin install lab-compute@liulab
 python skills/install.py --target all --user
 ```
 
-That links all three skills into every product's user-level skills
+That links every skill into every product's user-level skills
 directory (`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
 `~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see
 what would be installed, `--dry-run` to see where, and `--copy` where a
 symlink won't do. Because they are links, `git pull` updates every install.
-`lab-hpc` is the required base; the other two build on it.
+`lab-hpc` is the required base for the cluster skills; `lab-jupyter` and
+`lab-containers` build on it. `lab-edison` stands alone and needs none of
+them.
+
+One caveat outside Claude Code: `lab-edison` is user-invoked via
+`disable-model-invocation: true`, a Claude Code frontmatter key. Other
+products ignore it and will trigger the skill like any other. It still
+refuses without a key file and still shows the job before submitting.
 
 Install at the user level, not into a project. Claude Code users should use
 EITHER the plugin OR symlinks into `~/.claude/skills/` — never both (the
@@ -106,8 +126,9 @@ config, so they stay a pre-push control — run the gate locally before you push
 ## Adding a new skill
 
 1. Create `skills/<new-skill>/SKILL.md` — frontmatter with `name` +
-   `description` only (open-standard core); keep the body lean and put long
-   detail in `references/`.
+   `description` (open-standard core); keep the body lean and put long
+   detail in `references/`. Add `disable-model-invocation: true` only when
+   a skill must never load on its own, as `lab-edison` does.
 2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
    `~/.ssh/config` / `~/.claude/compute/personal.md`.

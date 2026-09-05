@@ -23,7 +23,11 @@ case "$plug" in
 esac
 
 echo "== skills =="
+# 1536 is `skillListingMaxDescChars`: the platform's cap on ONE description in the skill
+# listing. It is enforced per skill, below.
+DESC_MAX=1536
 total_desc=0
+n_skills=0
 for d in skills/*/; do
   s="${d}SKILL.md"
   name=$(basename "$d")
@@ -52,12 +56,20 @@ for ln in lines[1:]:
 print(len(" ".join(w for w in body if w)))
 EOF
   ) || { err "$s frontmatter unparseable"; continue; }
-  if [ "${dlen:-0}" -ge 20 ]; then ok "$s description present (${dlen} chars)"
-  else err "$s description missing or too short"; fi
+  if [ "${dlen:-0}" -lt 20 ]; then err "$s description missing or too short"
+  elif [ "$dlen" -gt "$DESC_MAX" ]; then
+    err "$s description ${dlen} chars exceeds the ${DESC_MAX}-char per-skill listing cap"
+  else ok "$s description present (${dlen}/${DESC_MAX} chars)"; fi
   total_desc=$((total_desc + dlen))
+  n_skills=$((n_skills + 1))
 done
-if [ "$total_desc" -le 1536 ]; then ok "combined description budget ${total_desc}/1536 chars"
-else err "combined descriptions ${total_desc} chars exceed the 1536-char listing budget"; fi
+# The sum is INFORMATION. It carried a FAIL until 2026-09, on the reading that 1536 was a
+# budget the skills shared. It is not: it caps a single description, which is why the check
+# above is per skill. The budget that really is shared is a fraction of the model's context
+# window, and it spans every skill installed on the machine — other plugins, the user's own
+# — not this plugin's. No number here can measure that, so nothing here may fail on it, and
+# adding a skill must not fail the gate. Do not reinstate the sum.
+ok "descriptions total ${total_desc} chars across ${n_skills} skills (informational)"
 
 echo "== no-secrets sweep =="
 # Publishable tree only (what git tracks + working copies), minus this test
@@ -87,6 +99,14 @@ else ok "no IP literals (0.0.0.0/127.0.0.1 exempt)"; fi
 if SWEEP 'Identity[F]ile|BEGIN [A-Z ]*PRIVATE[ ]KEY|ssh-(rsa|ed25519)[ ]AAAA'; then
   err "key material / IdentityFile reference found (above)"
 else ok "no key material"; fi
+# The Edison platform API key. Only the shipped placeholder may stand on the
+# right of an assignment. Both spellings are swept: `EDISON_PLATFORM_API_KEY` is
+# the name `edison-client` actually reads, and `EDISON_KEY` is the near miss a
+# user who set it up from memory would write — a real key committed under the
+# wrong name is exactly as leaked as one committed under the right name.
+if SWEEP '(EDISON_PLATFORM_API_KEY|EDISON_KEY)[[:space:]]*=' | grep -v 'PASTE-YOUR-EDISON-KEY-HERE'; then
+  err "Edison API key assigned to something other than the placeholder (above)"
+else ok "no Edison API key (only the PASTE-YOUR-... placeholder)"; fi
 # Usernames come from THIS machine's ssh config at test time — none are
 # stored in the repo, but none may appear in it either. Shared CI service
 # accounts are exempt for the same reason the hostname sweep below exempts
@@ -139,6 +159,42 @@ if [ $rc -eq 1 ] && ! printf '%s' "$out" | grep -v 'NOT CONFIGURED' | grep -q CO
 else
   err "check-hpc-config.sh with empty config: expected NOT CONFIGURED + exit 1, got exit $rc: $out"
 fi
+
+echo "== check-edison-config.sh self-test =="
+# Fixtures are built here and deleted on the way out; none is ever committed.
+# A committed fixture holding a fake key would trip the Edison rule in the sweep
+# above — which is the rule working, not a false positive, so the fixtures live
+# outside the tree the sweep reads.
+# Every case passes `-f`, which also suppresses the environment variable: on a
+# maintainer's machine the real key IS exported, and without that suppression
+# all three fixtures would report configured and prove nothing.
+edison_pf=skills/lab-edison/scripts/check-edison-config.sh
+fx=$(mktemp -d "${TMPDIR:-/tmp}/lab-edison-fixtures.XXXXXX")
+trap 'rm -rf "$fx"' EXIT
+
+edison_case() { # <label> <key-file> <expected-verdict-substring> <expected-exit>
+  local label="$1" file="$2" want="$3" wantrc="$4" out rc
+  out=$(bash "$edison_pf" -f "$file")
+  rc=$?
+  if [ "$rc" -eq "$wantrc" ] && printf '%s\n' "$out" | grep -qF "$want"; then
+    ok "edison preflight: $label"
+  else
+    err "edison preflight: $label — wanted '$want' and exit $wantrc, got exit $rc: $out"
+  fi
+}
+
+printf 'export EDISON_PLATFORM_API_KEY=PASTE-YOUR-EDISON-KEY-HERE\n' >"$fx/placeholder.env"
+chmod 600 "$fx/placeholder.env"
+# Not a key: 22 characters of the word "fixture", at a mode the preflight must reject.
+printf 'export EDISON_PLATFORM_API_KEY=fixture-not-a-real-key\n' >"$fx/open-perms.env"
+chmod 644 "$fx/open-perms.env"
+
+edison_case "missing file"       "$fx/absent.env"      "key file: MISSING"                 1
+edison_case "placeholder unreplaced" "$fx/placeholder.env" "key: PLACEHOLDER"              1
+edison_case "over-permissive mode"   "$fx/open-perms.env"  "key file: PERMISSIONS TOO OPEN" 1
+
+rm -rf "$fx"
+trap - EXIT
 
 echo
 if [ $fail -eq 0 ]; then echo "LINT PASS"; else echo "LINT FAIL"; fi

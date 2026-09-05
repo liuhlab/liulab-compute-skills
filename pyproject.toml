@@ -190,10 +190,10 @@ reportMissingTypeStubs = "none"
 skill-name-prefix = """The rule stops a repo-local skill from shadowing the lab's shared \
 `lab-compute` plugin: both are discovered the same way, so a directory named `lab-*` in \
 someone's working repo silently wins over the plugin's copy of that skill for everyone \
-who opens it. This repo IS that plugin — `skills/lab-hpc`, `skills/lab-jupyter` and \
-`skills/lab-containers` are the originals every other repo is being protected from \
-shadowing — so the rule fires three times on the one tree where the prefix is the correct \
-name. Waived here and nowhere else."""
+who opens it. This repo IS that plugin — every `skills/lab-*` directory here is the \
+original every other repo is being protected from shadowing — so the rule fires once per \
+skill on the one tree where the prefix is the correct name. Waived here and nowhere \
+else."""
 skill-symlinks = """These skills also ship as a Claude Code plugin, so a committed \
 project-local symlink would load every one of them twice for anyone who opens this repo \
 as their working directory with the plugin installed. Nothing is linked into the tree, \

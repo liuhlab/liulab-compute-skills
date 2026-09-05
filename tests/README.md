@@ -13,18 +13,23 @@ reasons under each heading below.
 ## Layer 1 — static lint (free, seconds): `tests/lint.sh`
 
 Tests the **artifacts**: manifests are valid JSON, every skill has parseable
-`name`/`description` frontmatter, names follow the `lab-*` policy, the
-combined description budget stays under Claude Code's limit, and — most
-importantly — the **no-secrets sweep**: no IP literals, no key material, and
-none of the usernames or dotted HostNames from *your* local `~/.ssh/config`
-appear anywhere in the repo (both are read from your machine at test time,
+`name`/`description` frontmatter, names follow the `lab-*` policy, each
+description stays under the per-skill listing limit (their total is printed,
+but nothing fails on it), and — most importantly — the **no-secrets sweep**:
+no IP literals, no key material, no Edison key other than the shipped
+placeholder, and none of the usernames or dotted
+HostNames from *your* local `~/.ssh/config` appear anywhere in the repo
+(both are read from your machine at test time,
 so the test itself stores none; single-label hostnames are unsweepable but
-still forbidden by policy). Also self-tests `check-hpc-config.sh` against an
-empty ssh config to prove it reports NOT CONFIGURED.
+still forbidden by policy). Also self-tests both preflight scripts:
+`check-hpc-config.sh` against an empty ssh config, and
+`check-edison-config.sh` against a missing key file, an unreplaced
+placeholder and an over-permissive mode, to prove each reports NOT
+CONFIGURED. No fixture ever holds a real key.
 
 **In CI it is half-blind, and that is expected.** The manifest-JSON,
-frontmatter, `lab-*` naming, description-budget, IP-literal, key-material and
-`check-hpc-config.sh` layers all work anywhere, so they are the reason the
+frontmatter, `lab-*` naming, description-length, IP-literal, key-material,
+Edison-key and preflight self-test layers all work anywhere, so they are the reason the
 suite runs on every pull request (as the `test` job, via the `skill-lint`
 task). The **username and hostname sweeps read the runner's own
 `~/.ssh/config`**, which has no lab hosts in it: on a runner they check about
@@ -42,7 +47,7 @@ Verifies the lab ssh aliases resolve from your `~/.ssh/config`; with
 `--live` it also opens a BatchMode connection to each login node (an ircbc
 timeout usually means the VPN is down).
 
-## Layer 3 — agent evals (costs tokens; `--live` touches the cluster): `tests/eval.sh`
+## Layer 3 — agent evals (costs tokens; `--live` touches the cluster and spends a credit): `tests/eval.sh`
 
 **Local only — never runs in CI**, because every case is a real headless
 agent session that spends API tokens, and on a public repo anyone who can
@@ -69,11 +74,29 @@ you're an agent doing this on someone's behalf. Evals exercise the
 5. **jupyter-ircbc** — a Jupyter-on-ircbc prompt must plan the container
    path (`lab-containers` SIF, `squeue -u $USER`, `compute_cpu`), not the
    arc-native flow.
-6. **live e2e** (only with `--live`) — the agent must actually ssh to arc,
-   submit a minimal `hostname` job to a no-cost partition
-   (`quick_preemptible`), report the job id, and clean it up. This is the
-   real "can Claude ssh in and submit a Slurm job" test — keep it tiny and
-   self-cleaning.
+6. **reuse-job** — told a GPU job is already held on arc, the agent must
+   reuse that node rather than `ssh arc "<work>"` on the login node.
+7. **edison-refuse** — told the Edison preflight found no key, the agent
+   must refuse and offer to write the key file, and must **never** ask for
+   the key in the chat (a negative assertion carries that half).
+8. **edison-molecules** — a chemistry question must route to the current
+   `MOLECULES` job and never to the retired name that now returns 404
+   (again with a negative assertion).
+9. **edison-kosmos** — a request to run Kosmos through the API must get the
+   browser-only answer *before* anything is submitted; the negative
+   assertion is that no submission call appears at all.
+10. **live-sbatch** (only with `--live`) — the agent must actually ssh to
+    arc, submit a minimal `hostname` job to a no-cost partition
+    (`quick_preemptible`), report the job id, and clean it up. This is the
+    real "can Claude ssh in and submit a Slurm job" test — keep it tiny and
+    self-cleaning.
+11. **live-edison** (only with `--live`) — one real standard literature
+    call, which **spends one of your Edison credits**, asserting the answer
+    comes back with citations. The narrow live proof that the whole path
+    works; everything else about the skill is checked without spending.
+
+Any `--only live-*` turns `--live` on by itself, so naming one of the last
+two is enough to run it.
 
 Evals are non-deterministic; assertions are deliberately loose (key phrases,
 not exact text). A failure means "read the transcript in the temp dir", not
