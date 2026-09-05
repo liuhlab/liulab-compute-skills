@@ -15,10 +15,9 @@ Per-cluster detail sits in `references/`: `arc-hpc.md` and `ircbc-hpc.md` for ho
 
 ## Step 0 — before the first ssh
 
-1. Run `bash scripts/check-hpc-config.sh` (`--live` also tests ssh). If the cluster the task
-   needs is `NOT CONFIGURED`, **refuse**: name the missing aliases and point at the README's
-   "Per-user config". Never improvise with raw addresses, passwords, or keys. Resolve every host
-   from `~/.ssh/config` aliases, and never record what those aliases hide.
+1. Run `bash scripts/check-hpc-config.sh` (`--live` also tests ssh). If the cluster the task needs
+   is `NOT CONFIGURED`, **refuse**: name the missing aliases, point at the README's "Per-user
+   config", never improvise with raw addresses or keys, and resolve hosts from `~/.ssh/config` only.
 2. Read `~/.claude/compute/personal.md` — usernames, code dirs, the standing job, sbatch
    defaults. It **overrides** this skill. Say so if it is absent.
 3. Ask which cluster unless context already pins it down. Then develop locally, push to GitHub,
@@ -40,7 +39,7 @@ reasons, and only two**, to run anything on a login node:
 
 ## SOP — take a foothold, then keep it
 
-1. **Find the node you already hold.** The lab parks a long-lived idle GPU job on arc for this.
+1. **Find and reuse the node you already hold.** The lab parks a long-lived idle GPU job on arc for this.
    Check `personal.md`, then probe aliases with `ssh -o BatchMode=yes -o ConnectTimeout=10
    <alias> true` — probes fail fast, so sweeping every alias is cheap. Judge by exit status, not stderr.
 2. **Land and stay.** On arc, wrap commands in a login shell — `ssh <node> 'bash -lc "…"'` — or
@@ -51,6 +50,7 @@ reasons, and only two**, to run anything on a login node:
 
 ## Hard rules
 
+- **Work on a compute node; the login node has exactly the two uses above.** Nothing else.
 - **Never submit sbatch/srun without showing the exact script and getting confirmation.**
   Read-only probes like `squeue` and `sbatch --test-only` need no permission.
 - **Reachable never means permitted.** ircbc lets you ssh to a node you hold no job on; working

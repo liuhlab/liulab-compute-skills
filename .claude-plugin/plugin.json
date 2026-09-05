@@ -1,6 +1,6 @@
 {
   "name": "lab-compute",
   "description": "Liu Lab HPC clusters and remote-compute workflow",
-  "version": "2026.9.0",
+  "version": "2026.9.1",
   "author": { "name": "Hanqing Liu", "email": "hanqing_liu@sioc.ac.cn" }
 }
