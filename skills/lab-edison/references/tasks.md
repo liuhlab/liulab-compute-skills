@@ -8,9 +8,9 @@ repeated here.
 ## Submit, then print the id
 
 `create_task` returns as soon as the task exists, so the id outlives the shell that made it.
-`run_tasks_until_done` runs the whole loop instead, blocking up to `timeout` — 2400 seconds by
-default — and on expiry returns whatever state it reached rather than raising. Use it only for
-a run you are willing to sit through.
+`run_tasks_until_done` runs the whole loop instead, blocking up to `timeout` — **2400 seconds by
+default**, the one place that number is written down — and on expiry returns whatever state it
+reached rather than raising. Use it only for a run you are willing to sit through.
 
 ```python
 task = TaskRequest(name=JobNames.LITERATURE, query="<the exact query you showed the user>")

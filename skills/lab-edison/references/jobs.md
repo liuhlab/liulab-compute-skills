@@ -25,6 +25,16 @@ use the canonical member, so the transcript and the table agree. They share thei
 the canonical members, so Python folds them into aliases and `list(JobNames)` yields **seven**
 members, not eleven: a listing that looks to be missing `CROW` is complete.
 
+## Never guess a job-name string
+
+`TaskRequest.name` is typed `str | JobNames`, so the client sends whatever string it is handed —
+the enum is a convenience list, not a whitelist. Names outside it do run: task history shows
+`job-futurehouse-paperqa3-api` and `job-futurehouse-data-analysis-heron`, and neither is a member
+(`kosmos.md`). So nothing rejects an invented name, and submitting is the only decisive check —
+which is exactly the thing to avoid. A wrong guess teaches you that one string was wrong; a right
+guess starts a run the user never asked for and bills it to them. Route from the table above, and
+when no row fits, say so and ask.
+
 ## The retired chemistry job
 
 The enum still carries `PHOENIX`, and the package's own comment on it is the whole warning:

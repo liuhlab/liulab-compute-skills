@@ -110,7 +110,9 @@ the skills; the number had stopped identifying the tree.
   it is the practical half. A wrong guess teaches you that one string was
   wrong; a right guess starts a run costing about two orders of magnitude more
   than the task the user asked for. Submitting is the only decisive check, and
-  submitting is what there is to avoid.
+  submitting is what there is to avoid. **Corrected in `2026.9.6`:** the rule
+  was announced here and never written into the skill. It reached the job
+  reference three releases later.
 - The enum listing is still documented, now framed as the check that can
   settle the question in one direction only.
 
