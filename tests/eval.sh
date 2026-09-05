@@ -86,7 +86,11 @@ launch_eval jupyter-ircbc 'singularity|\.sif|liulab-runtime|compute_cpu|lab-cont
 #    node, not `ssh arc "<work>"` on the login node. (Reuse-unique terms
 #    only — a bare 'squeue' would also match a naive check-then-ssh-login
 #    plan, so require the reuse/idle/existing-job vocabulary.)
-launch_eval reuse-job 'reuse|idle|existing (interactive )?job|already (running|holds|have)|node it holds' \
+#    'foothold', 'holding your job' and 'no new allocation' were added after
+#    2026.9.0: the skill now frames this as taking a foothold, and a correct
+#    plan phrased that way was failing an assertion that only knew the older
+#    'reuse an idle job' wording. All the alternates stay reuse-specific.
+launch_eval reuse-job 'reuse|idle|foothold|existing (interactive )?job|already (running|holds|have)|node it holds|holding (your|the|a) job|no new allocation' \
   "I already keep an interactive GPU job running on arc. Run my repo's train.py on the cluster." \
   --permission-mode plan
 

@@ -5,6 +5,24 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.1 — 2026-09-05
+
+Both fixes here were found by running the agent evals, which had not run
+against `2026.9.0`. Neither shows up in lint.
+
+- **The login-node rule is back in the hard-rules list.** Splitting it into
+  its own section left the list that reads as the safety summary without the
+  most important rule in it. Asked to state the hard safety rules, an agent
+  quoted three bullets and none of them mentioned a login node. The list now
+  leads with it and points at the section for the reasoning.
+- **Say "reuse" where reuse is meant.** The step that finds your running job
+  described taking a foothold but never named the act. It now reads "find and
+  reuse the node you already hold".
+- The `reuse-job` eval also accepts the newer wording. A correct plan that
+  said "holding your job" and "no new allocation" was failing an assertion
+  that only knew the older phrasing. The alternatives stay specific enough to
+  fail a plan that works on the login node.
+
 ## 2026.9.0 — 2026-09-05
 
 - **Work belongs on a compute node, not a login node.** The old rule was
