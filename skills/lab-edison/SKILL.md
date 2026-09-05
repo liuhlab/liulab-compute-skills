@@ -96,4 +96,32 @@ what makes the briefing worth the care. This path calls no API and spends no cre
 
 ## Analysing a dataset
 
-<!-- filled by #18 -->
+`ANALYSIS` takes the data with the question: upload, submit with the URI the upload returns,
+poll, fetch what the run produced. `references/datasets.md` has those calls, the collection rule
+for a directory, and how the answer and its notebook come back.
+
+**Where the data sits decides how the run happens, and the default is the user's own machine.**
+The key is why: a run started on a cluster needs a live credential sitting on a shared node, and
+the only machine that has to hold one is theirs.
+
+- **Data here** — upload from this machine. Nothing to arrange.
+- **Data on arc** — stage it down first, then upload from here, however the user already moves
+  data; `skills/lab-hpc/references/arc-hpc.md` has the hosts and the transfer alias.
+- **Data on ircbc** — the platform is not reachable from that cluster. Compute nodes have no
+  route out, and the login node reaches the internet only through a proxy
+  (`skills/lab-hpc/references/ircbc-hpc.md`). Say that and stop: do not debug the failure, do not
+  hunt for a route. Stage the data down and upload from here instead.
+
+**Running from arc is allowed only when the user has already installed their key there** — the
+same key file, at the same path, created in their own arc session with the commands above.
+Explain that; never do it for them. No scp, no rsync, and never a key on an ssh command line,
+where anyone running `ps` on a shared node reads it. No file there means staging the data down,
+not putting a credential on the cluster.
+
+**Confirm before submitting.** Show the exact path going up, file or directory, the job, and the
+exact query — then ask, and wait. This is the analysis confirmation *Choosing the job* already
+requires, and the upload doubles what a mistake costs: a wrong directory is uploaded before
+anyone notices it was wrong.
+
+Report the answer and the artifacts together, and keep the task id — a follow-up continues the
+run instead of uploading again.

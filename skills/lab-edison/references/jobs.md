@@ -17,8 +17,8 @@ one in a response's `job_name`.
 | Chemistry — molecules, properties, synthesis | `MOLECULES` | `job-futurehouse-data-analysis-molecules` |
 | Something about a dataset the user supplies | `ANALYSIS` | `job-futurehouse-data-analysis-crow-high` |
 
-`ANALYSIS` is driven from `SKILL.md`'s dataset section; it is in the table so the routing is
-complete. `DUMMY` (`job-futurehouse-dummy-env`) exercises the plumbing and does no science.
+`ANALYSIS` is driven from `SKILL.md`'s dataset section and `datasets.md`; it is in the table so
+the routing is complete. `DUMMY` (`job-futurehouse-dummy-env`) exercises the plumbing and does no science.
 `CROW`, `FALCON`, `OWL` and `FINCH` are older spellings of four of the rows above — use the
 canonical member, so the name in the transcript matches the name in the table.
 
