@@ -31,8 +31,9 @@ Current skills:
   cluster involved. You invoke it yourself (`disable-model-invocation`),
   it refuses until your key file `~/.claude/compute/edison.env` is in
   place (`scripts/check-edison-config.sh`), it shows the job and the
-  query before it spends, and it never transmits the key. Kosmos is
-  browser-only and the skill says so.
+  query before it spends, and it never transmits the key. Kosmos is a
+  chat session that fans out into many tasks, and the skill will not
+  start one unless you ask for that run.
 
 ## Security policy (hard rule)
 

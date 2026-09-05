@@ -5,6 +5,69 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.5 — 2026-09-05
+
+A case study — one real research question put through `lab-edison` end to end —
+found the skill spending a credit and returning nothing, and the fix reshaped
+the skill around the task id.
+
+- **`lab-edison` never blocks and never loses a run.** The old skill led with
+  `run_tasks_until_done`, which blocks a tool call for up to 40 minutes. Facing
+  that, a headless session pushed the submission into a background task and
+  ended its turn; the process was killed, the task id had not been printed yet,
+  and one credit bought an answer nobody could reach. The rule now is submit,
+  print the task id, then poll in short calls — the id is the receipt for the
+  credit and it outlives every shell.
+- **A run is never lost, only misplaced.** `get_tasks` lists your own
+  trajectories for free, so a run whose id went missing is found rather than
+  bought again. The lost run from the case study was recovered this way, answer
+  and citations intact.
+- **New `references/tasks.md`** for the lifecycle every job shares: submit,
+  poll, recover, `cancel_task`, what each response class carries, and how to
+  attach a run to a project so it appears in the platform's browser view — an
+  API run has no page there otherwise. `datasets.md` no longer repeats the
+  polling half.
+- **Correction: Kosmos is not browser-only, and `2026.9.2`–`2026.9.4` said it
+  was.** `get_session` on a real Kosmos project session returns the job name
+  `job-futurehouse-data-analysis-aries`. The old reasoning argued from the
+  absence of a `JobNames` member without checking the surface Kosmos uses:
+  `JobNames` enumerates the one-shot jobs `create_task` takes, and Kosmos is a
+  **chat session on a project** — `send_chat_message`, `create_project`,
+  `get_conversations` — that fans one objective out into many ordinary tasks
+  over several rounds. A real project showed thirteen, eight
+  `job-futurehouse-paperqa3-api` and five `job-futurehouse-data-analysis-heron`,
+  all carrying that project's id.
+- **The Kosmos rule changed shape with the facts.** It was "you cannot"; it is
+  now **never start one unless the user asks for that run in those words**,
+  which is the rule that was always needed — a run costs roughly two orders of
+  magnitude more than an API task, and documenting the call makes an accidental
+  start easier, not harder. Drafting the objective, checking the dataset and
+  reading a run that already exists stay free, and are usually what was wanted.
+  The exact chat invocation is marked unverified, because verifying it is the
+  charge.
+- The `edison-kosmos` eval asserted the claim that turned out to be wrong; its
+  expect regex now names the structure the skill teaches.
+- **The key-file setup left `SKILL.md` for the preflight script**, which now
+  prints the exact remedy when a check fails. A verdict and its fix can no
+  longer drift apart, and the agent relays tested text instead of recalling it.
+- Corrected: `list_files` returns a dict keyed `data`, not a list. Recorded:
+  `total_cost` and `total_queries` come back `None` on a real successful run,
+  so no cost may be reported from them.
+
+Tests:
+
+- **`tests/eval.sh` has no default run.** A bare invocation prints the case
+  list and exits without launching anything; the suite needs `--all`, one case
+  needs `--only`, and `--live` alone is refused as a modifier rather than a
+  request. Evals cost real tokens, and the failure being guarded is an agent
+  running all of them on a hunch. `tests/lint.sh` self-tests the guard with
+  `claude` stubbed, so a regression cannot spend anything even while failing.
+- **New eval case `edison-recover`**: a run whose id was lost must be found in
+  task history, not resubmitted. Its negative assertion is the point.
+- **`tests/preflight.sh` covers both checks now**, clusters and Edison. Only
+  the cluster check decides the exit code — a platform key is opt-in per user,
+  and failing on it would teach people to ignore the script.
+
 ## 2026.9.4 — 2026-09-05
 
 Guardrails, after a release-discipline failure: `2026.9.3` was tagged, two

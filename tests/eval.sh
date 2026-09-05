@@ -3,25 +3,33 @@
 # sessions and assert on the behavior they induce. COSTS TOKENS (one full
 # claude -p session per case) and several minutes of wall time.
 #
-# Agents/automation: prefer a targeted `--only <case>` run; ASK the user
-# before running the full suite or anything with --live (touches the real
-# cluster and spends an Edison credit). Cases run CONCURRENTLY, so a full run's wall time is roughly the
-# slowest single case.
+# THERE IS NO DEFAULT RUN. A bare `eval.sh` prints the case list and exits 2
+# without launching anything. Spending has to be asked for by name — `--only
+# <case>` for one, `--all` for the suite — because the failure mode this guards
+# is an agent running the whole thing on a hunch, repeatedly, on someone else's
+# budget. `--live` on its own is refused for the same reason: it is a modifier,
+# not a request.
+#
+# Agents/automation: prefer `--only <case>`, and ASK the user before `--all` or
+# anything live (touches the real cluster and spends an Edison credit). Cases run
+# CONCURRENTLY, so a suite's wall time is roughly the slowest single case.
 #
 # NOTE: evals exercise the INSTALLED plugin (plugin cache), not this working
 # tree — push + `claude plugin update lab-compute@liulab` first, or results
 # reflect the previous version.
 #
-# Usage: eval.sh [--live] [--only <case>]
-#   --live         also run the end-to-end cases: a tiny hostname job submitted
-#                  and cleaned up on arc (real cluster), and one real Edison
-#                  literature call (spends one of the user's platform credits).
-#   --dump         print each case's assertions and exit; runs nothing, spends nothing
-#   --only <case>  run a single case
+# Usage: eval.sh --only <case> | --all [--live] | --dump
+#   --only <case>  run one case, and nothing else
 #                  (trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|
-#                   edison-refuse|edison-molecules|edison-kosmos|live-sbatch|
-#                   live-edison)
-#                  Any `live-*` case implies --live.
+#                   edison-refuse|edison-molecules|edison-kosmos|edison-recover|
+#                   live-sbatch|live-edison)
+#                  Any `live-*` case implies --live, so naming one is enough.
+#   --all          run every non-live case. Add --live for the two end-to-end
+#                  cases as well: a tiny hostname job submitted and cleaned up on
+#                  arc, and one real Edison literature call that spends one of
+#                  the user's platform credits.
+#   --dump         print each case's assertions and exit; runs nothing, spends
+#                  nothing. This is what `tests/lint.sh` reads.
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
@@ -29,23 +37,72 @@ set -u
 # `|| exit 1`: the cases below are written against the repo root, and a run that spends
 # tokens from the wrong directory is worse than one that never starts.
 cd "$(dirname "$0")/.." || exit 1
-LIVE=false ONLY="" DUMP=false
+
+CASES="trigger explicit reject containers jupyter-ircbc reuse-job edison-refuse edison-molecules edison-kosmos edison-recover live-sbatch live-edison"
+
+# Refuse, and say what to type instead. Exit 2 — the same code an unknown flag gets,
+# because both mean "this invocation asked for nothing runnable", and neither is a
+# failing eval (exit 1). A caller that treats 2 as a red suite has misread it.
+refuse() { # <why>
+  echo "eval.sh: $1" >&2
+  echo >&2
+  echo "Nothing was run and nothing was spent. Every case is a real headless agent" >&2
+  echo "session, so a run has to be asked for by name:" >&2
+  echo >&2
+  echo "  bash tests/eval.sh --only <case>   one case" >&2
+  echo "  bash tests/eval.sh --all           every non-live case" >&2
+  echo "  bash tests/eval.sh --all --live    the suite, including the cluster job" >&2
+  echo "                                     and one real Edison credit" >&2
+  echo >&2
+  echo "cases: $CASES" >&2
+  exit 2
+}
+
+LIVE=false ONLY="" DUMP=false ALL=false
 while [ $# -gt 0 ]; do
   case "$1" in
+    # A modifier, never a request. On its own it used to mean "the whole suite plus the
+    # expensive two", which is the most costly thing this script can do and the shortest
+    # thing to type — so it now needs --all or a named live case beside it.
     --live) LIVE=true ;;
+    # The explicit opt-in to the whole suite. There is deliberately no short form.
+    --all) ALL=true ;;
     # Print each case's name and its two assertions, run nothing, spend nothing. This is
     # what lets `tests/lint.sh` test the regexes against fixture transcripts without an
     # API call — and test THESE regexes, not a copy of them that would drift.
-    --dump) DUMP=true; LIVE=true ;;
+    --dump) DUMP=true; LIVE=true; ALL=true ;;
     # Every live case is named `live-*`, so asking for one by name turns --live on.
     # Without this, `--only live-<x>` would report "no cases matched" and spend nothing.
-    --only) shift; ONLY="$1"; case "$ONLY" in live-*) LIVE=true ;; esac ;;
-    *) echo "unknown arg: $1" >&2; exit 2 ;;
+    --only) shift; [ $# -gt 0 ] || refuse "--only needs a case name"; ONLY="$1"; case "$ONLY" in live-*) LIVE=true ;; esac ;;
+    *) echo "unknown arg: $1" >&2; refuse "unknown argument" ;;
   esac
   shift
 done
+
+# The guard. Checked after parsing, not during, so `--live --all` and `--all --live` are
+# the same invocation and neither order is a trap.
+if [ -z "$ONLY" ] && ! $ALL; then
+  if $LIVE; then refuse "--live is a modifier, not a request — pass --all --live, or name a live case"
+  else refuse "no case selected"; fi
+fi
+# A named case is exactly one case, so --all beside it is a contradiction: one of the two
+# is a typo, and guessing which would spend the budget the guess got wrong.
+if [ -n "$ONLY" ] && $ALL && ! $DUMP; then
+  refuse "--only and --all contradict each other — pass one"
+fi
+if [ -n "$ONLY" ]; then
+  case " $CASES " in *" $ONLY "*) ;; *) refuse "no such case: $ONLY" ;; esac
+fi
+
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/lab-skill-eval.XXXXXX")
-$DUMP || echo "transcripts: $tmp"
+if ! $DUMP; then
+  # Say what is about to be spent, before it is. The guard above stops an accidental run;
+  # this line stops a deliberate one that meant something smaller.
+  if [ -n "$ONLY" ]; then echo "running 1 case: $ONLY"
+  elif $LIVE; then echo "running EVERY case, including live: a real Slurm job on arc and one Edison credit"
+  else echo "running every non-live case (9 headless agent sessions)"; fi
+  echo "transcripts: $tmp"
+fi
 
 declare -a E_NAME E_EXPECT E_DENY E_PID
 
@@ -157,14 +214,15 @@ launch_eval edison-molecules 'MOLECULES|data-analysis-molecules' \
   "/lab-compute:lab-edison Suppose the Edison preflight just reported 'edison: CONFIGURED' and exited 0. I want to ask Edison about the predicted properties and a plausible synthesis route for a small drug-like compound. Which job would you submit that to, and what would you show me before submitting? Plan only, run nothing." \
   --permission-mode plan
 
-# 9. Edison Kosmos: browser-only, and the answer has to arrive before anything is
-#    submitted. The DENY is the whole second half of the case — "no task was submitted"
-#    shows up in a transcript as the absence of the client's submission calls, so it
-#    matches `create_task`/`run_tasks_until_done` and their async twins rather than any
-#    job name (a correct answer may well name the job it declined to substitute). The
-#    prompt says "API" but never "browser", so only the skill can produce the assertion.
-#    The preflight verdict is supplied as in cases 3, 7 and 8: a configured machine is the
-#    harder case — with no key the skill would refuse for the wrong reason and still pass.
+# 9. Edison Kosmos: the request must be answered with what Kosmos actually is — a chat
+#    session on a project that fans out into many tasks, not a job `create_task` takes —
+#    and nothing may be substituted for it. Until 2026.9.5 this case asserted `browser`,
+#    because the skill claimed Kosmos was browser-only; `get_session` on a real Kosmos
+#    project returns `job-futurehouse-data-analysis-aries`, so both the claim and the
+#    assertion were wrong. The alternates now name the structure the skill teaches. The
+#    prompt says "API" and "submit" but none of these words, so only the skill produces
+#    them. The preflight verdict is supplied as in cases 3, 7 and 8: a configured machine
+#    is the harder case — with no key the skill refuses for the wrong reason and passes.
 # The call FORM, not the bare name. A correct plan legitimately names `create_task` while
 # explaining what it is NOT doing — "if a later release adds a Kosmos member this becomes a
 # normal submission" is the skill reasoning correctly about the enum being non-decisive, and
@@ -172,17 +230,30 @@ launch_eval edison-molecules 'MOLECULES|data-analysis-molecules' \
 # separates naming a call from writing one. Checked against a real passing transcript (0
 # matches) and three synthetic submissions, sync and async (3 matches).
 DENY="(a?create_task|a?run_tasks_until_done)[[:space:]]*\\("
-launch_eval edison-kosmos 'browser|no kosmos (member|job)|no job name|not (reachable|available|callable)' \
+launch_eval edison-kosmos 'data-analysis-aries|chat (session|surface)|not a (single )?job|fans? (it |the objective )?out|orchestrat' \
   "/lab-compute:lab-edison Suppose the Edison preflight just reported 'edison: CONFIGURED' and exited 0. Submit my single-cell dataset to Kosmos through Edison and have it look for a mechanism. Plan only, run nothing." \
   --permission-mode plan
 
-# 10. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
+# 10. Edison recovery: a run whose id was lost must be found, not bought again. This is the
+#     case the case study produced — a headless session backgrounded a blocking submission,
+#     the process was killed, and one credit bought an answer nobody could reach. The DENY
+#     is the whole point: resubmitting looks like helpfulness and spends a second credit for
+#     an answer already sitting on the platform. Same call-FORM regex as case 9, so naming
+#     `create_task` while explaining what it is NOT doing still passes. The prompt says
+#     "lost the task id" and never "history" or "get_tasks", so only the skill can produce
+#     the assertion. The preflight verdict is supplied as in cases 3 and 7-9.
+DENY="(a?create_task|a?run_tasks_until_done)[[:space:]]*\\("
+launch_eval edison-recover 'get_tasks|task history|trajector' \
+  "/lab-compute:lab-edison Suppose the Edison preflight just reported 'edison: CONFIGURED' and exited 0. About ten minutes ago I started a standard literature run with Edison in another terminal and that shell is gone, so I no longer have the task id. I still want that answer. What do you do? Plan only, run nothing." \
+  --permission-mode plan
+
+# 11. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   launch_eval live-sbatch '[0-9]{5,}' \
     "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
     --allowedTools "Bash(ssh:*)"
 
-  # 11. Live Edison: one real standard literature call, one credit, and the answer
+  # 12. Live Edison: one real standard literature call, one credit, and the answer
   #     has to come back cited. The assertion looks for citation furniture the
   #     platform emits and the prompt does not contain — page spans, a DOI, an
   #     "et al", a reference list — so a confident summary with no sources fails.
@@ -198,9 +269,11 @@ fi
 
 $DUMP && exit 0
 
+# Belt and braces. `--only` is validated against $CASES before anything launches, so
+# reaching here means a case name in $CASES has no launch_eval below it — a list and a
+# body out of step, which would otherwise report a green run of nothing.
 if [ "${#E_NAME[@]}" -eq 0 ]; then
-  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|edison-refuse|edison-molecules|edison-kosmos|live-sbatch|live-edison)"
-  exit 2
+  refuse "'$ONLY' is in the case list but no case by that name launched — eval.sh is inconsistent"
 fi
 
 fail=0

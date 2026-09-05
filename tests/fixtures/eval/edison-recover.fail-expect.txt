@@ -1,0 +1,8 @@
+Preflight is green, so I can reach the platform.
+
+Without the task id there is no way back to that run — the id was the only handle on it and
+it went when the shell did. The simplest path is to ask the question again and hold on to the
+id this time.
+
+I will show you the exact query before I send it, and I will print the id as soon as the
+submission returns so this cannot happen twice.

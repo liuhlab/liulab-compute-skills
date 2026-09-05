@@ -44,7 +44,9 @@ printf 'export EDISON_PLATFORM_API_KEY=PASTE-YOUR-EDISON-KEY-HERE\n' \
 chmod 600 ~/.claude/compute/edison.env
 ```
 
-That is the same thing as copying
+You do not have to remember any of that. The check the skill runs first
+prints those exact commands back to you when something is missing. That
+is also the same thing as copying
 [`templates/edison.env`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/edison.env),
 which has the reasoning in its comments. The variable name is exact: the
 client reads that one and no other. The `chmod` matters too. It leaves
@@ -74,6 +76,24 @@ No prices appear anywhere in this repo. They change, and a stale number
 is worse than none at all. Check the balance on the platform when the
 cost matters.
 
+## A run takes minutes, and it waits for you
+
+Edison runs are slow enough that nobody should sit and watch one. The
+skill sends the task, prints the task id straight away, and then checks
+on it. You get your terminal back.
+
+That id is the point. It is the receipt for what you paid, and it
+outlives the session that made it. If your laptop sleeps, the window
+closes, or the agent stops early, the run carries on and finishes on the
+platform.
+
+**So a run is never really lost.** The skill can list the tasks on your
+account, newest first, and find the one you started. It will offer to do
+that before it ever asks the same question twice, because asking twice
+means paying twice for an answer you already own. It can also cancel a
+run you started by mistake, which is worth knowing before a long data
+analysis job.
+
 ## Which agent answers which question
 
 | You are asking | What it picks |
@@ -87,16 +107,26 @@ cost matters.
 Ask in plain words and the skill picks for you. Say which one you want
 and it uses that.
 
-## Kosmos runs in your browser
+## Kosmos is a conversation, not a job
 
-Kosmos is the platform's heavyweight agent, and the API cannot start
-one. The client package carries no name for it, so there is nothing to
-send. The skill tells you that up front, before it calls anything.
+Kosmos is the platform's heavyweight agent, and it is not one task you
+send off. You pick a persona, make a project inside it, and talk to it
+there. It then splits your goal into many smaller tasks and works
+through them in rounds until it decides it is done. One real project ran
+thirteen of them.
 
-What it can do is get you ready. It drafts the research goal with you,
-and it checks your data is in a shape Kosmos can use. A Kosmos run costs
-far more than an ordinary task, so the time spent getting ready pays for
-itself. You start the run yourself on the platform.
+That is why it looks absent from the list of jobs the skill can send.
+That list covers one-shot tasks. Kosmos sits on the chat side of the
+same platform, under its own name.
+
+The skill will not start one unless you ask for that run in plain words.
+A Kosmos run costs far more than an ordinary task, and now that the
+skill knows how one starts, that rule is what stands between you and a
+large bill.
+
+What it does instead is free. It drafts the goal with you. It checks
+your data is in a shape Kosmos can use. And it can show you a run you
+already started, task by task, without opening a browser.
 
 ## Where your data sits
 
