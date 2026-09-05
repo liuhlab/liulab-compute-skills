@@ -1,0 +1,112 @@
+# ============================== project ==============================
+#
+# This repo ships no package. It is a Claude Code plugin marketplace of Agent Skills —
+# Markdown and bash — so `[project]` exists to give the tree an identity and a Python
+# floor, not to produce a distribution. Nothing here is ever uploaded to a package index,
+# so the name is an identifier rather than a claim on one.
+#
+# Taken from the lab template's `no-package` shape: no `[project.scripts]`, no wheel build
+# target, no pytest config. `[build-system]` and `[tool.hatch.version]` survive that shape
+# and are kept here for the same reason the template keeps them.
+
+[project]
+name = "liulab-compute-skills"
+description = "Liu Lab Agent Skills for HPC, containers and remote compute, packaged as a Claude Code plugin."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.13"
+authors = [{ name = "Liu Lab" }]
+# hatch-vcs reads the newest git tag. Never add a `version` key.
+dynamic = ["version"]
+
+# ============================== build ==============================
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+# No `fallback-version`: that is a hand-written version string.
+[tool.hatch.version]
+source = "vcs"
+
+# ============================== pixi ==============================
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+# The interpreter. `requires-python` above is the floor this pin satisfies.
+#
+# ruff and pyright are here even though every file in this repo is currently Markdown or
+# bash. Two Python files arrive later — the conformance checker and the skills installer,
+# both copied from the template, where they already pass these gates. A step that runs
+# over an empty set costs a second; a step nobody adds costs the first Python file.
+[tool.pixi.dependencies]
+python = "3.13.*"
+ruff = "*"
+# Exact: Pylance is pyright, so the editor and CI must give one verdict.
+pyright = "==1.1.411"
+
+[tool.pixi.tasks]
+lint = "ruff check ."
+fmt = "ruff format ."
+fmt-check = "ruff format --check ."
+typecheck = "pyright"
+# The repo's own bash suite. NOT named `lint` — that name is ruff's in every lab repo, and
+# a shared name meaning two different things is the collision this rule exists to stop.
+# Layer 1 only: `tests/preflight.sh` reads a real `~/.ssh/config` and `tests/eval.sh`
+# spends API tokens on headless agent sessions, so neither belongs on a pull request.
+skill-lint = "bash tests/lint.sh"
+# The static step list lives here and nowhere else; `check.sh` takes it as arguments, and
+# `ci.yml` invokes this task by name, so the local gate and CI cannot drift.
+check-static = "bash scripts/check.sh lint fmt-check typecheck"
+check = { depends-on = ["check-static", "skill-lint"] }
+
+# ============================== ruff ==============================
+
+[tool.ruff]
+line-length = 100
+src = ["scripts", "skills"]
+# No `target-version`: ruff infers it from `requires-python`.
+extend-exclude = [".pixi", "site", "build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "PT",  # flake8-pytest-style
+    "PTH", # flake8-use-pathlib
+    "N",   # pep8-naming
+    "D",   # pydocstyle (numpy convention, configured below)
+    "RUF", # ruff-specific
+]
+# E501: the formatter owns line length. D203/D213: incompatible with D211/D212.
+ignore = ["E501", "D203", "D213"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+# ============================== pyright ==============================
+
+[tool.pyright]
+# `scripts` and `skills`: the two directories where this repo's Python will land.
+include = ["scripts", "skills"]
+exclude = ["**/__pycache__", "**/.pixi"]
+venvPath = ".pixi/envs"
+venv = "default"
+# No `pythonVersion`: taken from the interpreter in the environment above.
+typeCheckingMode = "standard"
+# Not redundant: `standard` does not check that a parameter is annotated at all. `Any`
+# satisfies it, so the fix is always in the file you are editing.
+reportMissingParameterType = "error"
+# Deliberately NOT `reportUnknownParameterType`: it also fails annotated parameters and
+# inferred return types whose types an untyped dependency owns. Not a bar a lab repo can meet.
+useLibraryCodeForTypes = true
+reportMissingTypeStubs = "none"

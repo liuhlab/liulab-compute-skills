@@ -57,8 +57,19 @@ else err "combined descriptions ${total_desc} chars exceed the 1536-char listing
 
 echo "== no-secrets sweep =="
 # Publishable tree only (what git tracks + working copies), minus this test
-# and the gitignored MkDocs build output (site/).
-SWEEP() { grep -rnE "$1" --exclude-dir=.git --exclude-dir=.claude --exclude-dir=site --exclude=lint.sh . ; }
+# and the gitignored build and cache trees. Nothing excluded here is publishable
+# — every entry is in .gitignore, and this list is kept in step with it.
+# `.pixi/` holds vendored conda packages carrying both IP literals and key
+# material, and `.ruff_cache/` stores absolute paths (so, the local username):
+# sweeping either would turn this gate permanently red the day someone runs
+# `pixi run check`, which is the fastest way to get the gate disabled.
+SWEEP() { grep -rnE "$1" \
+  --exclude-dir=.git --exclude-dir=.claude --exclude-dir=.pixi \
+  --exclude-dir=site --exclude-dir=dist --exclude-dir=build \
+  --exclude-dir=.cache --exclude-dir=__pycache__ \
+  --exclude-dir=.ruff_cache --exclude-dir=.mypy_cache \
+  --exclude-dir=.pytest_cache \
+  --exclude=lint.sh . ; }
 # 0.0.0.0 / 127.0.0.1 are well-known non-secret addresses (used in the
 # "bind to localhost only" safety instructions) — everything else flags.
 if SWEEP '([0-9]{1,3}\.){3}[0-9]{1,3}' | grep -vE '0\.0\.0\.0|127\.0\.0\.1'; then
@@ -68,14 +79,20 @@ if SWEEP 'Identity[F]ile|BEGIN [A-Z ]*PRIVATE[ ]KEY|ssh-(rsa|ed25519)[ ]AAAA'; t
   err "key material / IdentityFile reference found (above)"
 else ok "no key material"; fi
 # Usernames come from THIS machine's ssh config at test time — none are
-# stored in the repo, but none may appear in it either.
-users=$( (awk 'tolower($1)=="user"{print $2}' ~/.ssh/config 2>/dev/null; whoami) | sort -u)
+# stored in the repo, but none may appear in it either. Shared CI service
+# accounts are exempt for the same reason the hostname sweep below exempts
+# the public forges: every GitHub-hosted machine runs as the same well-known
+# name, which is nobody's identity and is also an ordinary English word this
+# repo's own prose (and the copied scripts/check.sh) uses. It can never be a
+# lab username, so exempting it costs the sweep nothing.
+users=$( (awk 'tolower($1)=="user"{print $2}' ~/.ssh/config 2>/dev/null; whoami) \
+         | grep -vxE 'runner' | sort -u)
 for u in $users; do
   if SWEEP "(^|[^a-zA-Z0-9_-])$u([^a-zA-Z0-9_-]|\$)"; then
     err "local username '$u' appears in the repo (above)"
   fi
 done
-ok "no local ssh-config usernames leaked (checked $(echo "$users" | wc -l | tr -d ' ') names)"
+ok "no local ssh-config usernames leaked (checked $(printf '%s\n' "$users" | grep -c .) names)"
 # Hostnames likewise come from THIS machine's ssh config at test time — the
 # repo may reference hosts only by alias. Only dotted values are swept
 # (single-label names are indistinguishable from alias vocabulary); wildcards
