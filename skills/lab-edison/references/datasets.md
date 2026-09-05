@@ -1,9 +1,12 @@
 # Datasets: upload, attach, fetch what the run made
 
-Companion to `SKILL.md`'s "Analysing a dataset". Everything here was read off the installed
-`edison-client` 0.16.1 on 2026-09-05 — re-read it the same way when this is next touched. The
-`uv` invocation and the routing table are in `jobs.md`; submitting, polling, recovering and
-cancelling are in `tasks.md`. Neither is repeated here.
+> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
+
+Companion to `SKILL.md`. Read it whenever a run takes data with the question: `ANALYSIS` needs a
+URI, so the upload comes first, then `submit --data`, then `fetch`. Re-read the package the same
+way when this page is next touched. The `uv` invocation and the routing table are in `jobs.md`;
+submitting, polling, recovering and cancelling are in `tasks.md`. Neither is repeated here.
 
 ## Upload
 
@@ -39,24 +42,26 @@ whole difference between the two return values. A collection also comes back who
 
 ## Attach it to the task
 
-```python
-task = TaskRequest(name=JobNames.ANALYSIS, query="<the exact query you showed the user>")
-task_id = client.create_task(task, files=[uri])
+```bash
+bash scripts/edison-task.sh submit --job ANALYSIS --query-file <file> --data data_entry:<uuid>
 ```
 
-`files` takes URIs, never paths, and several of them attach several datasets. The client writes
-them into `runtime_config.environment_config["data_storage_uris"]`, so set that key **or** pass
-`files` — both at once raises `ValueError`.
+`--data` becomes `create_task(task, files=[uri])`. It takes URIs, never paths, and repeating it
+attaches several datasets. The client writes them into
+`runtime_config.environment_config["data_storage_uris"]`, so set that key **or** pass the URIs —
+both at once raises `ValueError`.
 
 ## Fetch what the run produced
 
-The answer and the notebook come off the response (`tasks.md`). Files the run *made* are listed
-by provenance, then fetched one at a time:
-
-```python
-entries = client.list_files(task_id)["data"]  # provenance records, each carrying data_storage
-path = client.fetch_data_from_storage("<uuid>")  # STRIP the "data_entry:" prefix first
+```bash
+bash scripts/edison-task.sh fetch <task-id> --out <dir>            # answer, notebook, records
+bash scripts/edison-task.sh fetch <task-id> --out <dir> --storage <id>   # one entry
 ```
+
+The answer and the notebook come off the response (`tasks.md`). Files the run *made* are listed
+by provenance, then fetched one at a time — `client.list_files(task_id)["data"]`, then
+`client.fetch_data_from_storage("<uuid>")`, which takes the bare id, so the command strips a
+`data_entry:` prefix for you.
 
 `list_files` returns a dict with one key, `data`, holding the list — reaching for it as a list
 is the mistake to avoid, and an empty list means the run wrote nothing worth keeping.
@@ -70,12 +75,19 @@ reporting it.
 
 ## Where the run happens
 
-The client and the key belong to the user's own machine by default, and `SKILL.md` says why. On
-arc — the only cluster where this is possible at all, and only with the user's own key file
-already there — `uv` lives under the user's home, so any remote command needs a login shell.
-`skills/lab-hpc/references/arc-hpc.md` covers that and the transfer hosts;
-`skills/lab-hpc/references/ircbc-hpc.md` covers why ircbc cannot reach the platform. Neither
-fact is repeated here.
+**The default is the user's own machine.** A run started on a cluster needs a live credential on a
+shared node, and the only machine that has to hold one is theirs. Arc is the one cluster where
+running from it is possible at all, and only once the user has installed their own key file there
+— explain that, never do it for them. There, `uv` lives under the user's home, so any remote
+command needs a login shell. `skills/lab-hpc/references/arc-hpc.md` covers that and the transfer
+hosts, and neither fact is repeated here.
+
+On ircbc, stage the data down and upload from the user's own machine. The basis for that is
+narrower than it looks: `lab-hpc` records nothing about this platform. What it records is that
+ircbc's compute nodes have no route to the internet
+(`skills/lab-hpc/references/ircbc-hpc.md`), and that the two hosts there that do have one are a
+doorway and a data mover, neither of them a place to run work. Earlier text here claimed the
+platform cannot be reached from ircbc at all; nothing verifies that.
 
 ## Preparing the data
 

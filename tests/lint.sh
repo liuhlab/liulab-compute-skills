@@ -104,7 +104,7 @@ else ok "no key material"; fi
 # the name `edison-client` actually reads, and `EDISON_KEY` is the near miss a
 # user who set it up from memory would write — a real key committed under the
 # wrong name is exactly as leaked as one committed under the right name.
-if SWEEP '(EDISON_PLATFORM_API_KEY|EDISON_KEY)[[:space:]]*=' | grep -v 'PASTE-YOUR-EDISON-KEY-HERE'; then
+if SWEEP '(EDISON_PLATFORM_API_KEY|EDISON_KEY)[[:space:]]*=' | grep -vF "$(bash skills/lab-edison/scripts/check-edison-config.sh --constants | sed -n 's/^PLACEHOLDER=//p' | grep . || echo NO-PLACEHOLDER-FROM-THE-PREFLIGHT)"; then
   err "Edison API key assigned to something other than the placeholder (above)"
 else ok "no Edison API key (only the PASTE-YOUR-... placeholder)"; fi
 # Usernames come from THIS machine's ssh config at test time — none are
@@ -151,6 +151,58 @@ if [ "$hleak" -eq 0 ]; then
   ok "no local ssh-config hostnames leaked (checked $hcount names)"
 fi
 
+echo "== vendor attribution =="
+# The Edison platform is run by Edison Scientific, FutureHouse's commercial spinout, and the
+# Edison entry in CONTEXT.md is the single authority on that. Four other registers say it in
+# their own words — the skill body, its trigger description, README.md and the published page
+# — and nothing can lint five registers for "says the right thing". This lints all of them
+# for "never says the wrong thing". Same shape as the eval suite's DENY assertions, which
+# guard one specific wrong job value the same way.
+#
+# Three appearances of the old name are CORRECT and must survive:
+#   * the platform's job-name strings, `job-futurehouse-...`;
+#   * the persona picker's handle, `@FutureHouse/...`;
+#   * CHANGELOG.md, whose entries record what shipped and are not rewritten afterwards.
+# The first two are naming residue of the spinout and are live API values — eliding them here
+# is what stops this rule being "fixed" by editing a string the client has to send verbatim.
+#
+# Narrow on purpose: a regression test for one known error, not a factual-claims checker. It
+# matches the shapes that put FutureHouse in charge of the platform and nothing else, so
+# "Edison Scientific, FutureHouse's commercial spinout" passes and must keep passing.
+VENDOR_WRONG='future[ -]?house[^[:space:]]{0,2}[[:space:]]+'
+VENDOR_WRONG="$VENDOR_WRONG"'(edison|research|platform|product|service|api|client'
+VENDOR_WRONG="$VENDOR_WRONG"'|runs?|operates?|owns?|hosts?|provides?)'
+VENDOR_WRONG="$VENDOR_WRONG"'|(run|built|operated|owned|made|developed|provided|hosted|created)'
+VENDOR_WRONG="$VENDOR_WRONG"'[[:space:]]+by[[:space:]]+future[ -]?house'
+vendor_elide() { sed -e 's/job-futurehouse-[A-Za-z0-9._-]*//g' -e 's|@FutureHouse/[A-Za-z0-9._-]*||g'; }
+
+# Both directions, every run. A sweep that can no longer fire looks exactly like a sweep that
+# passes, and this one guards prose that nothing else re-checks.
+vendor_probe() { # <label> <trips|clears> <text>
+  local label="$1" want="$2" text="$3" got
+  if printf '%s\n' "$text" | vendor_elide | grep -qiE "$VENDOR_WRONG"; then got=trips; else got=clears; fi
+  if [ "$got" = "$want" ]; then ok "vendor probe: $label $want the check"
+  else err "vendor probe: $label — wanted '$want', got '$got': $text"; fi
+}
+vendor_probe "the possessive re-attribution" trips  "FutureHouse's Edison research platform, reached from a lab machine"
+vendor_probe "the bare adjective form"       trips  "the FutureHouse Edison platform"
+vendor_probe "the run-by form"               trips  "the Edison platform, run by FutureHouse"
+vendor_probe "the corrected attribution"     clears "run by Edison Scientific — FutureHouse's commercial spinout"
+vendor_probe "a job-name string"             clears "get_session returns job-futurehouse-data-analysis-aries"
+vendor_probe "the persona picker handle"     clears "the picker offers @FutureHouse/data-analysis-aries"
+
+# CHANGELOG.md is excluded by name rather than by pattern: its older entries carry the wrong
+# attribution as shipped history, and rewriting a release note to satisfy a linter hides the
+# error instead of correcting it.
+vendor_hits=$(SWEEP '[Ff]uture[ -]?[Hh]ouse' | grep -v '^\./CHANGELOG\.md:' \
+              | vendor_elide | grep -iE "$VENDOR_WRONG")
+if [ -n "$vendor_hits" ]; then
+  printf '%s\n' "$vendor_hits"
+  err "the Edison platform is attributed to FutureHouse (above, with job names elided) — Edison Scientific runs it; CONTEXT.md's Edison entry is the authority"
+else
+  ok "no FutureHouse attribution of the Edison platform (CHANGELOG history exempt)"
+fi
+
 echo "== check-hpc-config.sh self-test =="
 out=$(bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)
 rc=$?
@@ -167,10 +219,23 @@ echo "== check-edison-config.sh self-test =="
 # outside the tree the sweep reads.
 # Every case passes `-f`, which also suppresses the environment variable: on a
 # maintainer's machine the real key IS exported, and without that suppression
-# all three fixtures would report configured and prove nothing.
+# every fixture would report configured and prove nothing.
 edison_pf=skills/lab-edison/scripts/check-edison-config.sh
 fx=$(mktemp -d "${TMPDIR:-/tmp}/lab-edison-fixtures.XXXXXX")
 trap 'rm -rf "$fx"' EXIT
+
+# The preflight owns the constants describing the key file, so the fixtures are built from
+# what it prints rather than from literals of their own. A placeholder fixture that restated
+# the string would go on passing after the preflight's placeholder moved, which is the drift
+# the section below exists to catch.
+edison_consts=$(bash "$edison_pf" --constants)
+edison_const() { printf '%s\n' "$edison_consts" | sed -n "s/^$1=//p"; }
+ed_var=$(edison_const VAR)
+ed_placeholder=$(edison_const PLACEHOLDER)
+ed_keyfile=$(edison_const KEYFILE)
+ed_mode_glob=$(edison_const MODE_GLOB)
+ed_mode_label=$(edison_const MODE_LABEL)
+ed_chmod=$(edison_const CHMOD_MODE)
 
 edison_case() { # <label> <key-file> <expected-verdict-substring> <expected-exit>
   local label="$1" file="$2" want="$3" wantrc="$4" out rc
@@ -183,18 +248,153 @@ edison_case() { # <label> <key-file> <expected-verdict-substring> <expected-exit
   fi
 }
 
-printf 'export EDISON_PLATFORM_API_KEY=PASTE-YOUR-EDISON-KEY-HERE\n' >"$fx/placeholder.env"
-chmod 600 "$fx/placeholder.env"
+printf 'export %s=%s\n' "$ed_var" "$ed_placeholder" >"$fx/placeholder.env"
+chmod "$ed_chmod" "$fx/placeholder.env"
 # Not a key: 22 characters of the word "fixture", at a mode the preflight must reject.
-printf 'export EDISON_PLATFORM_API_KEY=fixture-not-a-real-key\n' >"$fx/open-perms.env"
+printf 'export %s=fixture-not-a-real-key\n' "$ed_var" >"$fx/open-perms.env"
 chmod 644 "$fx/open-perms.env"
+# The path that lets work PROCEED, which nothing covered until 2026-09: a replaced value at
+# an owner-only mode. Mode 400 on purpose — it is owner-only without being 600, so this case
+# fails the moment someone narrows the rule back to the one mode the remedy hands out.
+printf 'export %s=fixture-stands-in-for-a-replaced-key\n' "$ed_var" >"$fx/replaced.env"
+chmod 400 "$fx/replaced.env"
+: >"$fx/empty.env"
+chmod "$ed_chmod" "$fx/empty.env"
+# Present, correctly permissioned, and assigning nothing — what a user who edited the file
+# and deleted the wrong line leaves behind.
+printf '# no assignment here\n' >"$fx/no-assignment.env"
+chmod "$ed_chmod" "$fx/no-assignment.env"
 
 edison_case "missing file"       "$fx/absent.env"      "key file: MISSING"                 1
 edison_case "placeholder unreplaced" "$fx/placeholder.env" "key: PLACEHOLDER"              1
 edison_case "over-permissive mode"   "$fx/open-perms.env"  "key file: PERMISSIONS TOO OPEN" 1
+edison_case "empty key file"         "$fx/empty.env"       "key file: EMPTY"               1
+edison_case "file assigns no key"    "$fx/no-assignment.env" "key: NOT SET"                1
+edison_case "replaced key, owner-only" "$fx/replaced.env"  "edison: CONFIGURED"            0
 
 rm -rf "$fx"
 trap - EXIT
+
+echo "== edison key-file constants =="
+# One owner for the four constants describing the key file — the variable name the client
+# reads, the shipped placeholder, the file's location, and which modes are acceptable — and
+# it is the preflight above. Everything else in the tree has to AGREE with what it prints
+# rather than restate it. The failure this catches is specific: let the onboarding
+# template's placeholder drift from the preflight's, and a user who never replaced it is
+# told CONFIGURED and then fails minutes later at authentication — the exact failure the
+# placeholder check exists to prevent.
+if [ -z "$edison_consts" ]; then
+  err "$edison_pf --constants printed nothing, so nothing could be cross-checked"
+else
+  cmissing=""
+  for k in VAR PLACEHOLDER KEYFILE MODE_GLOB MODE_LABEL CHMOD_MODE; do
+    printf '%s\n' "$edison_consts" | grep -q "^$k=." || cmissing="$cmissing $k"
+  done
+  if [ -n "$cmissing" ]; then err "--constants printed no value for:$cmissing"
+  else ok "--constants prints every key-file constant"; fi
+  # The shape is the contract: one KEY=value per line and nothing else, so a shell or a
+  # python check can parse it. A stray sentence here would also be the first place a future
+  # edit could print something that is not a constant.
+  if printf '%s\n' "$edison_consts" | grep -qvE '^[A-Z_]+=.'; then
+    printf '%s\n' "$edison_consts" | grep -vE '^[A-Z_]+=.'
+    err "--constants printed a line that is not KEY=value (above)"
+  else ok "--constants prints KEY=value lines only"; fi
+
+  const_case() { # <label> <file> <literal-that-must-appear>
+    local label="$1" file="$2" want="$3"
+    if [ ! -f "$file" ]; then err "$label — $file is missing"
+    elif grep -qF -- "$want" "$file"; then ok "$label"
+    else err "$label — '$want' appears nowhere in $file"; fi
+  }
+
+  tmpl=templates/edison.env
+  page=docs/skills/lab-edison.md
+  const_case "$tmpl assigns the owned variable and placeholder" "$tmpl" \
+    "export $ed_var=$ed_placeholder"
+  const_case "$tmpl names the owned location"   "$tmpl" "$ed_keyfile"
+  const_case "$tmpl hands out the owned chmod"  "$tmpl" "chmod $ed_chmod"
+  const_case "$page names the owned variable"    "$page" "$ed_var"
+  const_case "$page prints the owned placeholder" "$page" "$ed_placeholder"
+  const_case "$page names the owned location"    "$page" "$ed_keyfile"
+  const_case "$page hands out the owned chmod"   "$page" "chmod $ed_chmod"
+
+  # The remedy every document repeats has to be a mode the preflight actually accepts.
+  # Unquoted so the glob globs; shellcheck reads that as word splitting.
+  # shellcheck disable=SC2254
+  case "$ed_chmod" in
+    $ed_mode_glob) ok "chmod $ed_chmod satisfies the $ed_mode_label rule ($ed_mode_glob)" ;;
+    *) err "the remedy hands out chmod $ed_chmod, which the preflight's own $ed_mode_glob test rejects" ;;
+  esac
+
+  # The sweep's Edison exemption, two ways. First: it must not restate the placeholder
+  # anywhere in this file — a second copy is a second thing to forget.
+  if grep -qF -- "$ed_placeholder" tests/lint.sh; then
+    err "tests/lint.sh restates the placeholder; it must read it from $edison_pf"
+  else
+    ok "the no-secrets sweep reads the placeholder from the preflight"
+  fi
+  # Second, and behavioural: the template's assignment is the one line in the tree that may
+  # hold the placeholder, so the sweep's own regex over it, minus what the preflight prints,
+  # must come out empty. This is what fails when the template's placeholder drifts.
+  if grep -E "($ed_var|EDISON_KEY)[[:space:]]*=" "$tmpl" | grep -vF "$ed_placeholder"; then
+    err "$tmpl assigns something the preflight's placeholder does not exempt (above)"
+  else
+    ok "$tmpl's assignment is exactly what the sweep exempts"
+  fi
+fi
+
+echo "== edison provenance =="
+# Every Edison reference page opens with a provenance block: the page's default source, the
+# date it was checked, and the tier that holds unless a claim says otherwise — verified, read
+# or unverified. See `docs/adr/0009-facts-carry-their-provenance.md`.
+#
+# Vendor facts are not cluster facts. The vendor moves them without telling anyone, and
+# several of them can only be observed by spending a credit, so a page has to say how it
+# knows. Three wrong claims shipped in four releases before this check existed, each caught by
+# a person rather than by anything here.
+#
+# What this checks is that the block is THERE and PARSES: a real calendar date and one of the
+# three tier words. It cannot check that a date is honest — nothing can — and it must not read
+# as though it did: whether the package still says what the page says is answered only by
+# re-reading the package.
+prov_n=0
+for f in skills/lab-edison/references/*.md; do
+  [ -f "$f" ] || continue
+  prov_n=$((prov_n + 1))
+  # stderr is captured too, so a crash in here is a FAIL and never a silent pass.
+  msg=$(python3 - "$f" 2>&1 <<'EOF'
+import datetime
+import pathlib
+import re
+import sys
+
+BLOCK = re.compile(
+    r"^> \*\*Provenance\*\* — Source: (?P<source>.+?) · Checked: (?P<date>[^ ·]+) ·"
+    r" Default tier: (?P<tier>[A-Za-z]+)"
+)
+TIERS = ("verified", "read", "unverified")
+
+head = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").splitlines()[:6]
+found = [m for m in (BLOCK.match(line) for line in head) if m]
+if not found:
+    print("no provenance block in the first 6 lines")
+elif not found[0]["source"].strip():
+    print("the Source field is empty")
+elif found[0]["tier"] not in TIERS:
+    print(f"default tier '{found[0]['tier']}' is not one of {', '.join(TIERS)}")
+else:
+    try:
+        datetime.date.fromisoformat(found[0]["date"])
+    except ValueError:
+        print(f"Checked date '{found[0]['date']}' is not a real YYYY-MM-DD date")
+EOF
+  )
+  if [ -n "$msg" ]; then err "$f: $msg"
+  else ok "$f carries a provenance block that parses"; fi
+done
+if [ "$prov_n" -eq 0 ]; then
+  err "no pages under skills/lab-edison/references/, so the provenance rule checked nothing"
+fi
 
 echo "== release =="
 # The version has to identify the content. This plugin's source is the repo ROOT, so
@@ -218,6 +418,101 @@ elif git diff --quiet "v$pver" -- . 2>/dev/null; then
 else
   err "version $pver is already tagged v$pver but the tree has moved — bump the version. Changed: $(git diff --name-only "v$pver" -- . | tr '\n' ' ')"
 fi
+
+echo "== edison-task.sh self-test =="
+# The Edison command's command-line interface — the one seam the spend path is tested
+# through. Everything below is asserted on an exit code and on stdout, never on the script's
+# insides, and every case costs nothing: two refusals never reach the network, and the one
+# path that would is answered by a stub on PATH that runs no client.
+edt=skills/lab-edison/scripts/edison-task.sh
+tx=$(mktemp -d "${TMPDIR:-/tmp}/lab-edison-task.XXXXXX")
+trap 'rm -rf "$tx"' EXIT
+mkdir -p "$tx/bin"
+
+# A query a user could have confirmed, an empty one, and a key file holding a sentence saying
+# it is not a key. Built here and deleted on the way out, like the preflight's fixtures above,
+# so the no-secrets sweep never reads one — and the assignment is written through the
+# preflight's own variable name rather than spelled out, for the same reason.
+printf 'what is known about the thing\n' >"$tx/query.txt"
+: >"$tx/empty.txt"
+edt_fake_key=fixture-stands-in-for-a-key-and-must-never-leak
+printf 'export %s=%s\n' "$ed_var" "$edt_fake_key" >"$tx/key.env"
+chmod "$ed_chmod" "$tx/key.env"
+
+edt_case() { # <label> <expected-exit> <expected-substring> <args...>
+  local label="$1" wantrc="$2" want="$3"; shift 3
+  local out rc
+  out=$(bash "$edt" "$@" 2>&1)
+  rc=$?
+  if [ "$rc" -eq "$wantrc" ] && printf '%s\n' "$out" | grep -qF "$want"; then
+    ok "edison-task: $label"
+  else
+    err "edison-task: $label — wanted '$want' and exit $wantrc, got exit $rc: $out"
+  fi
+}
+
+# Submission refuses before anything can be spent. Each of these passes a key file that does
+# not exist, so a green result cannot come from a maintainer's own configured machine: the
+# argument checks run first and these three never reach the preflight at all.
+edt_case "submit refuses an absent query file" 2 "no query file at" \
+  submit --job LITERATURE --query-file "$tx/nothing-here.txt" -f "$tx/absent.env"
+edt_case "submit refuses an empty query file" 2 "is empty" \
+  submit --job LITERATURE --query-file "$tx/empty.txt" -f "$tx/absent.env"
+edt_case "submit refuses a job name off the routing table" 2 "never invent a name" \
+  submit --job PHOENIX --query-file "$tx/query.txt" -f "$tx/absent.env"
+
+# With no key file, every subcommand that would touch the network refuses AND relays the
+# preflight's own remedy. The placeholder is what makes it the preflight's own rather than a
+# copy: it comes out of `--constants` above, the preflight prints it inside the remedy, and
+# it is written down nowhere in this file.
+for edt_spec in "submit --job LITERATURE --query-file $tx/query.txt" "status a-task-id" \
+                "list" "cancel a-task-id" "fetch a-task-id"; do
+  # shellcheck disable=SC2086  # $edt_spec is an argument list on purpose, not one word
+  edt_case "${edt_spec%% *} refuses and relays the remedy when no key file exists" 1 \
+    "$ed_placeholder" $edt_spec -f "$tx/absent.env"
+done
+
+# The task-id-first property, and the key's route to the client, bought for nothing: `uv` is
+# shadowed by a stub that runs no client, records every argument and the whole program it is
+# handed, and reports only WHETHER the key variable arrived non-empty — never its value. Same
+# shape as the eval guard's `claude` stub below, and for the same reason: a test of the
+# spending path must be safe on the day the path is broken.
+cat >"$tx/bin/uv" <<STUB
+#!/bin/sh
+printf '%s\n' "\$*" >>"$tx/uv-args"
+cat >>"$tx/uv-stdin"
+if [ -n "\${$ed_var:-}" ]; then echo yes >>"$tx/uv-env"; else echo no >>"$tx/uv-env"; fi
+echo "TASK_ID: stub-task-id-0001"
+STUB
+chmod +x "$tx/bin/uv"
+
+edt_out=$(PATH="$tx/bin:$PATH" bash "$edt" submit --job literature \
+  --query-file "$tx/query.txt" -f "$tx/key.env" 2>/dev/null)
+edt_rc=$?
+if [ "$edt_rc" -eq 0 ] && [ "$(printf '%s\n' "$edt_out" | head -1)" = "TASK_ID: stub-task-id-0001" ]; then
+  ok "edison-task: the task id is the first line of stdout on a submission"
+else
+  err "edison-task: wanted the stub's task id as the first line and exit 0, got exit $edt_rc: $edt_out"
+fi
+# Without this the three leak checks below would pass on a command that never sent the key at
+# all, which is a different thing from sending it safely.
+if [ -f "$tx/uv-env" ] && grep -qx yes "$tx/uv-env"; then
+  ok "edison-task: the key reached the client through the environment"
+else
+  err "edison-task: the client ran with no key in its environment, so the leak checks prove nothing"
+fi
+edt_leaked=""
+grep -qF "$edt_fake_key" "$tx/uv-args" 2>/dev/null && edt_leaked="$edt_leaked an-argument"
+grep -qF "$edt_fake_key" "$tx/uv-stdin" 2>/dev/null && edt_leaked="$edt_leaked the-program-text"
+printf '%s\n' "$edt_out" | grep -qF "$edt_fake_key" && edt_leaked="$edt_leaked stdout"
+if [ -n "$edt_leaked" ]; then
+  err "edison-task: the key appeared in:$edt_leaked"
+else
+  ok "edison-task: the key appears in no argument, in no program text and in no output"
+fi
+
+rm -rf "$tx"
+trap - EXIT
 
 echo "== eval guard self-test =="
 # These lines RUN tests/eval.sh. If its guard ever regressed they would launch real headless

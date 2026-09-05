@@ -1,9 +1,9 @@
 # lab-edison — cited answers from the Edison platform
 
-Edison is FutureHouse's research platform. It reads the published
-literature and answers with citations. It can also run code on a dataset
-you upload. This skill drives it from your machine through the
-`edison-client` package.
+Edison is a research platform. The company that runs it is Edison
+Scientific. It reads the published literature and answers with
+citations. It can also run code on a dataset you upload. This skill
+drives it from your machine through the `edison-client` package.
 
 No cluster is involved. This is the one skill in the plugin that talks
 only to a cloud service.
@@ -120,9 +120,10 @@ That list covers one-shot tasks. Kosmos sits on the chat side of the
 same platform, under its own name.
 
 The skill will not start one unless you ask for that run in plain words.
-A Kosmos run costs far more than an ordinary task, and now that the
-skill knows how one starts, that rule is what stands between you and a
-large bill.
+A run pays for every task it fans out to, so the cost depends on how far
+it goes. There is no flat price to quote you — check your own balance.
+Now that the skill knows how one starts, that rule is what stands
+between you and a large bill.
 
 What it does instead is free. It drafts the goal with you. It checks
 your data is in a shape Kosmos can use. And it can show you a run you
@@ -136,9 +137,10 @@ else.
 - **Data on your laptop.** Nothing to arrange. It uploads and runs.
 - **Data on arc.** The skill brings the files down first, then uploads
   from your machine. Your key stays off the shared cluster.
-- **Data on ircbc.** Edison cannot be reached from that cluster at all.
-  Its compute nodes have no route out. The skill says so and stops,
-  rather than hunting for a way around it.
+- **Data on ircbc.** The skill brings the files down here too. Compute
+  nodes there have no route out to the internet. The two hosts that do
+  have one are a doorway and a data mover, and work does not run on
+  either.
 
 You can run Edison on arc, but only after you put the key there
 yourself, in your own session. The skill will not do it for you. It

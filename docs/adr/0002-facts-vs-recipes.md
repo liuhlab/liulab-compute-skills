@@ -29,7 +29,7 @@ compute nodes — so a fact that drifted is not a stale sentence, it is an agent
 wrong command against a real cluster.
 
 The two kinds of content also change for different reasons and on different evidence. A
-fact is re-verified with read-only commands on a login node and carries a date. A procedure
+fact is re-verified with read-only commands on a compute node and carries a date. A procedure
 changes when a step or a flag changes, and is tested by an eval case. Keeping them apart
 means each is edited against the evidence that can actually settle it.
 

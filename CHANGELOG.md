@@ -5,6 +5,89 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.6 — 2026-09-05
+
+An architecture review of `lab-edison` found three claims about the Edison
+platform that no source backed, and one safety rule that only worked if the
+agent remembered it. This release corrects the claims, turns the rule into a
+command, and makes every Edison page say where its facts came from.
+
+- **Correction: the platform is run by Edison Scientific, not FutureHouse.**
+  Edison Scientific is FutureHouse's commercial spinout, and the platform
+  moved to it. Four releases named the wrong company, in five places. If you
+  have repeated that to a colleague, this is the fix. The platform's own job
+  names still read `job-futurehouse-…` and its persona picker still offers
+  `@FutureHouse/…`. Those are live values and they are correct as they stand
+  — naming left over from the spinout, and never something to "fix".
+- **`lab-edison` now spends through one command, not a remembered rule.**
+  `scripts/edison-task.sh` does submit, status, list, cancel and fetch. The
+  task id is the first line it prints, before anything can block, so a run
+  you paid for is always reachable. Submission takes your query as a file, so
+  the text you approved is the text that goes out; a missing or empty file is
+  refused before anything is spent. The command runs the preflight itself, so
+  a session that skips the setup check refuses instead of spending. Your key
+  reaches the client through the environment and by no other route. See
+  `docs/adr/0010-edison-skill-runs-through-a-script.md`.
+- **Correction: no price for a Kosmos run appears anywhere now.** The old
+  claim — roughly two orders of magnitude more than an ordinary task — was
+  sourced nowhere and shipped six times. A Kosmos run is billed for each of
+  the tasks it fans out to, so it costs the sum of the ones it calls and
+  there is no flat per-run price. Check your own balance. The rule has not
+  changed: the skill never starts a run unless you ask for that run.
+- **Correction: the reason data on ircbc has to come down first.** The skill
+  said the platform cannot be reached from that cluster at all, and cited a
+  page that says the opposite. The compute nodes there have no route out.
+  The two hosts that do have one are a doorway and a data mover, and work
+  does not run on either. So the instruction stands — the skill brings the
+  files down and uploads from your machine — and the reason is now what its
+  source supports.
+- **Your key file passes at any owner-only mode.** Four documents said it had
+  to be mode 600; the check has always accepted 400 as well. They agree now.
+  `chmod 600` is still what the remedy hands you, because that is a command
+  and not a claim about what passes. The preflight owns the four facts about
+  the key file — the variable, the placeholder, the location and the modes —
+  and prints them on request, so the onboarding template, the published page
+  and the secrets sweep can be checked against it instead of repeating it.
+- **Every `lab-edison` reference page says where its facts came from.** A
+  provenance block at the head gives the source, the date it was checked, and
+  a tier: **verified** (we ran it), **read** (from the package or a vendor
+  page, not run), **unverified** (inferred). A claim at another tier is
+  tagged where it is made, which is what now marks the Kosmos chat call
+  nobody has ever run. See
+  `docs/adr/0009-facts-carry-their-provenance.md`.
+- **The skill body is 547 words, down from 950.** It holds what must be true
+  before the first call and nothing else: the preflight and its refusal, the
+  key rules, show-before-you-spend, never start Kosmos unasked, and one line
+  saying which reference page answers what. Every procedure moved behind the
+  seam to `references/`, which is where an agent was looking them up anyway.
+- Also corrected: the blocking wait's default timeout was written in minutes
+  in one file and in seconds in another, and `references/tasks.md` owns the
+  number now. And the rule `2026.9.3` announced — never guess a job-name
+  string — is written down at last, in `references/jobs.md`. The command
+  will only send a name from its own short list, so there is nothing left to
+  guess past.
+
+Tests:
+
+- **The gate can see four things it could not see before**: a commit putting
+  FutureHouse back in charge of the platform (the job names, the persona
+  handle and this file's history are exempt), a reference page with no
+  provenance block or with a date that will not parse, key-file constants
+  that have drifted apart, and a skill body over its cap. Each was checked in
+  both directions — a sweep that can no longer fire looks just like a sweep
+  that passes.
+- **Skill bodies have a word cap of their own, 600** (`Lab.LengthSkill`).
+  One dial used to cover skill bodies, reference pages and `AGENTS.md`
+  together, so raising it for one handed room to all three. All four bodies
+  pass untouched; the Edison body at its old size would not have.
+- **The preflight's success path has a fixture at last.** All three of the
+  old ones asserted failure, so the check that lets work proceed was the one
+  path nothing covered. Three new cases: a replaced key at mode 400, an empty
+  file, and a file that assigns nothing.
+- The spend path is tested for nothing. The refusals never reach the network,
+  and the checks that the task id leads the output and that the key never
+  lands in an argument, a program or a log run against a stub.
+
 ## 2026.9.5 — 2026-09-05
 
 A case study — one real research question put through `lab-edison` end to end —
@@ -104,7 +187,9 @@ the skills; the number had stopped identifying the tree.
   it is the practical half. A wrong guess teaches you that one string was
   wrong; a right guess starts a run costing about two orders of magnitude more
   than the task the user asked for. Submitting is the only decisive check, and
-  submitting is what there is to avoid.
+  submitting is what there is to avoid. **Corrected in `2026.9.6`:** the rule
+  was announced here and never written into the skill. It reached the job
+  reference three releases later.
 - The enum listing is still documented, now framed as the check that can
   settle the question in one direction only.
 

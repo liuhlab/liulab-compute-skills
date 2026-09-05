@@ -1,9 +1,11 @@
 # Jobs, and how to run one
 
-Companion to `SKILL.md`'s "Choosing the job". Read it before the first submission of a session.
-Everything here was read off the installed `edison-client` 0.16.1 on 2026-09-05 — re-read it the
-same way when this is next touched, and believe the package over any vendor page. The submit /
-poll / recover loop is in `tasks.md`.
+> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
+
+Companion to `SKILL.md`, and the first page to read in a session: nothing is submitted until a
+question has a job. Re-read the package the same way when this page is next touched, and believe
+the package over any vendor page. The submit / poll / recover loop is in `tasks.md`.
 
 ## Which job answers which question
 
@@ -18,12 +20,21 @@ one in a response's `job_name` — or under `crow`, which is what task history c
 | Chemistry — molecules, properties, synthesis | `MOLECULES` | `job-futurehouse-data-analysis-molecules` |
 | Something about a dataset the user supplies | `ANALYSIS` | `job-futurehouse-data-analysis-crow-high` |
 
-`ANALYSIS` is driven from `SKILL.md`'s dataset section and `datasets.md`; it is in the table so
-the routing is complete. `DUMMY` (`job-futurehouse-dummy-env`) exercises the plumbing and does
-no science. `CROW`, `FALCON`, `OWL` and `FINCH` are older spellings of four of the rows above —
+`ANALYSIS` is driven from `datasets.md`; it is in the table so the routing is complete.
+`DUMMY` (`job-futurehouse-dummy-env`) exercises the plumbing and does no science. `CROW`, `FALCON`, `OWL` and `FINCH` are older spellings of four of the rows above —
 use the canonical member, so the transcript and the table agree. They share their values with
 the canonical members, so Python folds them into aliases and `list(JobNames)` yields **seven**
 members, not eleven: a listing that looks to be missing `CROW` is complete.
+
+## Never guess a job-name string
+
+`TaskRequest.name` is typed `str | JobNames`, so the client sends whatever string it is handed —
+the enum is a convenience list, not a whitelist. Names outside it do run: task history shows
+`job-futurehouse-paperqa3-api` and `job-futurehouse-data-analysis-heron`, and neither is a member
+(`kosmos.md`). So nothing rejects an invented name, and submitting is the only decisive check —
+which is exactly the thing to avoid. A wrong guess teaches you that one string was wrong; a right
+guess starts a run the user never asked for and bills it to them. Route from the table above, and
+when no row fits, say so and ask.
 
 ## The retired chemistry job
 
@@ -35,29 +46,26 @@ a 404.
 
 ## Running the client
 
-PyPI only, so it runs ephemerally under `uv` and installs nothing the user maintains:
+`scripts/edison-task.sh` runs it. Write the query the user confirmed to a file, then:
 
 ```bash
-. ~/.claude/compute/edison.env
-uv run --no-project --python 3.12 --with edison-client python - <<'PY'
-from edison_client import EdisonClient
-from edison_client.models.app import JobNames, TaskRequest
-
-client = EdisonClient()  # reads the key from the environment
-task = TaskRequest(name=JobNames.LITERATURE, query="<the exact query you showed the user>")
-print("TASK_ID:", client.create_task(task))  # printed before anything can block
-PY
+bash scripts/edison-task.sh submit --job LITERATURE --query-file /path/to/query.txt
 ```
 
-Then poll — `tasks.md` has the loop, and why this is two steps and not one blocking call.
+It runs the preflight, sources the key, prints `TASK_ID: <id>` as its first line and returns.
+Then poll — `tasks.md` has `status` and the rest, and why this is two steps and not one
+blocking call. The `--job` value is a `JobNames` member from the table above; the command
+sends nothing else, so a name you invented is refused rather than submitted.
 
-Both flags are load-bearing:
+Underneath, the client is PyPI only, so it runs ephemerally under `uv` and installs nothing
+the user maintains: `uv run --no-project --python 3.12 --with edison-client python -`. Both
+flags are load-bearing:
 
 - **`--no-project`.** This repo has a `pyproject.toml` of its own. Without the flag `uv` tries to
   sync *this* project instead of an ephemeral one, so the failure lands exactly where a
   maintainer is standing.
-- **`--python 3.12`.** Not cosmetic. Unpinned runs resolved a different interpreter and
-  re-downloaded the whole dependency set a second time.
+- **`--python 3.12`.** Not cosmetic. `[verified]` Unpinned runs resolved a different interpreter
+  and re-downloaded the whole dependency set a second time.
 
 An activated pixi shell does not disturb it — `VIRTUAL_ENV` and `CONDA_PREFIX` do not leak into
 the run, so nothing needs deactivating first. `pixi exec` is not an alternative: conda-forge does
@@ -69,22 +77,14 @@ looks hung. Later runs come from the cache.
 
 `EdisonClient()` takes no arguments here, and constructing it is already a network call: it
 authenticates and fetches your organisations eagerly, so a bad key fails at construction rather
-than at submission. The key reaches it through the environment and by no other route — never an
-`api_key=` argument, never echoed, never sent to a cluster. See `SKILL.md`'s hard rules.
+than at submission. The key reaches it through the environment and by no other route; `SKILL.md`'s
+hard rules say what that forbids.
 
 ## Continuing a task
 
-A follow-up rides on the previous run instead of re-establishing its context:
-
-```python
-from edison_client.models.app import RuntimeConfig
-
-TaskRequest(
-    name=JobNames.LITERATURE,
-    query="<the follow-up question>",
-    runtime_config=RuntimeConfig(continued_job_id="<prior task id>"),
-)
-```
+A follow-up rides on the previous run instead of re-establishing its context —
+`submit --continue <prior task id>`, which the command turns into
+`runtime_config=RuntimeConfig(continued_job_id=...)` on the `TaskRequest`.
 
 The id is the `task_id` of the earlier run and is validated as a UUID, so keep it verbatim. The
 field is `continued_job_id`; the vendor's README calls it `continued_task_id`, which `TaskRequest`

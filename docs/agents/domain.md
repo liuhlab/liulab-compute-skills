@@ -31,6 +31,7 @@ This repo has a fourth home the template does not, and it takes most of the traf
 | What a term means | `CONTEXT.md` |
 | A decision and its trade-off | `docs/adr/` |
 | How a cluster behaves | `skills/lab-hpc/references/` |
+| How a vendor platform behaves | the owning skill's `references/`, under a provenance block |
 | A repeatable procedure | the task-recipe skill that owns it |
 | How the repo is worked on | `AGENTS.md` |
 | What is still open | a GitHub issue |
@@ -39,6 +40,11 @@ This repo has a fourth home the template does not, and it takes most of the traf
 the internet — those are observations, and they belong in a reference page, verified on the
 cluster and dated. Nobody decided them and they change without anyone here agreeing to it.
 Writing one into a record freezes an observation in the one place that is never re-checked.
+
+**A vendor fact is not a decision either**, and it is weaker than a cluster fact: the vendor
+changes it, and the only place several of them can be observed costs money to reach. So it
+carries its tier as well as its date — see `CONTEXT.md` on the provenance block, and
+`docs/adr/0009-facts-carry-their-provenance.md` for why three tiers and not more.
 
 Both `CONTEXT.md` and `docs/adr/` are agent-facing and capped — see `writing.md`. Both are
 also published, unlisted, so the repo's no-secrets policy applies to every word of them.

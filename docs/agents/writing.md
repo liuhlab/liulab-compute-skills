@@ -17,14 +17,17 @@ targets.
 
 | Files | Cap |
 | --- | --- |
-| `AGENTS.md`, `docs/agents/*`, `skills/**/*.md` | 1200 (`Lab.LengthDoc`) |
+| `AGENTS.md`, `docs/agents/*`, `skills/*/references/*` | 1200 (`Lab.LengthDoc`) |
+| `skills/*/SKILL.md` | 600 (`Lab.LengthSkill`) |
 | `docs/adr/*` | 400 (`Lab.LengthAdr`) |
 | `CONTEXT.md` | 200 words per glossary entry, checked by conformance |
 | `docs/research/*` | none — a research note is long by nature |
 
-The `skills/**/*.md` glob is wider than the lab template's `skills/*/SKILL.md`, on purpose:
-this repo's densest agent-facing prose is the per-cluster reference pages under
-`skills/lab-hpc/references/`, and the narrower glob does not reach them.
+A skill body and the pages behind it are capped apart, because they are different things. The
+body is an interface — what must be true before the first tool call — so it gets 600, and a
+body that outgrows that is detail belonging in `references/`. The reference pages are this
+repo's densest agent-facing prose and keep the document cap; the lab template's
+`skills/*/SKILL.md` glob does not reach them at all.
 
 `CONTEXT.md` has no file cap. A glossary grows one term at a time and never shrinks, so a
 file-level count measures how big the domain is, not how well the entries are written — a
@@ -62,6 +65,12 @@ you would otherwise reach for.
 and their settings accumulate, the later section winning. A rule left out of a section
 inherits whatever an earlier one said rather than defaulting off, which once left the
 decision records checked by nothing on a green gate. Broad section first, narrowest last.
+
+**Every declared file class names its section.** Each key in `[tool.liulab.agent-docs]` is
+paired to a section by conformance rule 3, which looks for the key inside a section header
+and wants exactly one match. So a new cap is a new section plus a key that no other header
+spells — check both directions before you commit, because a key matching two headers fails
+the gate and a key matching none is a file class checked by nothing.
 
 ## Which is which
 

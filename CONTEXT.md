@@ -62,7 +62,7 @@ The Edison platform's unit of spend. A submitted task is charged in credits agai
 balance the key belongs to, so a wasted run costs the person whose key it is. The tiers are
 what a skill routes by, never the numbers: literature, precedent and molecules are the
 ordinary tier; high-reasoning literature and analysis cost more and run longer; a batch
-multiplies whichever was picked; a Kosmos run is in a class of its own. No figure appears
+multiplies whichever was picked; a Kosmos run pays for every task it fans out to. No figure appears
 anywhere in this repo. The platform's own billing page is the only current source, and a
 price written into a skill goes stale in silence — so send the user to their balance
 instead of quoting one.
@@ -86,19 +86,31 @@ after the build succeeds — an image that failed its smoke test must not have o
 
 ### Edison
 
-FutureHouse's Edison research platform, reached from a lab machine through the
+The Edison research platform, run by **Edison Scientific** — FutureHouse's commercial
+spinout, which the platform transitioned to — and reached from a lab machine through the
 `edison-client` Python package: cited answers over the published literature, precedent
 searches, chemistry, and a data-analysis agent that runs code on a dataset the user
 uploads. It is a cloud API, and the one thing this repo teaches that has no cluster in it
 at all. `lab-edison` is the skill that drives it — user-invoked only, and in the same
 plugin as the rest. See `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`.
 
+This entry is the **single authority** on who runs the platform. Every other page — the
+skill body, its trigger description, `README.md`, the published page — names Edison
+Scientific in its own register and carries none of the lineage above, because no one
+sentence passes every register's checks. The platform's own job names still read
+`job-futurehouse-…` and its persona picker still offers `@FutureHouse/…`: naming residue
+of the spinout, not evidence of who runs it. They are live API values, so never "correct"
+one or argue from one back to a vendor. The gate fails a commit re-attributing the
+platform, and exempts those strings.
+
 ### Edison key file
 
-`~/.claude/compute/edison.env` on the user's own machine, mode 600: one exported assignment
-of the variable the client reads, and nothing else. It sits beside the per-user config and
-never inside it, because a skill reads that file into context and a key placed there would
-land in every transcript. `templates/edison.env` is the blank copy; a filled-in one never
+`~/.claude/compute/edison.env` on the user's own machine, at owner-only permissions: one
+exported assignment of the variable the client reads, and nothing else. The preflight owns
+those constants — the name, the placeholder, the location and which modes pass — and prints
+them on request, so nothing else in the tree may restate one. It sits beside the per-user
+config and never inside it, because a skill reads that file into context and a key placed
+there would land in every transcript. `templates/edison.env` is the blank copy; a filled-in one never
 lands here, and the no-secrets sweep fails a commit that brings one. A skill sources the
 file into the process that needs it and never transmits, prints or asks for its contents.
 See `docs/adr/0007-edison-key-file-and-never-transmit.md`.
@@ -129,10 +141,11 @@ The Edison platform's heavyweight agent. Not a job you submit but a **chat sessi
 project**, which fans one objective out into many ordinary tasks over several rounds. That
 is why `JobNames` has no member for it — the enum lists the one-shot jobs `create_task`
 takes, while Kosmos sits on the chat surface under the job name
-`job-futurehouse-data-analysis-aries`. Because a run costs roughly two orders of magnitude
-more than an API task, a skill never starts one unless the user asks for that run in those
-words; drafting the objective, checking the dataset and reading a run that already exists
-are free, and are usually what was wanted.
+`job-futurehouse-data-analysis-aries`. A run is billed for each of the tasks it fans out to,
+so its cost is the sum of the ones it actually calls and there is no flat per-run price. It
+is also unbounded before the run starts, which is why a skill never starts one unless the
+user asks for that run in those words; drafting the objective, checking the dataset and
+reading a run that already exists are free, and are usually what was wanted.
 
 ### liulab-runtime
 
@@ -182,6 +195,20 @@ whether `~/.ssh/config` carries the aliases; `lab-edison` runs
 no longer the placeholder and is owner-only — never the key itself. On a machine that is
 not configured the skill refuses the request rather than improvising around it. Each takes
 a flag naming an alternative file, so the gate can drive it against fixtures.
+
+### Provenance block
+
+The two lines at the head of every `lab-edison` reference page: where the page's facts came
+from, the date they were checked, and the tier that holds unless a claim says otherwise.
+Three tiers, and only three — **verified**, we ran it and saw the result; **read**, taken
+from the package source or a vendor page and not run; **unverified**, inferred or assumed
+with nothing checked. A claim at another tier is tagged where it is made, so the exceptions
+are visible and the page still declares one default. Package or vendor page is a matter for
+the Source line and never the tier: the skill already ranks those two ("believe the package
+over any vendor page"), and encoding the ranking twice would let tier and source contradict
+each other with nothing to catch it. `tests/lint.sh` fails a reference page carrying no block
+and a block whose date will not parse; no check can tell whether a date is honest. See
+`docs/adr/0009-facts-carry-their-provenance.md`.
 
 ### Reservation job
 
