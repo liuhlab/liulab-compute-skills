@@ -28,14 +28,13 @@ On ircbc Jupyter lives inside the lab's Singularity image, described in
 [lab-containers](lab-containers.md). The agent uses the container launch command,
 and the cluster's older Slurm dialect, without being told.
 
-## What you will be asked
+## Fewer questions
 
-Which cluster, unless the context makes it obvious. Job resources: CPUs, memory,
-GPUs, time. And confirmation of the job command before it is submitted.
-
-Fill in `~/.claude/compute/personal.md` and most of those questions go away. It
-holds your port (9990 by default), the path to your Jupyter on arc, and the
-resources you usually ask for.
+The agent asks the usual ones before it submits, listed under
+[basic usage](../usage.md#what-the-agent-will-ask-you). Fill in
+`~/.claude/compute/personal.md` and most of them go away: it holds your port
+(9990 by default), the path to your Jupyter on arc, and the resources you usually
+ask for.
 
 ## When it triggers
 

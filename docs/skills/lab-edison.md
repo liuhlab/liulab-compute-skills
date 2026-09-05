@@ -15,8 +15,9 @@ one waits.
 /lab-compute:lab-edison what is known about ...
 ```
 
-Other openings that work: "Has anyone already done this experiment?", "Analyse
-this table and tell me what it shows", "Set up my Edison key on this machine."
+Anything else you would put to a researcher goes after that same command: "Has
+anyone already done this experiment?", "Analyse this table and tell me what it
+shows", "Set up my Edison key on this machine."
 
 Every run spends credits from your own account. That is why nothing here starts
 without you.

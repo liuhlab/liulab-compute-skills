@@ -19,8 +19,9 @@ your request. It never picks one in silence.
 ## What the skill enforces
 
 Preflight first. The agent checks that your `~/.ssh/config` defines the lab
-aliases. If it does not, it refuses the request and points you at the setup steps.
-It never asks you for a raw address or a password.
+aliases, and reports a line per cluster: `arc_hpc` is arc, `ircbc_hpc` is ircbc.
+If the one you need is missing, it refuses the request and points you at the setup
+steps. It never asks you for a raw address or a password.
 
 Work belongs on a compute node. A login node is a doorway, not a workspace: one
 shared machine per cluster, and a crowd of agents each firing off "small" commands

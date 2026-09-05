@@ -11,13 +11,15 @@ Docs only. The four skill pages, the home page and the usage page were rewritten
 shorter and in plainer English, and brought back in line with what the skills now
 say. No skill, script or template changed, so nothing an agent reads is different.
 
-- **Every page is shorter.** The site lost about a page and a half of prose, most
-  of it from `lab-edison`, without dropping a fact anyone needed. Repeated
-  material is gone: the list of what an agent refuses to do lived on both the home
-  page and the usage page, and now lives on the home page alone.
-- **Plainer sentences.** Long dashes are out of the human-facing pages entirely,
-  bullet lists that were really paragraphs are paragraphs again, and page titles
-  read as titles rather than as two ideas joined by punctuation.
+- **Every page is shorter.** The six pages lost about 430 words, most of them from
+  `lab-edison`, without dropping a fact anyone needed. Repeated material is gone:
+  the list of what an agent refuses to do lived on both the home page and the
+  usage page, and now lives on the home page alone, and the questions the agent
+  asks before a job are on the usage page alone.
+- **Plainer sentences.** Long dashes are gone from all six pages, bullet lists
+  that were really paragraphs are paragraphs again, and page titles read as titles
+  rather than as two ideas joined by punctuation. The README and this file were
+  not part of the pass.
 - **Kosmos leads the `lab-edison` page instead of trailing it.** It is the reason
   to reach for the platform when a goal is bigger than one question, and the page
   had it last, below the one-shot jobs, reading as a hazard to be fenced off. It
@@ -27,10 +29,11 @@ say. No skill, script or template changed, so nothing an agent reads is differen
   agents; the skill and its references call them jobs, and one word for one thing
   is easier to follow. Its key setup, spend rules and task-id recovery are
   unchanged.
-- **Two stale details fixed.** The cluster table said ircbc's GPU nodes were
-  drained, which is a node state that changes and does not belong in writing that
-  is not dated. It also named the clusters by the labels the setup check prints
-  (`arc_hpc`, `ircbc_hpc`) rather than the names people use.
+- **The cluster table reads as people speak.** It named the clusters by the labels
+  the setup check prints, `arc_hpc` and `ircbc_hpc`. Those labels now appear where
+  you meet them, next to the check itself, and the table says arc and ircbc. The
+  aside about ircbc's GPU nodes went with it; "CPU cluster" is the guidance, and
+  `sinfo` is where to look for a node's state.
 
 ## 2026.9.6 — 2026-09-05
 
