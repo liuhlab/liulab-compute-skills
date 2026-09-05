@@ -21,7 +21,9 @@
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
 set -u
-cd "$(dirname "$0")/.."
+# `|| exit 1`: the cases below are written against the repo root, and a run that spends
+# tokens from the wrong directory is worse than one that never starts.
+cd "$(dirname "$0")/.." || exit 1
 LIVE=false ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in

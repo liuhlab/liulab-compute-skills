@@ -1,5 +1,30 @@
-# Session-local Claude Code permission settings — never commit
-.claude/settings.local.json
-
-# MkDocs build output
+.pixi/
+# Build output: `site/` is the docs site, `dist/` and `build/` anything a packaging tool
+# leaves behind. `.cache/` is the docs builder's download cache. None of it is tracked, and
+# `tests/lint.sh` excludes the same trees from its no-secrets sweep — a vendored conda
+# package under `.pixi/` carries IP literals and key material by the thousand.
 site/
+.cache/
+dist/
+build/
+__pycache__/
+*.egg-info/
+.coverage
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+
+# Agent products. Never a blanket `/.claude/`: this repo's plugin manifest lives under
+# `.claude-plugin/` and future agent-facing files under `.claude/` are meant to be tracked.
+# So this names the machine-local files inside `.claude/` and nothing else.
+.claude/settings.local.json
+.claude/worktrees/
+# Installer output. `skills/install.py` is documented `--user` only, so no discovery path
+# under this repo is ever committed: these skills also ship as a plugin, and a project-local
+# link would load every one of them twice for anyone who opens this repo with the plugin
+# installed. These four lines stop a stray `--target` landing in a commit.
+/.claude/skills/
+/.agents/
+/.codex/
+/.gemini/

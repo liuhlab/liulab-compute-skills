@@ -61,12 +61,22 @@ claude plugin install lab-compute@liulab
 
 ## Other agentic tools (Cursor, Codex, Gemini CLI, …)
 
-`git clone` this repo anywhere, then symlink each skill directory
-(`skills/lab-hpc`, `skills/lab-jupyter`, `skills/lab-containers`) — or the
-whole `skills/` tree if the tool supports it — into the tool's skills
-directory. `lab-hpc` is the required base; the other two build on it.
-Claude Code users should use EITHER the plugin OR symlinks into
-`~/.claude/skills/` — never both (the skills would load twice).
+`git clone` this repo anywhere, then run the installer:
+
+```bash
+python skills/install.py --target all --user
+```
+
+That links all three skills into every product's user-level skills
+directory (`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
+`~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see
+what would be installed, `--dry-run` to see where, and `--copy` where a
+symlink won't do. Because they are links, `git pull` updates every install.
+`lab-hpc` is the required base; the other two build on it.
+
+Install at the user level, not into a project. Claude Code users should use
+EITHER the plugin OR symlinks into `~/.claude/skills/` — never both (the
+skills would load twice).
 
 ## Updating
 
@@ -82,10 +92,16 @@ claude plugin update lab-compute@liulab
 Three layers under [tests/](tests/) — see [tests/README.md](tests/README.md):
 
 ```bash
+pixi run check                          # the gate: linters + tests/lint.sh, all at once, every failure reported
 bash tests/lint.sh                      # static: manifests, frontmatter, naming, no-secrets sweep
 bash tests/preflight.sh --live          # this machine's ssh config + login-node reachability
 bash tests/eval.sh [--live] [--only <case>]  # headless claude -p behavior evals (costs tokens; --live submits a real job on arc)
 ```
+
+`pixi run check` is what CI runs on every pull request. The other two layers
+are local-only: one reads your ssh config, the other spends API tokens. The
+no-secrets sweep's username and hostname checks only see *your* machine's ssh
+config, so they stay a pre-push control — run the gate locally before you push.
 
 ## Adding a new skill
 
@@ -95,7 +111,8 @@ bash tests/eval.sh [--live] [--only <case>]  # headless claude -p behavior evals
 2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
    `~/.ssh/config` / `~/.claude/compute/personal.md`.
-3. Run `bash tests/lint.sh`; bump `version` (CalVer `YYYY.M.PATCH`) in
+3. Run `pixi run check`; bump `version` (CalVer `YYYY.M.PATCH`) in
    `.claude-plugin/plugin.json` and add a `CHANGELOG.md` entry in the same
-   commit; push. Installed machines pick it up on
+   commit; tag that commit `v<version>`; push with `git push origin main
+   --tags`. Installed machines pick it up on
    `claude plugin marketplace update liulab`.

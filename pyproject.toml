@@ -1,0 +1,200 @@
+# ============================== project ==============================
+#
+# This repo ships no package. It is a Claude Code plugin marketplace of Agent Skills —
+# Markdown and bash — so `[project]` exists to give the tree an identity and a Python
+# floor, not to produce a distribution. Nothing here is ever uploaded to a package index,
+# so the name is an identifier rather than a claim on one.
+#
+# Taken from the lab template's `no-package` shape: no `[project.scripts]`, no wheel build
+# target, no pytest config. `[build-system]` and `[tool.hatch.version]` survive that shape
+# and are kept here for the same reason the template keeps them.
+
+[project]
+name = "liulab-compute-skills"
+description = "Liu Lab Agent Skills for HPC, containers and remote compute, packaged as a Claude Code plugin."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.13"
+authors = [{ name = "Liu Lab" }]
+# hatch-vcs reads the newest git tag. Never add a `version` key.
+dynamic = ["version"]
+
+# ============================== build ==============================
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+# No `fallback-version`: that is a hand-written version string.
+[tool.hatch.version]
+source = "vcs"
+
+# ============================== pixi ==============================
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+# The interpreter. `requires-python` above is the floor this pin satisfies.
+#
+# ruff and pyright cover this repo's Python, which is `skills/install.py` today and the
+# conformance checker next, both copied from the template, where they already pass these
+# gates. A step that runs over an empty set costs a second; a step nobody adds costs the
+# first Python file.
+[tool.pixi.dependencies]
+python = "3.13.*"
+ruff = "*"
+# Exact: Pylance is pyright, so the editor and CI must give one verdict.
+pyright = "==1.1.411"
+# The writing gates. Exact on vale: the jargon map and the grade-11 cap in `styles/Lab/`
+# were measured against this version, so a floating pin would move the verdict without
+# anyone editing a rule.
+vale = "3.19.0.*"
+markdownlint-cli2 = "*"
+# The one gate that reads this repo's actual executable surface. Everything that runs here
+# is bash — the three test suites, the gate runner and the skill's config check — so
+# without this the linters above would all be checking an empty set.
+shellcheck = "*"
+# For conformance, which parses `mkdocs.yml` and the workflows and runs in `default`. Not on
+# the `docs` feature: the checker reads the site configuration, it does not build the site.
+pyyaml = "*"
+
+# The docs builder, in a feature of its own so that exactly one CI job installs it and the
+# gate everyone runs does not carry it.
+#
+# Exact, and bumped in a commit of its own: at `0.0.x` nothing promises the next patch is
+# compatible, and a patch release has already broken search once. Re-run `pixi run docs-build`
+# when you move it. See `docs/adr/0005-docs-site-on-zensical.md`.
+#
+# No mkdocstrings handler: this repo ships no package, so there is no API to render.
+[tool.pixi.feature.docs.dependencies]
+zensical = "==0.0.57"
+
+# On the feature, so these resolve in the `docs` environment with no `-e` flag.
+# `serve` ignores `--strict` and says so, hence its absence.
+[tool.pixi.feature.docs.tasks]
+docs = "zensical serve"
+docs-build = "zensical build --clean --strict"
+
+# `default` deliberately does NOT take `docs`: the docs feature exists so that one CI job,
+# and one laptop command, installs the builder and nothing else pays for it.
+[tool.pixi.environments]
+default = { solve-group = "default" }
+docs = { features = ["docs"], solve-group = "default" }
+
+[tool.pixi.tasks]
+lint = "ruff check ."
+fmt = "ruff format ."
+fmt-check = "ruff format --check ."
+typecheck = "pyright"
+# The repo's own bash suite. NOT named `lint` — that name is ruff's in every lab repo, and
+# a shared name meaning two different things is the collision this rule exists to stop.
+# Layer 1 only: `tests/preflight.sh` reads a real `~/.ssh/config` and `tests/eval.sh`
+# spends API tokens on headless agent sessions, so neither belongs on a pull request.
+skill-lint = "bash tests/lint.sh"
+# vale reads language, markdownlint reads structure. `.`, never an absolute path: an
+# absolute path matches no `.vale.ini` section and exits 0 having checked nothing. The glob
+# keeps vale out of trees it never lints — `check.sh` runs the steps concurrently, and a
+# walk of `.pixi/` races whatever else is writing there.
+vale = "vale --glob='!{.pixi,site,dist,build}/**' ."
+# No glob here: `.markdownlint-cli2.yaml` carries both the file set and `gitignore: true`.
+markdownlint = "markdownlint-cli2"
+# `git ls-files`, not a hand-written glob: the file set is then "every tracked script",
+# so a script added in a directory nobody thought of is checked rather than skipped.
+# Default severity — a finding this repo disagrees with is silenced at its line with a
+# `shellcheck disable` directive saying why, never by turning a whole class off here.
+shellcheck = "shellcheck $(git ls-files '*.sh')"
+# The structural gate: the conventions a lab repo keeps after it leaves the template, read
+# off `[tool.liulab.agent-docs]` and `[tool.liulab.waived]` at the foot of this file. The
+# script is a verbatim copy of the template's — never edit it here; a rule this repo cannot
+# meet is answered with a waiver, not a patch.
+conformance = "python scripts/conformance.py"
+# The static step list lives here and nowhere else; `check.sh` takes it as arguments, and
+# `ci.yml` invokes this task by name, so the local gate and CI cannot drift.
+check-static = "bash scripts/check.sh lint fmt-check typecheck vale markdownlint shellcheck conformance"
+check = { depends-on = ["check-static", "skill-lint"] }
+
+# ============================== ruff ==============================
+
+[tool.ruff]
+line-length = 100
+src = ["scripts", "skills"]
+# No `target-version`: ruff infers it from `requires-python`.
+extend-exclude = [".pixi", "site", "build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "PT",  # flake8-pytest-style
+    "PTH", # flake8-use-pathlib
+    "N",   # pep8-naming
+    "D",   # pydocstyle (numpy convention, configured below)
+    "RUF", # ruff-specific
+]
+# E501: the formatter owns line length. D203/D213: incompatible with D211/D212.
+ignore = ["E501", "D203", "D213"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+# ============================== pyright ==============================
+
+[tool.pyright]
+# `scripts` and `skills`: the two directories where this repo's Python will land.
+include = ["scripts", "skills"]
+exclude = ["**/__pycache__", "**/.pixi"]
+venvPath = ".pixi/envs"
+venv = "default"
+# No `pythonVersion`: taken from the interpreter in the environment above.
+typeCheckingMode = "standard"
+# Not redundant: `standard` does not check that a parameter is annotated at all. `Any`
+# satisfies it, so the fix is always in the file you are editing.
+reportMissingParameterType = "error"
+# Deliberately NOT `reportUnknownParameterType`: it also fails annotated parameters and
+# inferred return types whose types an untyped dependency owns. Not a bar a lab repo can meet.
+useLibraryCodeForTypes = true
+reportMissingTypeStubs = "none"
+
+# ============================== liulab ==============================
+# Read by `scripts/conformance.py`; its docstring has the rules.
+
+# The agent-facing files, and the Vale Length rule that caps each. Keys are plain path
+# prefixes matched against `git ls-files`, not globs; a trailing `/` matches a directory.
+# Every key must appear verbatim in exactly one `.vale.ini` section header — conformance
+# rule 3 pairs them by substring, and a key in zero sections or in two fails. `skills/`
+# pairs with the `skills/**/*.md` header, which is wider than the template's so that the
+# per-cluster reference pages are capped too.
+#
+# `docs/research/` is absent because this repo has no research notes; declaring a key for a
+# directory nobody wrote would fail rule 3 on the section that has no key to pair with.
+[tool.liulab.agent-docs]
+"AGENTS.md" = "LengthDoc"
+"CONTEXT.md" = false          # capped per entry by conformance rule 4, not per file
+"docs/agents/" = "LengthDoc"
+"skills/" = "LengthDoc"
+"docs/adr/" = "LengthAdr"
+
+# Conformance rules this repo does not meet on purpose. Keyed by rule name, value the
+# reason. Per-rule, never per-file; no expiry; printed on every conformance run, so the
+# reason has to read well to someone who has never seen the issue that added it.
+# `placeholder-rename` refuses to be waived.
+[tool.liulab.waived]
+skill-name-prefix = """The rule stops a repo-local skill from shadowing the lab's shared \
+`lab-compute` plugin: both are discovered the same way, so a directory named `lab-*` in \
+someone's working repo silently wins over the plugin's copy of that skill for everyone \
+who opens it. This repo IS that plugin — `skills/lab-hpc`, `skills/lab-jupyter` and \
+`skills/lab-containers` are the originals every other repo is being protected from \
+shadowing — so the rule fires three times on the one tree where the prefix is the correct \
+name. Waived here and nowhere else."""
+skill-symlinks = """These skills also ship as a Claude Code plugin, so a committed \
+project-local symlink would load every one of them twice for anyone who opens this repo \
+as their working directory with the plugin installed. Nothing is linked into the tree, \
+and the documented install is user-level: `python skills/install.py --target all --user`."""

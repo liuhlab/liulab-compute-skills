@@ -1,126 +1,59 @@
-# ircbc_hpc — CPU cluster (old OS; module + Singularity required)
+# ircbc — hosts, network, toolchain, storage
 
-Slurm cluster running **CentOS 7 (kernel 3.10, glibc 2.17)** with an old
-**Slurm 18.08** — expect missing newer sbatch/srun flags. Modern binaries
-will NOT run on the bare OS — always run real work inside **Singularity**
-with the lab's `ghcr.io` container images. All hosts below are
-**`~/.ssh/config` aliases** — resolve usernames/hostnames from that file (see
-the skill's step 0); never record them.
+What the machines are and what they can reach. Partitions and submitting are in `ircbc-slurm.md`; the rule about where work runs is
+`SKILL.md`'s. Every host below is an `~/.ssh/config` alias — resolve the details from that file at run time, never record them. CentOS 7.6
+(glibc 2.17) with Slurm 18.08: an old cluster, and it shows. Modern binaries will not run on the bare host, so real work goes inside a
+Singularity image (`lab-containers`).
 
-## VPN — read this first
+## VPN — stop and ask
 
-The whole cluster sits behind a **VPN** (atrust app) that the user manages
-manually. If ssh to `ircbc` (or any of its nodes) hangs or times out:
-**stop immediately and tell the user to check / re-login the VPN.** Do not
-retry in a loop, do not try alternate routes, do not attempt to fix the VPN.
+The whole cluster sits behind a **VPN** (the atrust app) that the user manages by hand. If ssh to `ircbc` or any node hangs or times out,
+**stop and tell the user to check or re-login the VPN**. Do not retry in a loop, look for another route, or try to fix it yourself.
 
-## Hosts
+## Hosts and reaching a compute node (verified 2026-09-04)
 
-- **Login:** `ircbc`. Light work only: editing, git, Slurm commands, and
-  network downloads (see below). **No compute.**
-- **File transfer:** `ircbc-transfer` (note: this alias uses a separate,
-  shared lab account — whatever is configured in the user's `~/.ssh/config`).
-- **Compute nodes:** `cpu01`…`cpu08`, ProxyJump through `ircbc`. Reachable
-  **only while the user holds a Slurm job on them**.
+- **Login:** `ircbc`. A doorway. Two reasons to be here (`SKILL.md`): submitting your first job, and the two things compute nodes lack —
+  internet and `git`.
+- **Compute:** `cpu01`…`cpu08`, ProxyJumping through `ircbc`.
+- **Transfer:** `ircbc-transfer` — separate shared lab account, direct internet, ~1 TB local disk, but it does **not mount `/share`**, so it
+  cannot see lab code or the image store. Fetch there and copy over; never compute there. It does have `git` and `rsync`.
 
-## Network topology (verified 2026-07-04) — plan around this
+**ircbc has no `pam_slurm_adopt` gate.** With `squeue -u $USER` empty, `ssh cpu02` and `ssh cpu05` both connected in 3-4 s. Sweeping the
+eight aliases finds a node fast — and a trap, because **reachable never means permitted**. Working on a node you hold no allocation for
+steals CPU from the job the scheduler put there. Nothing technical stops you; this rule does. arc does enforce it.
 
-| Node | Internet | Notes |
-|---|---|---|
-| compute (`cpu01`…) | **none** | Jobs must never assume network. Stage downloads beforehand. |
-| login (`ircbc`) | limited, via **SOCKS proxy** | `socks5h://127.0.0.1:1080` (tunneled from the transfer node); already exported as `http(s)_proxy`/`ALL_PROXY` in the shell profile, so `curl`/`git` just work. Go tools accept it too. |
-| transfer (`ircbc-transfer`) | **full, direct** | Small VM: ~1 TB local disk, few cores, and it does **NOT mount `/share`** — anything fetched there must be copied over afterwards. |
+Only some `cpu0X` aliases are in `known_hosts`; the rest fail under `BatchMode` with `Host key verification failed`, so probe with
+`-o StrictHostKeyChecking=accept-new`. And **every** cpu-alias connection prints `port 22: Network is unreachable` on stderr and *then
+succeeds* — the jump tries a dead address first. Judge by exit status, never by scanning stderr, or you will retry a working link forever.
 
-Rule of thumb: **download on the login node (through the proxy) directly
-onto `/share`; compute on the compute nodes from local files.** Use the
-transfer node only when the proxy path fails.
+## What compute nodes lack: internet and `git` (verified 2026-09-04)
 
-**Local → `/share` uploads** (verified 2026-07-05): `rsync`/`scp` from the
-local machine through the `ircbc` login alias straight onto `/share`. Fall
-back to `ircbc-transfer` only if that path fails — it does **not** mount
-`/share`, so data landing there needs a second hop.
+| Host | Internet | Notes |
+| --- | --- | --- |
+| `cpu01`…`cpu08` | **none** | Confirmed: `curl https://github.com` returns http_code 000. Stage every download first; a job must never assume network. |
+| `ircbc` | via SOCKS proxy | `socks5h://<login-host>:1080`, exported by the shell profile, so `curl` and `git` just work. `ghcr.io/v2/` answers 401, the expected unauthenticated challenge, and `git ls-remote` returns real SHAs. |
 
-**Proxy-env gotcha:** `srun`/`sbatch` from the login node propagate the
-proxy variables into jobs, but compute nodes have no `127.0.0.1:1080`
-tunnel — so anything honoring `http(s)_proxy` fails to fetch, and even
-`curl http://127.0.0.1:<port>` probes of on-node services get misrouted
-into the dead proxy. In job scripts either
-`unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY all_proxy`
-(there is no internet to reach anyway) or use `curl --noproxy '*'` for
-localhost traffic.
+**The proxy-env trap.** Six variables — `http_proxy`, `https_proxy`, `all_proxy` and their uppercase twins — point at a port only the login
+node listens on, and `sbatch`/`srun` propagate them into jobs. A fetch on a compute node then fails as *connection refused on port 1080*,
+which reads like a broken proxy but means "no internet here". `unset` all six at the top of a job script so tools fail honestly, and
+`curl --noproxy '*'` to probe localhost.
 
-## Lab package store: `$LIU_LAB_PACKAGES`
+| Tool | `ircbc` login | `cpu0X` compute |
+| --- | --- | --- |
+| `git` | present | **absent, and no module for it** |
+| `rsync`, `python3`, `pixi`, `uv`, `module` | present | present, `module` included even non-interactively |
+| `singularity` | module only, `singularity/3.2.1` | same, `3.2.1-7.1.ohpc.1.3.8` |
+| `crane`, `conda` / `mamba` | `crane` in the image store, and useful | `crane` useless (no internet); no conda or mamba |
 
-Shared images/tools live in `/share/lhqlab/liulab_data/packages`, exposed as
-the env var `LIU_LAB_PACKAGES` (exported in users' shell profiles):
+The missing `git` is the one that bites: even an offline `git status` or `git log` needs a login-node hop. Drive git from `ircbc` against
+`/share`, or put git inside your container or pixi env so compute-side sessions stand alone. Compute PATH is bare —
+`~/.pixi/bin:/usr/local/bin:/usr/bin:/opt/ibutils/bin`.
 
-- `bin/` — static helper binaries (`crane` for registry pulls) and smoke-test
-  scripts (`test-jupyter-ml.sh` — Jupyter-in-SIF check, run it via `srun`)
-- `oci/` — transient docker-archive tarballs (deleted after the SIF builds)
-- `*.sif` — built Singularity images
-- `*.sif.digest` — sidecar recording the ghcr.io image digest each SIF was
-  built from (the `lab-containers` skill compares it against
-  `crane digest` for update checks)
-- `logs/` — build-job logs
+## Storage and the `$LIU_LAB_PACKAGES` image store
 
-The whole store is group-writable for `lhqlab` with setgid dirs — keep it
-that way so any lab member can add or update images.
-
-## Getting container images onto ircbc (no-internet compute nodes)
-
-`singularity pull docker://…` needs network, so network and compute are
-split: `crane pull` a docker-archive tarball on the login node, then
-`singularity build` the SIF in a compute job. The full step-by-step recipe
-(inventory, pull, build, per-env smoke test) is the **`lab-containers`**
-skill — use it.
-
-## Slurm on ircbc — how to submit (verified 2026-07-04)
-
-No accounting/QOS caps are exposed (`sacctmgr` returns nothing); no
-`--account` needed. `DefaultTime`/`MaxTime` are unlimited — set `--time`
-anyway so runaway jobs die. Slurm 18.08 flag gotchas: `squeue --me` does not
-exist (use `squeue -u $USER`); expect other modern flags to be missing too.
-
-| Partition | Nodes | Per node | Notes |
-|---|---|---|---|
-| `compute_cpu` (default) | `cpu01`–`cpu08` | 56 CPUs, ~100 GB | **MaxNodes=2 per job.** The workhorse partition. |
-| `compute_fat` | 2 fat nodes | 160 CPUs, ~1–2 TB | Big-memory jobs. |
-| `compute_gpu_2080` | 2 nodes | 4× RTX 2080 | Both nodes were **drained** when checked — treat this cluster as CPU-only in practice. |
-
-Quick interactive check / smoke test:
-
-```bash
-ssh ircbc 'srun -p compute_cpu -t 10 bash -lc "hostname"'
-```
-
-**Idle-job reuse (default — prefer over `ssh ircbc "…"`):** find jobs with
-`ssh ircbc 'squeue -u $USER'` (no `--me` on Slurm 18.08); if an idle job holds
-a `cpu0X` node, `ssh` to it (ProxyJump via `ircbc`) and run there rather than
-queueing new. This is the skill's "Default execution target" flow.
-
-## Running work: `module load singularity` + lab containers
-
-Singularity is **not on PATH** — it ships as an OpenHPC module
-(`singularity/3.2.1`, available on login and compute nodes; note it is an
-old 3.x — very new image features may not work):
-
-```bash
-module load singularity
-```
-
-Environments are built with pixi and published as containers by the
-`liulab-runtime` repo (check its README for current image names and tags).
-Verified run/shell/Jupyter patterns inside the images — including the
-required pixi-env activation (`source /app/.pixi/activate-<env>.sh`) and
-bind mounts — are the **`lab-containers`** skill's "Using the images"
-section; use it rather than writing raw `singularity exec` lines. Images
-must be built beforehand into `$LIU_LAB_PACKAGES` (compute nodes cannot
-pull — see above).
-
-Never run modern toolchains (recent Python builds, compiled binaries from
-elsewhere) directly on the host OS — glibc 2.17 will break them.
-
-## Storage / code
-
-- Code lives in `/share/home/<user>/src`, with the same directory names as
-  local repos, synced via git (local → GitHub → `git pull` remote).
+`/share` is mounted and writable on login and compute alike (428 T, 77% used, ~102 T free). Lab code lives in `/share/home/<user>/src`, one
+directory per repo, names matching local ones, synced local → GitHub → `git pull`; `rsync`/`scp` from a laptop through `ircbc` lands
+straight on `/share` (2026-07-05). `$LIU_LAB_PACKAGES` is set on both hosts and the store sits on `/share`, so jobs can read the images;
+only the network *fetch* is login-bound. It holds the `*.sif` images, a `*.sif.digest` sidecar each (a `sha256:` line, compared against
+`crane digest` for updates), `bin/` (`crane`, smoke-test scripts), `oci/` (transient tarballs) and `logs/`. Which images exist changes —
+**list the store rather than assuming** (no `default` image yet). It is group-writable with setgid dirs so any member can add images; keep it that way.

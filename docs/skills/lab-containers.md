@@ -1,38 +1,45 @@
 # lab-containers — Singularity images on ircbc
 
 The lab's software environments are built with pixi and published as
-container images (the `liulab-runtime` registry). On ircbc they are the
-only way to run modern software: the cluster's OS is too old for current
-tools, and its compute nodes have **no internet**, so images are staged as
-Singularity files (SIFs) in a shared lab store. This skill teaches the
+container images (the `liulab-runtime` registry). On ircbc they are the only
+way to run modern software. The cluster's OS is far too old for current
+tools, and its compute nodes have **no internet**. So the images are staged
+as Singularity files (SIFs) in a shared lab store. This skill teaches the
 agent the whole routine.
 
 !!! note "ircbc only"
-    On arc the same environments run natively via pixi — no containers
+    On arc the same environments run natively via pixi. No containers are
     needed there.
 
 ## What the agent can do with it
 
-- **Check before rebuilding.** Every image records which registry version
-  it was built from. Asked to "update the ml image", the agent first
-  compares that against the registry and tells you whether an update is
-  actually needed — it never rebuilds blindly.
-- **Pull + build the offline way.** Downloads happen on the login node (the
-  only place with network), the build runs as a Slurm job, and the image
-  lands in the shared store — with your approval before the build job is
-  submitted.
-- **Smoke-test.** After a build it runs the same import/version checks the
-  image was built with, in a small test job, and tells you if something is
-  off.
+- **Check before rebuilding.** Every image records the registry version it
+  was built from. Ask for "the ml image, updated" and the agent compares
+  that record against the registry first, then tells you whether an update
+  is really needed. It never rebuilds blindly.
+- **Pull and build the offline way.** The download runs on the login node,
+  the one place with network. The build then runs as a Slurm job, and the
+  image lands in the shared store. You approve that job before it goes in.
+- **Smoke-test.** After a build, the agent repeats the import and version
+  checks the image was built with. It runs them in a small test job and
+  tells you if anything looks off.
 - **Run your work inside the image.** Batch commands, an interactive shell
-  with the environment already activated, or Jupyter Lab in the container
-  (handing the session off to [lab-jupyter](lab-jupyter.md) for the
-  tunnel).
+  with the environment already active, or Jupyter Lab in the container. For
+  Jupyter it hands the session to [lab-jupyter](lab-jupyter.md), which sets
+  up the tunnel.
+
+## Why a login node shows up here
+
+Reading an image from a compute node is fine, because the shared store is
+mounted there too. Downloading a new one is not, since ircbc compute nodes
+have no internet at all. That is one of the two cases where
+[lab-hpc](lab-hpc.md) lets the agent step onto a login node. It downloads,
+then goes straight back to the job.
 
 ## Shared-store etiquette
 
-The images are shared lab assets: the agent asks before overwriting or
-deleting anything another lab member might be using, and keeps the store
+These are shared lab images. The agent asks first before it overwrites or
+deletes anything another lab member may be using, and it keeps the store
 writable for the whole group.
 
 ## When it triggers
