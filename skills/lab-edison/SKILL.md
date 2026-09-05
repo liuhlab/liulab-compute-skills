@@ -81,7 +81,18 @@ old one already holds. Keep the task id of every run so the next question can us
 
 ## Kosmos
 
-<!-- filled by #17 -->
+**Kosmos runs in the browser and nowhere else.** `JobNames` carries no Kosmos member —
+checked against `edison-client` 0.16.1 on 2026-09-05 — so there is no job name to submit.
+Say so **before** touching the client, and never route the request to a different job to
+have something to run.
+
+Then offer the two things that do help, because the user is about to pay for the run by
+hand: draft the research objective with them, and check their dataset is in a state Kosmos
+can use. `references/kosmos.md` holds the vendor's guidance on both, the cost warning, and
+how to re-check the job list when this goes stale.
+
+A Kosmos run costs far more than an API task — roughly two orders of magnitude — which is
+what makes the briefing worth the care. This path calls no API and spends no credits.
 
 ## Analysing a dataset
 

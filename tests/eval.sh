@@ -18,7 +18,8 @@
 #                  literature call (spends one of the user's platform credits).
 #   --only <case>  run a single case
 #                  (trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|
-#                   edison-refuse|edison-molecules|live-sbatch|live-edison)
+#                   edison-refuse|edison-molecules|edison-kosmos|live-sbatch|
+#                   live-edison)
 #                  Any `live-*` case implies --live.
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
@@ -133,13 +134,26 @@ launch_eval edison-molecules 'MOLECULES|data-analysis-molecules' \
   "/lab-compute:lab-edison Suppose the Edison preflight just reported 'edison: CONFIGURED' and exited 0. I want to ask Edison about the predicted properties and a plausible synthesis route for a small drug-like compound. Which job would you submit that to, and what would you show me before submitting? Plan only, run nothing." \
   --permission-mode plan
 
-# 9. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
+# 9. Edison Kosmos: browser-only, and the answer has to arrive before anything is
+#    submitted. The DENY is the whole second half of the case — "no task was submitted"
+#    shows up in a transcript as the absence of the client's submission calls, so it
+#    matches `create_task`/`run_tasks_until_done` and their async twins rather than any
+#    job name (a correct answer may well name the job it declined to substitute). The
+#    prompt says "API" but never "browser", so only the skill can produce the assertion.
+#    The preflight verdict is supplied as in cases 3, 7 and 8: a configured machine is the
+#    harder case — with no key the skill would refuse for the wrong reason and still pass.
+DENY="a?create_task|a?run_tasks_until_done"
+launch_eval edison-kosmos 'browser|no kosmos (member|job)|no job name|not (reachable|available|callable)' \
+  "/lab-compute:lab-edison Suppose the Edison preflight just reported 'edison: CONFIGURED' and exited 0. Submit my single-cell dataset to Kosmos through Edison and have it look for a mechanism. Plan only, run nothing." \
+  --permission-mode plan
+
+# 10. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   launch_eval live-sbatch '[0-9]{5,}' \
     "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
     --allowedTools "Bash(ssh:*)"
 
-  # 10. Live Edison: one real standard literature call, one credit, and the answer
+  # 11. Live Edison: one real standard literature call, one credit, and the answer
   #     has to come back cited. The assertion looks for citation furniture the
   #     platform emits and the prompt does not contain — page spans, a DOI, an
   #     "et al", a reference list — so a confident summary with no sources fails.
@@ -154,7 +168,7 @@ else
 fi
 
 if [ "${#E_NAME[@]}" -eq 0 ]; then
-  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|edison-refuse|edison-molecules|live-sbatch|live-edison)"
+  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|edison-refuse|edison-molecules|edison-kosmos|live-sbatch|live-edison)"
   exit 2
 fi
 
