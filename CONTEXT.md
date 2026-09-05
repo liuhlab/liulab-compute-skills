@@ -62,7 +62,7 @@ The Edison platform's unit of spend. A submitted task is charged in credits agai
 balance the key belongs to, so a wasted run costs the person whose key it is. The tiers are
 what a skill routes by, never the numbers: literature, precedent and molecules are the
 ordinary tier; high-reasoning literature and analysis cost more and run longer; a batch
-multiplies whichever was picked; a Kosmos run is in a class of its own. No figure appears
+multiplies whichever was picked; a Kosmos run pays for every task it fans out to. No figure appears
 anywhere in this repo. The platform's own billing page is the only current source, and a
 price written into a skill goes stale in silence — so send the user to their balance
 instead of quoting one.
@@ -141,10 +141,11 @@ The Edison platform's heavyweight agent. Not a job you submit but a **chat sessi
 project**, which fans one objective out into many ordinary tasks over several rounds. That
 is why `JobNames` has no member for it — the enum lists the one-shot jobs `create_task`
 takes, while Kosmos sits on the chat surface under the job name
-`job-futurehouse-data-analysis-aries`. Because a run costs roughly two orders of magnitude
-more than an API task, a skill never starts one unless the user asks for that run in those
-words; drafting the objective, checking the dataset and reading a run that already exists
-are free, and are usually what was wanted.
+`job-futurehouse-data-analysis-aries`. A run is billed for each of the tasks it fans out to,
+so its cost is the sum of the ones it actually calls and there is no flat per-run price. It
+is also unbounded before the run starts, which is why a skill never starts one unless the
+user asks for that run in those words; drafting the objective, checking the dataset and
+reading a run that already exists are free, and are usually what was wanted.
 
 ### liulab-runtime
 

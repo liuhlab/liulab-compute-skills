@@ -3,9 +3,9 @@
 > **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
-Companion to `SKILL.md`'s "Choosing the job". Read it before the first submission of a session.
-Re-read the package the same way when this page is next touched, and believe the package over
-any vendor page. The submit / poll / recover loop is in `tasks.md`.
+Companion to `SKILL.md`, and the first page to read in a session: nothing is submitted until a
+question has a job. Re-read the package the same way when this page is next touched, and believe
+the package over any vendor page. The submit / poll / recover loop is in `tasks.md`.
 
 ## Which job answers which question
 
@@ -20,9 +20,8 @@ one in a response's `job_name` — or under `crow`, which is what task history c
 | Chemistry — molecules, properties, synthesis | `MOLECULES` | `job-futurehouse-data-analysis-molecules` |
 | Something about a dataset the user supplies | `ANALYSIS` | `job-futurehouse-data-analysis-crow-high` |
 
-`ANALYSIS` is driven from `SKILL.md`'s dataset section and `datasets.md`; it is in the table so
-the routing is complete. `DUMMY` (`job-futurehouse-dummy-env`) exercises the plumbing and does
-no science. `CROW`, `FALCON`, `OWL` and `FINCH` are older spellings of four of the rows above —
+`ANALYSIS` is driven from `datasets.md`; it is in the table so the routing is complete.
+`DUMMY` (`job-futurehouse-dummy-env`) exercises the plumbing and does no science. `CROW`, `FALCON`, `OWL` and `FINCH` are older spellings of four of the rows above —
 use the canonical member, so the transcript and the table agree. They share their values with
 the canonical members, so Python folds them into aliases and `list(JobNames)` yields **seven**
 members, not eleven: a listing that looks to be missing `CROW` is complete.
@@ -78,8 +77,8 @@ looks hung. Later runs come from the cache.
 
 `EdisonClient()` takes no arguments here, and constructing it is already a network call: it
 authenticates and fetches your organisations eagerly, so a bad key fails at construction rather
-than at submission. The key reaches it through the environment and by no other route — never an
-`api_key=` argument, never echoed, never sent to a cluster. See `SKILL.md`'s hard rules.
+than at submission. The key reaches it through the environment and by no other route; `SKILL.md`'s
+hard rules say what that forbids.
 
 ## Continuing a task
 
