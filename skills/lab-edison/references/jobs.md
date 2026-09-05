@@ -45,23 +45,20 @@ a 404.
 
 ## Running the client
 
-PyPI only, so it runs ephemerally under `uv` and installs nothing the user maintains:
+`scripts/edison-task.sh` runs it. Write the query the user confirmed to a file, then:
 
 ```bash
-. ~/.claude/compute/edison.env
-uv run --no-project --python 3.12 --with edison-client python - <<'PY'
-from edison_client import EdisonClient
-from edison_client.models.app import JobNames, TaskRequest
-
-client = EdisonClient()  # reads the key from the environment
-task = TaskRequest(name=JobNames.LITERATURE, query="<the exact query you showed the user>")
-print("TASK_ID:", client.create_task(task))  # printed before anything can block
-PY
+bash scripts/edison-task.sh submit --job LITERATURE --query-file /path/to/query.txt
 ```
 
-Then poll — `tasks.md` has the loop, and why this is two steps and not one blocking call.
+It runs the preflight, sources the key, prints `TASK_ID: <id>` as its first line and returns.
+Then poll — `tasks.md` has `status` and the rest, and why this is two steps and not one
+blocking call. The `--job` value is a `JobNames` member from the table above; the command
+sends nothing else, so a name you invented is refused rather than submitted.
 
-Both flags are load-bearing:
+Underneath, the client is PyPI only, so it runs ephemerally under `uv` and installs nothing
+the user maintains: `uv run --no-project --python 3.12 --with edison-client python -`. Both
+flags are load-bearing:
 
 - **`--no-project`.** This repo has a `pyproject.toml` of its own. Without the flag `uv` tries to
   sync *this* project instead of an ephemeral one, so the failure lands exactly where a
@@ -84,17 +81,9 @@ than at submission. The key reaches it through the environment and by no other r
 
 ## Continuing a task
 
-A follow-up rides on the previous run instead of re-establishing its context:
-
-```python
-from edison_client.models.app import RuntimeConfig
-
-TaskRequest(
-    name=JobNames.LITERATURE,
-    query="<the follow-up question>",
-    runtime_config=RuntimeConfig(continued_job_id="<prior task id>"),
-)
-```
+A follow-up rides on the previous run instead of re-establishing its context —
+`submit --continue <prior task id>`, which the command turns into
+`runtime_config=RuntimeConfig(continued_job_id=...)` on the `TaskRequest`.
 
 The id is the `task_id` of the earlier run and is validated as a UUID, so keep it verbatim. The
 field is `continued_job_id`; the vendor's README calls it `continued_task_id`, which `TaskRequest`

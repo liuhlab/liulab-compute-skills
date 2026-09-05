@@ -39,24 +39,26 @@ whole difference between the two return values. A collection also comes back who
 
 ## Attach it to the task
 
-```python
-task = TaskRequest(name=JobNames.ANALYSIS, query="<the exact query you showed the user>")
-task_id = client.create_task(task, files=[uri])
+```bash
+bash scripts/edison-task.sh submit --job ANALYSIS --query-file <file> --data data_entry:<uuid>
 ```
 
-`files` takes URIs, never paths, and several of them attach several datasets. The client writes
-them into `runtime_config.environment_config["data_storage_uris"]`, so set that key **or** pass
-`files` — both at once raises `ValueError`.
+`--data` becomes `create_task(task, files=[uri])`. It takes URIs, never paths, and repeating it
+attaches several datasets. The client writes them into
+`runtime_config.environment_config["data_storage_uris"]`, so set that key **or** pass the URIs —
+both at once raises `ValueError`.
 
 ## Fetch what the run produced
 
-The answer and the notebook come off the response (`tasks.md`). Files the run *made* are listed
-by provenance, then fetched one at a time:
-
-```python
-entries = client.list_files(task_id)["data"]  # provenance records, each carrying data_storage
-path = client.fetch_data_from_storage("<uuid>")  # STRIP the "data_entry:" prefix first
+```bash
+bash scripts/edison-task.sh fetch <task-id> --out <dir>            # answer, notebook, records
+bash scripts/edison-task.sh fetch <task-id> --out <dir> --storage <id>   # one entry
 ```
+
+The answer and the notebook come off the response (`tasks.md`). Files the run *made* are listed
+by provenance, then fetched one at a time — `client.list_files(task_id)["data"]`, then
+`client.fetch_data_from_storage("<uuid>")`, which takes the bare id, so the command strips a
+`data_entry:` prefix for you.
 
 `list_files` returns a dict with one key, `data`, holding the list — reaching for it as a list
 is the mistake to avoid, and an empty list means the run wrote nothing worth keeping.

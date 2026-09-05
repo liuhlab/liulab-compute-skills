@@ -47,14 +47,15 @@ file in their own editor, and it never comes back through the conversation.
 ## Choosing the job
 
 Route from the shape of the question — literature, high-reasoning literature, precedent, molecules,
-dataset analysis. `references/jobs.md` holds the routing table, the retired chemistry job that
-returns 404, and the ephemeral `uv` invocation. Read it before the first submission.
+dataset analysis. `references/jobs.md` holds the routing table and the retired chemistry job that
+returns 404. Read it before the first submission.
 
 **Never guess a job-name string.** The client sends any string it is handed, so nothing rejects an
 invented name — and one that happens to exist starts a run the user never asked for. Route from
 the table; when no row fits, say so and ask.
 
-**Show before you spend.** Name the job and print the exact query, then submit — a run the user never saw is a charge they cannot audit.
+**Show before you spend.** Name the job, write the exact query to a file, show that text, then
+submit the file — a run the user never saw is a charge they cannot audit.
 
 **Ask, and wait for an answer**, before a high-reasoning literature run, before an analysis run,
 and before any batch of more than three tasks — the expensive shapes. A single literature, precedent
@@ -62,21 +63,26 @@ or molecules run needs only the showing above.
 
 ## Never block, never lose the run
 
+**Run the client through `scripts/edison-task.sh`** — `submit`, `status`, `list`, `cancel`,
+`fetch` — and never hand-write the call. It runs the preflight itself, takes the query as a
+file and refuses an absent or empty one, prints the task id as its first line of output, and
+returns at once. `-h` prints the flags.
+
 A run takes minutes, and there are two ways to spend a credit and get nothing back, both
 observed: `run_tasks_until_done` holds one tool call open until the run ends or its default
 timeout expires — `references/tasks.md` has that default — and moving that blocking call into a
 background task loses it outright: the session ends, the process is killed,
-and the task finishes on the platform with nobody holding its id.
+and the task finishes on the platform with nobody holding its id. The command does neither.
 
 So **submit, print the task id, and only then poll.** The id is the receipt for the credit and
-it outlives every shell. Poll in short calls, say it is running, and never end a turn having
-reported a background job id in place of a task id.
+it outlives every shell. Poll in short `status` calls, say it is running, and never end a turn
+having reported a background job id in place of a task id.
 
-**A run is never lost, only misplaced.** `get_tasks` lists your own trajectories and costs nothing,
-so offer that before anyone resubmits and pays twice. Keep every task id: a follow-up rides on the
-prior run as `runtime_config.continued_job_id`, where a fresh task pays again for context the old
-one already holds. `references/tasks.md` has the poll loop, that recovery search, `cancel_task`,
-what each response class carries, and how to give a run a project so it shows up in the browser.
+**A run is never lost, only misplaced.** `list` shows your own trajectories and costs nothing,
+so offer that before anyone resubmits and pays twice. Keep every task id: a follow-up rides on
+the prior run with `--continue`, where a fresh task pays again for context the old one already
+holds. `references/tasks.md` has what each response class carries, and how to give a run a
+project so it shows up in the browser.
 
 ## Kosmos
 
@@ -93,11 +99,11 @@ checking the dataset, and reading a run they already started are free, and usual
 
 ## Analysing a dataset
 
-`ANALYSIS` takes the data with the question: upload, attach the URI the upload returns, submit,
-poll, fetch what the run produced. `references/datasets.md` has those calls, the collection rule
-for a directory, and where the run may happen. **The default is the user's own machine**, because
-a run started on a cluster needs a live
-credential on a shared node, and the only machine that has to hold one is theirs. Data on either
+`ANALYSIS` takes the data with the question: upload, hand the URI the upload returns to
+`submit --data`, poll, then `fetch`. `references/datasets.md` has the upload calls, the
+collection rule for a directory, and where the run may happen. **The default is the user's own
+machine**, because a run started on a cluster needs a live credential on a shared node, and the
+only machine that has to hold one is theirs. Data on either
 cluster gets staged down and uploaded from the user's own machine; `datasets.md` says what makes
 ircbc the stricter case. Running from arc is allowed only once the user has installed their own
 key there — explain that, never do it for them.
