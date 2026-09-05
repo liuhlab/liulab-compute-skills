@@ -1,123 +1,59 @@
-# arc_hpc (aka chimera / ARC) — GPU cluster
+# arc (aka chimera / ARC) — hosts, network, toolchain, storage
 
-Modern GPU cluster with Slurm (H100 nodes: 184 CPUs, ~1 TB RAM, 4 GPUs each;
-high-mem variants ~2 TB). Use it for GPU work and anything needing a modern
-OS/glibc. All hosts below are **`~/.ssh/config` aliases** — resolve
-usernames/hostnames from that file (see the skill's step 0); never record
-them.
+What the machines are and what they can reach; partitions and submitting are in `arc-slurm.md`,
+and the rule about where work runs is `SKILL.md`'s. Hosts appear only as `~/.ssh/config` aliases —
+resolve them at run time, never record what they hide. arc is a modern GPU cluster (H100 nodes:
+184 CPUs, ~1 TB RAM, 4 GPUs each; high-mem variants ~2 TB), so use it for GPU work and anything
+needing a current OS/glibc. **No VPN** (that is ircbc's rule): if `ssh arc` hangs, VPN is not why.
 
 ## Hosts
 
-- **Login:** `arc` or `chimera-login` (same machine). Light work only:
-  editing, git, Slurm commands, file browsing, transfer small files. **No compute.**
-- **File transfer:** `chimera-transfer` — use for `rsync`/`scp` of large data.
-- **Interactive compute (convenience aliases):** these ssh straight into a
-  fresh interactive Slurm job via a `RemoteCommand` in the user's ssh config:
-  - `ssh chimera-gpu` → runs `sh_gpu --cpus-per-task 16 --mem-per-cpu 8`
-  - `ssh chimera-cpu` → runs `sh_dev --cpus-per-task 16 --mem-per-cpu 4`
-- **Compute nodes:** Slurm node names (`GPU****` / `CPU****` style) double as
-  ssh aliases in each user's `~/.ssh/config`, ProxyJumping through
-  `chimera-login`. A node is reachable **only while the user holds a Slurm
-  job on it**. Find your nodes with `squeue --me` on the login node, then ssh
-  to that node name.
+- **Login:** `arc` or `chimera-login`, one machine. A doorway: submit the first job, then leave.
+  Once you hold a node the login node has no remaining use — everything below, Slurm included,
+  works from the node itself.
+- **Bulk transfer:** `chimera-transfer`, for genuinely large moves only. Ordinary files go straight
+  to the compute node: `rsync` from a laptop is ~3 s round trip through the ProxyJump (2026-09-04).
+- **Compute nodes:** Slurm node names (`GPU****` / `CPU****` style) double as ssh aliases that
+  ProxyJump through the login host — roughly 31 of them, in one shared `Host` stanza.
 
-**No VPN:** arc is reachable directly — it is **not** behind the atrust VPN
-(that is ircbc only). Do not apply ircbc's VPN rule here: if `ssh arc` hangs,
-it is *not* a VPN problem.
+## Landing on a node (verified 2026-09-04)
 
-## Network / internet (verified 2026-07-20)
+`ssh <node-alias>` is not a bare ssh: `pam_slurm_adopt` adopts the session into your job's `step_extern`
+cgroup, setting `$SLURM_JOB_ID` alone (`SLURM_JOB_NAME` and `SLURM_NODELIST` stay empty). Hence:
 
-**Both login and compute nodes have direct internet** — no proxy, no
-staging dance (this is the opposite of ircbc, whose compute nodes are
-offline). So `pixi`, `git`, `wget`/`curl`, and package installs all work
-from a compute node. The login-node rule still holds: keep *heavy* downloads
-and installs inside a Slurm job; only light/interactive network commands
-belong on the login node.
+- **The session is cgroup-confined.** `nproc` and `nvidia-smi` report your *allocation*, not the
+  machine — 48 CPUs / 1 GPU observed where the node has 184 / 4. Size work from Slurm, never from
+  `nproc`. Nodes are shared; three other jobs were resident at the same time.
+- **A node you hold no job on refuses you** in ~2 s, exit 255, stderr `Access denied by
+  pam_slurm_adopt: you have no active jobs on this node` — so sweeping all ~31 aliases for your
+  foothold is cheap. But exit 255 also means `Host key verification failed`: a minority of aliases
+  are missing from `known_hosts`, and the effective `StrictHostKeyChecking ask` would hang an agent
+  on a prompt. Probe with `-o BatchMode=yes` (fails cleanly) or `-o StrictHostKeyChecking=accept-new`.
+- **Expect transient noise.** A `Connection timed out during banner exchange`, and a bogus
+  `Slurmctld(primary) … is DOWN` from `scontrol ping` while every other client worked, both cleared
+  on retry inside one session. Retry once before believing either; never gate on `scontrol ping`.
 
-## Slurm on arc — how to submit (verified 2026-07-04)
+## Internet and toolchain on the compute node (verified 2026-09-04)
 
-- **Account:** lab members submit under account `zhoulab` (QOS `normal`).
-  You normally don't need to pass `--account`.
-- **`DefaultTime` is 12 h on every partition — always set `--time`.**
-- Jobs are single-node on most partitions (`MaxNodes=1` except the priority
-  partition). `PreemptMode=REQUEUE` on the preemptible tiers.
+Internet is direct and unproxied — no `*_proxy` variables set at all. GitHub, `pypi.org` and
+conda-forge repodata answer 200; `ghcr.io/v2/` answers 401, its unauthenticated challenge, so the
+registry is reachable; `git ls-remote` over HTTPS returns real SHAs. Outbound *ssh* to GitHub finds
+no key (`Permission denied (publickey)`), so use HTTPS — `gh` 2.4.0 is token-authenticated and set
+to HTTPS. Also present: `git` 2.34.1, `python3` 3.10.12, `nvidia-smi`, `rsync`, `tmux`, `screen`,
+`singularity`, `apptainer`, `docker`, `curl`, `wget`, `jq`, `node`, and the `sh_gpu` / `sh_dev`
+wrappers in `/usr/local/bin`.
 
-| Partition | Wall limit | Purpose / limits |
-| --- | --- | --- |
-| `cpu` (default) | 5 d | Interactive CPU work. QOS `cpu_interact`: ≤ 64 CPUs and **≤ 2 running jobs per user**; ≤ 4 GB per CPU. |
-| `cpu_batch` | 14 d | CPU batch. QOS `cpu_batch`: ≤ 20 running / 200 queued per user. |
-| `gpu` | 1 d | Interactive GPU work; ≤ 32 CPUs per node per job; ≤ 10 GB per CPU. |
-| `gpu_batch` | 14 d | GPU batch. |
-| `*_high_mem` | 14 d | Same tiers on the ~2 TB nodes. |
-| `preemptible` | 14 d | Big fan-outs, **GPU available**; may be requeued anytime. QOS `preempt`: ≤ 100 running / 512 queued. |
-| `cpu_preemptible` | 14 d | Same, but **CPU-only** (no GPU). QOS `preempt`. |
-| `quick_preemptible` | 2 h | Short tests / smoke jobs (**GPU available**). QOS `quick_preempt`: ≤ 4 running / 8 queued. |
-| `zhoulab_gpu_priority` | 14 d | **Lab-reserved node** (account `zhoulab` only, 184 CPUs / 4 GPUs). Highest-priority access; also where long-lived reservations live. |
+- **`module` does not exist on arc** — no Lmod, no environment-modules; `/etc/profile.d` holds plain
+  per-app scripts. Any `module load` line is simply wrong here; that is ircbc's habit, not arc's.
+- **`pixi`, `uv`, `conda` and `mamba` need a login shell.** They live under the user's home, so
+  `ssh <node> 'command -v pixi'` says not found while `ssh <node> 'bash -lc "command -v uv"'` finds
+  it. Wrap remote commands in `bash -lc "…"` or use absolute paths — a bare `command -v` probe lies.
 
-### Choosing a partition (cost + queue reality)
+## Storage (verified 2026-09-04)
 
-- **No extra cost:** `zhoulab_gpu_priority` and the preemptible tiers
-  (`preemptible`, `cpu_preemptible`, `quick_preemptible`). **Billed extra:**
-  the other GPU partitions (`gpu`, `gpu_batch`, `gpu_high_mem`, …). Default
-  to the no-cost partitions.
-- **GPU work → `zhoulab_gpu_priority` first.** It is usually far more
-  available than the shared queues, and free to the lab. For GPU fan-outs
-  that tolerate requeueing, `preemptible` (GPU-capable) is the free
-  alternative.
-- **CPU / batch fan-out → `cpu_preemptible`** (CPU-only, free, lots of
-  nodes) when the job tolerates requeueing; `quick_preemptible` for smoke
-  tests (has GPUs too).
-- The interactive wrappers `sh_gpu` / `sh_dev` (= `ssh chimera-gpu` /
-  `chimera-cpu`) queue on the shared `gpu` / `cpu` partitions and **often
-  wait a long time, especially for large requests** — for anything sizable,
-  prefer an sbatch/salloc on `zhoulab_gpu_priority` (e.g.
-  `sh_gpu 1 --partition zhoulab_gpu_priority` or the reservation sbatch
-  below) or a preemptible partition instead.
-
-### Submitting: interactive wrappers, smoke test, reservation
-
-- **Interactive jobs** — cluster-provided wrappers (what the ssh aliases run):
-  - `sh_gpu [1-4] [srun/salloc options]` — interactive shell on a GPU node
-    (default 1 GPU + 8 cores + 80 GB per GPU; default partition `gpu`).
-  - `sh_dev [srun/salloc options]` — interactive shell on a CPU node
-    (partition `cpu`, default 2 cores / 8 GB; the 2-running-job cap applies).
-- **Quick smoke test** (cheap, doesn't touch lab resources):
-
-  ```bash
-  ssh arc 'sbatch --partition=quick_preemptible --time=00:05:00 --wrap=hostname'
-  ssh arc 'squeue --me'          # then scancel <jobid> if still queued
-  ```
-
-- **Long-lived reservation on the lab partition** (adapted from the repo
-  owner's script; adjust resources and payload; run `mkdir -p sbatch` in
-  the submit directory first — the log paths below need it):
-
-  ```bash
-  #!/bin/bash
-  #SBATCH --job-name=reserve
-  #SBATCH --time=5-00:00:00
-  #SBATCH --partition=zhoulab_gpu_priority
-  #SBATCH --cpus-per-task=24
-  #SBATCH --mem-per-cpu=6G
-  #SBATCH --gpus=1
-  #SBATCH --output=sbatch/gpu.%j.output.log
-  #SBATCH --error=sbatch/gpu.%j.error.log
-
-  date
-  cd "$HOME" && jupyter lab --no-browser --port 9990
-  date
-  ```
-
-  Note: `sbatch` inherits the submitting shell's environment — commands like
-  `jupyter` must be on PATH in *your* environment (or use an absolute path;
-  see `~/.claude/compute/personal.md`).
-
-**Idle-job reuse (default — prefer over `ssh arc "…"`):** if an idle
-Jupyter/reservation job already exists, `ssh` to its node (from `squeue --me`,
-NODELIST column) and run there instead of queueing new. This is the skill's
-"Default execution target" flow; `lab-jupyter` adds the token/tunnel steps.
-
-## Storage / code
-
-- Code lives in `/large_storage/zhoulab/<user>/pkg`, with the same directory
-  names as local repos, synced via git (local → GitHub → `git pull` remote).
+`$HOME` and `/large_storage` are both wekafs network filesystems, mounted identically on login and
+compute nodes, so there is nothing to stage between them. `$HOME` is ~932 G with ~751 G free;
+`/large_storage` is 2.3 P, 81% used, ~455 T free. `/tmp` is node-local ext4, ~916 G with ~777 G
+free, and writable, as is `/dev/shm`; `/scratch` exists but is not writable, and there is no
+`/local` or `/localscratch`. Lab code lives in `/large_storage/zhoulab/<user>/pkg`, one directory
+per repo with the same names as local ones, synced local → GitHub → `git pull` on the node.

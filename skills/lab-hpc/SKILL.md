@@ -1,144 +1,59 @@
 ---
 name: lab-hpc
 description: >-
-  Lab HPC clusters (arc/chimera GPU cluster, ircbc CPU cluster) and the lab's
-  remote-compute workflow. Use whenever a task involves ssh to a lab server,
-  running or testing code on a remote machine, Slurm jobs (sbatch, srun,
-  squeue, salloc), GPU/CPU compute or login nodes, the zhoulab_gpu_priority
-  partition, transferring files to a cluster, or syncing code local ->
-  GitHub -> remote. Consult BEFORE the first ssh or Slurm command of any
-  session. Covers host aliases, which cluster to pick, safety rules (never
-  run compute on a login node), and per-user config (~/.ssh/config,
-  personal.md).
+  Lab HPC clusters (arc/chimera GPU, ircbc CPU) and the lab's remote-compute workflow. Use whenever
+  a task involves ssh to a lab server, running or testing code remotely, Slurm jobs (sbatch, srun,
+  squeue, salloc), GPU/CPU compute or login nodes, the zhoulab_gpu_priority partition, transferring
+  files to a cluster, or syncing code local -> GitHub -> remote. Read it BEFORE the first ssh of a
+  session: it decides where every command runs. Covers host aliases, choosing a cluster, per-user
+  config, and the rule that work belongs on a compute node, never on the shared login node.
 ---
 
 # Lab HPC clusters & remote-compute workflow
 
-This skill documents **shared lab infrastructure**: cluster roles, workflow,
-and safety rules. It deliberately contains **no connection details** — no IP
-addresses, no usernames, no key files, no credentials. All of that lives on
-each user's own machine and is resolved at run time (step 0 below). Never
-write such details into this skill, into any repo, or into command output
-that gets committed.
+Per-cluster detail sits in `references/`: `arc-hpc.md` and `ircbc-hpc.md` for hosts, network and storage; `arc-slurm.md` and `ircbc-slurm.md` for partitions and submitting.
 
-## Step 0 — preflight & per-user details (always do this first)
+## Step 0 — before the first ssh
 
-1. **Preflight — verify this machine is configured.** Run the bundled check
-   (path relative to this skill's directory):
+1. Run `bash scripts/check-hpc-config.sh` (`--live` also tests ssh). If the cluster the task
+   needs is `NOT CONFIGURED`, **refuse**: name the missing aliases and point at the README's
+   "Per-user config". Never improvise with raw addresses, passwords, or keys. Resolve every host
+   from `~/.ssh/config` aliases, and never record what those aliases hide.
+2. Read `~/.claude/compute/personal.md` — usernames, code dirs, the standing job, sbatch
+   defaults. It **overrides** this skill. Say so if it is absent.
+3. Ask which cluster unless context already pins it down. Then develop locally, push to GitHub,
+   and `git pull` on the remote — code reaches a cluster through git, not scp.
 
-   ```bash
-   bash scripts/check-hpc-config.sh          # add --live to also test ssh
-   ```
+## Work on a compute node, not the login node
 
-   It reports, per cluster, `CONFIGURED` or `NOT CONFIGURED (missing: …)`
-   based on the user's own `~/.ssh/config`. **If the cluster the task needs
-   is NOT CONFIGURED, refuse the HPC request clearly**: say this machine
-   isn't set up for that cluster, list the missing ssh aliases, and point
-   the user to the repo README's "Per-user config" section. Do NOT
-   improvise around it — never ask for or use raw IPs, passwords, or keys;
-   SSH setup is out of scope for this skill and must never be automated or
-   stored.
-2. If `~/.claude/compute/personal.md` exists, **read it now** — it carries
-   the user's per-cluster usernames, code dirs, and reservation/sbatch
-   notes, and takes precedence over the defaults in this skill and its
-   references.
-3. All lab hosts are reached through conventional **aliases in each user's
-   own `~/.ssh/config`**: `arc` / `chimera-login`, `chimera-transfer`,
-   `chimera-gpu`, `chimera-cpu`, `ircbc`, `ircbc-transfer`, `cpu01`…`cpu08`,
-   plus per-node compute aliases. Read `~/.ssh/config` to resolve hostnames
-   and usernames — never hardcode them, never record them anywhere.
+Get onto a compute node and stay there. A login node is a doorway, not a workspace: one shared
+machine per cluster, and a fan-out of "small" agent commands is what takes it down. `ssh arc
+'<cmd>'` is the wrong reflex even for a one-liner — and rarely needed, since the whole Slurm
+client (`squeue`, `sbatch`, `scancel`, `sinfo`) runs on the compute node. There are **two
+reasons, and only two**, to run anything on a login node:
 
-## Hard rules (safety)
+1. **You hold no job**, so no compute node is yours yet. Only a login node can submit that
+   first one.
+2. **The compute node lacks what you need.** On ircbc that means internet (its compute nodes
+   are offline) and `git` (not installed there). On **arc it means nothing at all** — arc
+   compute nodes have direct internet and a full toolchain, so once you hold one, never leave.
 
-- **Never run heavy work on a login node** (arc, ircbc, or any HPC). Login
-  nodes are shared and for *light* commands only: `cd`/`ls`, file
-  browse/edit, Slurm control (`squeue`/`sbatch`/`salloc`/`scancel`), small
-  transfers, and non-bulk `git`/`gh`. Anything heavy — `pixi`,
-  builds/compiles, large downloads, data processing, training/inference —
-  runs inside a Slurm **compute** job, **never** via `ssh <login> "<cmd>"`.
-  Get a node first — reuse an idle interactive job if one exists (see next
-  section) — then run there. Ask before assuming a node is available.
-  - *Exception — staging downloads:* a light network fetch to stage data or
-    images onto shared storage is fine on the login node, and on **ircbc is
-    required there** — its compute nodes have no internet, while its login
-    node reaches out through a SOCKS proxy. On **arc** both login and
-    compute nodes have internet, so fetch from wherever is convenient (still
-    keep heavy pulls off the login node). Details:
-    `references/arc-hpc.md` / `references/ircbc-hpc.md`.
-- Compute nodes (`GPU****`/`CPU****` aliases on chimera, `cpu01`–`cpu08` on
-  ircbc) are reachable **only while the user holds a Slurm job on them**.
-- If ssh to `ircbc` (or its compute/transfer nodes) hangs or times out:
-  **stop and tell the user to check the VPN** (atrust app, managed manually
-  by the user). Never try to work around it.
-- **Never submit sbatch/srun work on the user's behalf without showing the
-  exact script/command and getting their confirmation first** (applies to
-  every skill in this plugin; tiny read-only probes like `squeue` are fine).
+## SOP — take a foothold, then keep it
 
-## Default execution target — reuse an idle interactive job
+1. **Find the node you already hold.** The lab parks a long-lived idle GPU job on arc for this.
+   Check `personal.md`, then probe aliases with `ssh -o BatchMode=yes -o ConnectTimeout=10
+   <alias> true` — probes fail in ~2-4 s, so sweeping is cheap. Judge by exit status, not stderr.
+2. **Land and stay.** On arc, wrap commands in a login shell — `ssh <node> 'bash -lc "…"'` — or
+   `pixi` and other user-installed tools are invisible.
+3. **No node anywhere?** Only then use the login node, and only to fix that: show the exact
+   sbatch/salloc, get confirmation, submit, poll to RUNNING, ssh in, and leave. Footholds are
+   preemptible; if one dies, repeat this step.
 
-Never run real work via `ssh arc "<cmd>"` / `ssh ircbc "<cmd>"`: that lands on
-the **shared login node**, which the Hard rules forbid and parallel
-agents/subagents overload. Run anything heavier than light Slurm control
-inside an **interactive Slurm job** — the user usually keeps one idle already
-(a long-lived Jupyter/reservation job). So before running anything:
+## Hard rules
 
-1. **Find an existing job** and note its node (NODELIST column):
-   `ssh arc 'squeue --me'` — on ircbc `squeue -u $USER` (no `--me` on Slurm
-   18.08). Also check `personal.md` for a recorded persistent job.
-2. **Idle job exists → reuse it.** Its node name is an ssh alias (ProxyJump
-   via login), so `ssh <node>` lands on it; run there. Prefer this over
-   queueing new. (Idle = holds the node but isn't computing, e.g. a Jupyter
-   job with no cells running.)
-3. **None exists → create one** — confirm the exact sbatch/salloc first
-   (Hard rules) — then use its node. On arc prefer `zhoulab_gpu_priority`
-   (reservation sbatch in `references/arc-hpc.md`). `lab-jupyter` automates
-   this reuse-first flow for Jupyter.
-
-Only light Slurm control and small file ops belong on the login node.
-
-## Development workflow
-
-- Develop code **locally**; run/test heavy work on **remote HPC**.
-- Sync path: local edits → `git push` → GitHub → `git pull` on the remote →
-  test on a **compute** node (not a login node).
-- Repos generally use the **same directory name** locally and remotely.
-- `git` and `gh` are already authenticated on local machines and all remotes.
-
-## Choosing a cluster — the user's call
-
-Cluster choice is complex (task, project, where the data lives) — **never
-decide it silently**. If the session context doesn't already pin it down
-(the user named a cluster, personal.md or the project says so, or the data
-already lives on one), **ask the user**. Per-cluster factors:
-
-- **`arc_hpc`** (aka chimera / ARC) — GPUs; modern OS/glibc; envs run
-  natively via pixi. See `references/arc-hpc.md`.
-- **`ircbc_hpc`** — CPU-only in practice; work ALWAYS runs inside
-  Singularity with the lab's `ghcr.io` containers (the bare OS is CentOS 7,
-  glibc 2.17 — modern binaries will not run on it); pull/build/use the SIFs
-  with the **`lab-containers`** skill. See `references/ircbc-hpc.md`.
-- Environments are managed with **pixi** and shipped as `ghcr.io` containers
-  by the `liulab-runtime` repo — on arc they normally run natively via pixi
-  (no SIFs needed); on ircbc always consume them via Singularity.
-
-## Quick reference
-
-| Cluster | Login alias | Transfer alias | Get a compute node | Code dir |
-| --- | --- | --- | --- | --- |
-| arc_hpc (chimera) | `arc` / `chimera-login` | `chimera-transfer` | `sbatch`/`salloc` on `zhoulab_gpu_priority` | `/large_storage/zhoulab/<user>/pkg` |
-| ircbc_hpc | `ircbc` | `ircbc-transfer` (no `/share` mount — copy onward after landing; see `references/ircbc-hpc.md`) | Slurm job → ssh `cpu01`…`cpu08` | `/share/home/<user>/src` |
-
-- `<user>` = the per-cluster username from `~/.ssh/config` /
-  `~/.claude/compute/personal.md`.
-- arc: prefer `zhoulab_gpu_priority` (free, usually available) or the free
-  preemptible partitions; interactive `ssh chimera-gpu` / `ssh chimera-cpu`
-  (shared queues) often wait long — cost/queue detail in
-  `references/arc-hpc.md`.
-
-## Deep detail
-
-For node-access patterns, the reserved-partition sbatch example, and
-Singularity usage, read:
-
-- `references/arc-hpc.md` — chimera/ARC GPU cluster
-- `references/ircbc-hpc.md` — ircbc CPU cluster
+- **Never submit sbatch/srun without showing the exact script and getting confirmation.**
+  Read-only probes like `squeue` and `sbatch --test-only` need no permission.
+- **Reachable never means permitted.** ircbc lets you ssh to a node you hold no job on; working
+  there steals from the scheduler. Hold an allocation, and never scancel a job you didn't start.
+- If ssh to `ircbc` hangs, **stop and tell the user to check the VPN** (atrust, managed by
+  hand). arc is not behind it. Never retry in a loop.
