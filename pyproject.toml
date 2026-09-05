@@ -38,10 +38,10 @@ platforms = ["osx-arm64", "linux-64"]
 
 # The interpreter. `requires-python` above is the floor this pin satisfies.
 #
-# ruff and pyright are here even though every file in this repo is currently Markdown or
-# bash. Two Python files arrive later — the conformance checker and the skills installer,
-# both copied from the template, where they already pass these gates. A step that runs
-# over an empty set costs a second; a step nobody adds costs the first Python file.
+# ruff and pyright cover this repo's Python, which is `skills/install.py` today and the
+# conformance checker next, both copied from the template, where they already pass these
+# gates. A step that runs over an empty set costs a second; a step nobody adds costs the
+# first Python file.
 [tool.pixi.dependencies]
 python = "3.13.*"
 ruff = "*"
@@ -154,3 +154,14 @@ reportMissingParameterType = "error"
 # inferred return types whose types an untyped dependency owns. Not a bar a lab repo can meet.
 useLibraryCodeForTypes = true
 reportMissingTypeStubs = "none"
+
+# ============================== liulab ==============================
+
+# Conformance rules this repo does not meet on purpose. Keyed by rule name, value the
+# reason. Per-rule, never per-file; no expiry; printed on every conformance run, so the
+# reason has to read well to someone who has never seen the issue that added it.
+[tool.liulab.waived]
+skill-symlinks = """These skills also ship as a Claude Code plugin, so a committed \
+project-local symlink would load every one of them twice for anyone who opens this repo \
+as their working directory with the plugin installed. Nothing is linked into the tree, \
+and the documented install is user-level: `python skills/install.py --target all --user`."""

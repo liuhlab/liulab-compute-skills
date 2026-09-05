@@ -61,12 +61,22 @@ claude plugin install lab-compute@liulab
 
 ## Other agentic tools (Cursor, Codex, Gemini CLI, …)
 
-`git clone` this repo anywhere, then symlink each skill directory
-(`skills/lab-hpc`, `skills/lab-jupyter`, `skills/lab-containers`) — or the
-whole `skills/` tree if the tool supports it — into the tool's skills
-directory. `lab-hpc` is the required base; the other two build on it.
-Claude Code users should use EITHER the plugin OR symlinks into
-`~/.claude/skills/` — never both (the skills would load twice).
+`git clone` this repo anywhere, then run the installer:
+
+```bash
+python skills/install.py --target all --user
+```
+
+That links all three skills into every product's user-level skills
+directory (`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
+`~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see
+what would be installed, `--dry-run` to see where, and `--copy` where a
+symlink won't do. Because they are links, `git pull` updates every install.
+`lab-hpc` is the required base; the other two build on it.
+
+Install at the user level, not into a project. Claude Code users should use
+EITHER the plugin OR symlinks into `~/.claude/skills/` — never both (the
+skills would load twice).
 
 ## Updating
 

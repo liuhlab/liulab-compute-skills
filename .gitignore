@@ -20,6 +20,11 @@ __pycache__/
 # So this names the machine-local files inside `.claude/` and nothing else.
 .claude/settings.local.json
 .claude/worktrees/
-# Installer output for other agent runtimes. Nobody's clone needs another machine's copy.
+# Installer output. `skills/install.py` is documented `--user` only, so no discovery path
+# under this repo is ever committed: these skills also ship as a plugin, and a project-local
+# link would load every one of them twice for anyone who opens this repo with the plugin
+# installed. These four lines stop a stray `--target` landing in a commit.
+/.claude/skills/
+/.agents/
 /.codex/
 /.gemini/

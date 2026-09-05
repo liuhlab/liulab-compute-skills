@@ -64,13 +64,28 @@ clusters?"* — the skill runs its preflight and reports per cluster.
 
 ## Install in other agents (Cursor, Codex, Gemini CLI, …)
 
-The skills follow the open Agent Skills standard: `git clone` this repo
-anywhere, then symlink each skill directory (`skills/lab-hpc`,
-`skills/lab-jupyter`, `skills/lab-containers`) into the tool's skills
-directory. `lab-hpc` is the required base; the other two build on it.
+The skills follow the open Agent Skills standard, so the same files work in
+every product — only the folder each one reads is different. `git clone`
+this repo anywhere, then run the installer:
 
-Claude Code users should use **either** the plugin **or** symlinks — never
-both, or the skills load twice.
+```bash
+python skills/install.py --target all --user
+```
+
+That links all three skills into every product's user-level skills folder
+(`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
+`~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see
+what would be installed, `--dry-run` to see where, and `--copy` if your
+setup can't follow a symlink. Because they are links, `git pull` updates
+every install at once. `lab-hpc` is the required base; the other two build
+on it.
+
+!!! warning "Install for your user, not for a project"
+    Keep `--user`. A project install writes the links into a folder inside
+    the repo, and these skills also ship as a plugin — so anyone who opens
+    this repo with the plugin installed would load all of them twice.
+    Claude Code users pick **either** the plugin **or** the links, never
+    both.
 
 ## Updating
 
