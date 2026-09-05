@@ -81,10 +81,11 @@ old one already holds. Keep the task id of every run so the next question can us
 
 ## Kosmos
 
-**Kosmos runs in the browser and nowhere else.** `JobNames` carries no Kosmos member —
-checked against `edison-client` 0.16.1 on 2026-09-05 — so there is no job name to submit.
-Say so **before** touching the client, and never route the request to a different job to
-have something to run.
+**Kosmos runs in the browser and nowhere else.** No job name for it is published, and
+`JobNames` in `edison-client` 0.16.1 carried none on 2026-09-05 while naming every other
+advertised agent. Say so **before** touching the client, never route the request to a
+different job to have something to run, and **never guess a job-name string** —
+`references/kosmos.md` explains why a lucky guess is the expensive outcome here.
 
 Then offer the two things that do help, because the user is about to pay for the run by
 hand: draft the research objective with them, and check their dataset is in a state Kosmos

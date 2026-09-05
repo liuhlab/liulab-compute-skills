@@ -5,6 +5,24 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.3 — 2026-09-05
+
+- **`lab-edison` no longer argues that Kosmos is browser-only because the job
+  enum omits it.** That reasoning was unsound and this is the correction.
+  `TaskRequest.name` is typed `str | JobNames`, so the client sends any string
+  it is handed — the enum is a convenience list, not a whitelist. Job names
+  outside it do run on the platform: `job-futurehouse-paperqa3-api` and
+  `job-futurehouse-data-analysis-heron` were both seen in task history and
+  neither is in the enum. The conclusion stands, on better ground: no job name
+  for Kosmos is published anywhere.
+- **A new rule: never guess a job-name string.** It follows from the above and
+  it is the practical half. A wrong guess teaches you that one string was
+  wrong; a right guess starts a run costing about two orders of magnitude more
+  than the task the user asked for. Submitting is the only decisive check, and
+  submitting is what there is to avoid.
+- The enum listing is still documented, now framed as the check that can
+  settle the question in one direction only.
+
 ## 2026.9.2 — 2026-09-05
 
 - **New skill: `lab-edison`.** It runs work on FutureHouse's Edison
