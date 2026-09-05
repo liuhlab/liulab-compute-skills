@@ -5,6 +5,28 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.7 — 2026-09-05
+
+Docs only. The four skill pages, the home page and the usage page were rewritten
+shorter and in plainer English, and brought back in line with what the skills now
+say. No skill, script or template changed, so nothing an agent reads is different.
+
+- **Every page is shorter.** The site lost about a page and a half of prose, most
+  of it from `lab-edison`, without dropping a fact anyone needed. Repeated
+  material is gone: the list of what an agent refuses to do lived on both the home
+  page and the usage page, and now lives on the home page alone.
+- **Plainer sentences.** Long dashes are out of the human-facing pages entirely,
+  bullet lists that were really paragraphs are paragraphs again, and page titles
+  read as titles rather than as two ideas joined by punctuation.
+- **`lab-edison` says "job" where the skill says job.** The page called them
+  agents; the skill and its references call them jobs, and one word for one thing
+  is easier to follow. Its key setup, spend rules and task-id recovery are
+  unchanged.
+- **Two stale details fixed.** The cluster table said ircbc's GPU nodes were
+  drained, which is a node state that changes and does not belong in writing that
+  is not dated. It also named the clusters by the labels the setup check prints
+  (`arc_hpc`, `ircbc_hpc`) rather than the names people use.
+
 ## 2026.9.6 — 2026-09-05
 
 An architecture review of `lab-edison` found three claims about the Edison

@@ -1,41 +1,35 @@
 # Liu Lab Compute Skills
 
-A set of [Agent Skills](https://agentskills.io) that teach AI coding
-agents — Claude Code first, but any skill-aware tool — how to use the Liu
-Lab's HPC clusters correctly and safely.
+[Agent Skills](https://agentskills.io) that teach AI coding agents how to use the
+Liu Lab's HPC clusters. Built for Claude Code, and they work in any tool that
+reads the open skills standard.
 
-## What is this for?
-
-When you ask an AI agent to "run this on the cluster" or "start Jupyter on
-a GPU node", it needs lab-specific knowledge it can't guess: which clusters
-exist, how jobs are submitted, what is safe to do. This plugin packages
-that knowledge as four skills. The first three load on their own when
-your request touches remote compute. The fourth you call by name,
-because every run of it costs you money.
+Ask an agent to "run this on the cluster" and it needs lab knowledge it cannot
+guess: which clusters exist, how a job gets submitted, what is safe to do. This
+plugin holds that knowledge, in four skills.
 
 | Skill | What it covers |
 | --- | --- |
-| [lab-hpc](skills/lab-hpc.md) | The foundation: the two clusters (arc/chimera GPU, ircbc CPU), Slurm usage, safety rules, per-machine setup checks. |
-| [lab-jupyter](skills/lab-jupyter.md) | Jupyter Lab on a cluster compute node, tunneled to your local browser. |
-| [lab-containers](skills/lab-containers.md) | The lab's Singularity container images on ircbc: keep them updated and run work inside them. |
-| [lab-edison](skills/lab-edison.md) | Cited answers from the Edison research platform, and analysis of a dataset you upload. No cluster. You ask for it by name. |
+| [lab-hpc](skills/lab-hpc.md) | The two clusters (arc/chimera GPU, ircbc CPU), Slurm, the safety rules, the per-machine setup check. |
+| [lab-jupyter](skills/lab-jupyter.md) | Jupyter Lab on a compute node, tunnelled to your local browser. |
+| [lab-containers](skills/lab-containers.md) | The lab's Singularity images on ircbc: keeping them current, running work inside them. |
+| [lab-edison](skills/lab-edison.md) | Cited answers from the Edison platform, and analysis of a dataset you upload. No cluster. |
 
-The skills come with safety rules built in. An agent using them will:
+The first three load by themselves when your request touches remote compute. You
+call lab-edison by name, because every run of it costs you money.
 
-- **never run compute on a login node** — it gets a Slurm job first;
-- **never submit a job without showing you the exact command** and getting
-  your OK;
-- **ask which cluster to use** (or infer it from context) instead of
-  deciding for you;
-- **refuse cleanly** on a machine that isn't set up, instead of improvising
-  with raw addresses or passwords;
-- **stop and tell you to check the VPN** when ircbc is unreachable.
+## What the agent will not do
+
+It never runs compute on a login node, never submits a job you have not seen, and
+never picks a cluster in silence. On a machine that is not set up it refuses and
+points you at the setup below, rather than asking for an address or a password.
+When ircbc stops answering it tells you to check the VPN instead of retrying in a
+loop.
 
 !!! note "No secrets in this repo"
-    The skills contain no hostnames, IP addresses, usernames, or keys.
-    Hosts are referred to only by ssh alias names; everything else resolves
-    from *your* `~/.ssh/config` at run time. That is why this repo can be
-    public.
+    The skills hold no hostnames, addresses, usernames or keys. Hosts appear only
+    as ssh alias names, and the rest is read from *your* `~/.ssh/config` at run
+    time. That is what makes this repo safe to publish.
 
 ## Install in Claude Code
 
@@ -44,36 +38,35 @@ claude plugin marketplace add liuhlab/liulab-compute-skills
 claude plugin install lab-compute@liulab
 ```
 
-Then set up your machine once:
+Then set the machine up once.
 
-1. **SSH aliases** — make sure your `~/.ssh/config` defines the lab's
-   conventional aliases (`arc` / `chimera-login`, `chimera-transfer`,
-   `chimera-gpu`, `chimera-cpu`, per-node aliases, `ircbc`,
-   `ircbc-transfer`, `cpu01`…`cpu08`) with your own usernames and keys.
-   Ask a lab member for a working example — this repo intentionally does
-   not ship one.
-2. **Personal config** — copy
+1. **SSH aliases.** Your `~/.ssh/config` needs the lab's usual alias names:
+   `arc`, `chimera-login`, `chimera-transfer`, `chimera-gpu`, `chimera-cpu`, the
+   per-node aliases, `ircbc`, `ircbc-transfer`, and `cpu01` through `cpu08`, each
+   with your own username and key. Ask a lab member for a working example. This
+   repo ships none.
+2. **Personal config.** Copy
    [`templates/personal.md`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/personal.md)
-   to `~/.claude/compute/personal.md` and fill in your usernames,
-   directories, and Jupyter defaults. Never commit it anywhere.
-3. **Safety stub (optional)** — append
+   to `~/.claude/compute/personal.md` and fill in your usernames, directories and
+   Jupyter defaults. Never commit it.
+3. **Safety stub, optional.** Append
    [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/CLAUDE-stub.md)
-   to your `~/.claude/CLAUDE.md` so the core safety rules apply even in
-   sessions where no skill triggers.
-4. **Edison key (only if you use `lab-edison`)** — copy
+   to your `~/.claude/CLAUDE.md`, so the core rules apply even in sessions where
+   no skill loads.
+4. **Edison key, only for lab-edison.** Copy
    [`templates/edison.env`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/edison.env)
-   to `~/.claude/compute/edison.env`, paste your own key over the
-   placeholder, and `chmod 600` it. It sits beside `personal.md` and never
-   inside it. Never commit it.
+   to `~/.claude/compute/edison.env`, paste your own key over the placeholder,
+   and `chmod 600` it. It sits beside `personal.md`, never inside it. Never
+   commit it.
 
-To check the setup, just ask Claude: *"Am I set up for the lab HPC
-clusters?"* — the skill runs its preflight and reports per cluster.
+To check the result, ask Claude: *"Am I set up for the lab HPC clusters?"* The
+skill runs its preflight and reports per cluster.
 
-## Install in other agents (Cursor, Codex, Gemini CLI, …)
+## Install in other agents
 
 The skills follow the open Agent Skills standard, so the same files work in
-every product — only the folder each one reads is different. `git clone`
-this repo anywhere, then run the installer:
+Cursor, Codex, Gemini CLI and the rest. Only the folder each product reads is
+different. Clone this repo anywhere, then run the installer:
 
 ```bash
 python skills/install.py --target all --user
@@ -81,23 +74,20 @@ python skills/install.py --target all --user
 
 That links every skill into every product's user-level skills folder
 (`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
-`~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see
-what would be installed, `--dry-run` to see where, and `--copy` if your
-setup can't follow a symlink. Because they are links, `git pull` updates
-every install at once. `lab-hpc` is the base the two cluster skills build
-on. `lab-edison` needs none of them.
+`~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see what
+would be installed, `--dry-run` to see where, and `--copy` if your setup cannot
+follow a symlink. They are links, so `git pull` updates every install at once.
 
-One thing does not port. The setting that keeps `lab-edison` from loading
-on its own is Claude Code's, and other products ignore it. There the
-skill can load like any other, so read its
-[page](skills/lab-edison.md) before you use it elsewhere.
+One thing does not port. The setting that keeps lab-edison from loading on its
+own belongs to Claude Code, and other products ignore it. There the skill can
+load like any other, so read its [page](skills/lab-edison.md) before you use it
+elsewhere.
 
 !!! warning "Install for your user, not for a project"
-    Keep `--user`. A project install writes the links into a folder inside
-    the repo, and these skills also ship as a plugin — so anyone who opens
-    this repo with the plugin installed would load all of them twice.
-    Claude Code users pick **either** the plugin **or** the links, never
-    both.
+    Keep `--user`. A project install writes the links into a folder inside the
+    repo, and these skills also ship as a plugin, so anyone who opened this repo
+    with the plugin installed would load all of them twice. Pick either the
+    plugin or the links, never both.
 
 ## Updating
 
@@ -106,4 +96,4 @@ claude plugin marketplace update liulab
 claude plugin update lab-compute@liulab
 ```
 
-(For clone-based installs: `git pull`.)
+For clone-based installs, `git pull`.
