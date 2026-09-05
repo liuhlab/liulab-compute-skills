@@ -69,3 +69,16 @@ jobs:
           environments: default
           locked: true
       - run: pixi run skill-lint
+
+  # A third environment, so a third job: the docs builder is a pinned alpha nothing else
+  # needs installed. It BUILDS and stops — publishing lives in `docs.yml`, on `main` alone —
+  # so a broken site is a red pull request rather than a discovery at deploy time.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          environments: docs
+          locked: true
+      - run: pixi run docs-build

@@ -57,6 +57,29 @@ markdownlint-cli2 = "*"
 # without this the linters above would all be checking an empty set.
 shellcheck = "*"
 
+# The docs builder, in a feature of its own so that exactly one CI job installs it and the
+# gate everyone runs does not carry it.
+#
+# Exact, and bumped in a commit of its own: at `0.0.x` nothing promises the next patch is
+# compatible, and a patch release has already broken search once. Re-run `pixi run docs-build`
+# when you move it. See `docs/adr/0005-docs-site-on-zensical.md`.
+#
+# No mkdocstrings handler: this repo ships no package, so there is no API to render.
+[tool.pixi.feature.docs.dependencies]
+zensical = "==0.0.57"
+
+# On the feature, so these resolve in the `docs` environment with no `-e` flag.
+# `serve` ignores `--strict` and says so, hence its absence.
+[tool.pixi.feature.docs.tasks]
+docs = "zensical serve"
+docs-build = "zensical build --clean --strict"
+
+# `default` deliberately does NOT take `docs`: the docs feature exists so that one CI job,
+# and one laptop command, installs the builder and nothing else pays for it.
+[tool.pixi.environments]
+default = { solve-group = "default" }
+docs = { features = ["docs"], solve-group = "default" }
+
 [tool.pixi.tasks]
 lint = "ruff check ."
 fmt = "ruff format ."

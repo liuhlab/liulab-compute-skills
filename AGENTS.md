@@ -17,9 +17,10 @@ marketplace. The **repo root is the plugin** (`.claude-plugin/marketplace.json`
 declares `source: "./"`): marketplace `liulab`, plugin `lab-compute`, skills
 under `skills/<name>/`. One plugin holds every lab skill
 (`docs/adr/0001-repo-root-is-the-plugin.md`). `docs/` + `mkdocs.yml` are a
-human-facing MkDocs (Material)
-site, deployed to GitHub Pages by `.github/workflows/docs.yml` on pushes to
-main that touch them — keep those pages concise and end-user-facing (the
+human-facing site built by zensical
+(`docs/adr/0005-docs-site-on-zensical.md`), built on every pull request and
+deployed to GitHub Pages by `.github/workflows/docs.yml` on pushes to
+main — keep those pages concise and end-user-facing (the
 SKILL.md files are for agents; the docs are for people), and remember the
 security policy below applies to `docs/` too (lint sweeps it).
 
@@ -49,6 +50,7 @@ pixi run check                          # THE GATE — run on EVERY change; what
 bash tests/lint.sh                      # static checks alone (same as `pixi run skill-lint`)
 bash tests/preflight.sh [--live]        # is this machine's ~/.ssh/config set up (+ ssh reachability)
 bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS TOKENS
+pixi run docs-build                     # build the site strictly (`docs` environment)
 ```
 
 - `pixi run check` = `check-static` (ruff, ruff format, pyright, vale,
