@@ -25,15 +25,16 @@ Current skills:
   have no internet: digest-sidecar update checks, crane pull on the login
   node → sbatch build from docker-archive, and running commands, pixi-env
   shells, or Jupyter inside the containers.
-- **`lab-edison`** — the FutureHouse Edison research platform: cited
-  literature answers, precedent, molecules, and analysis of a dataset you
-  upload, run through `edison-client` in a throwaway environment. No
-  cluster involved. You invoke it yourself (`disable-model-invocation`),
-  it refuses until your key file `~/.claude/compute/edison.env` is in
-  place (`scripts/check-edison-config.sh`), it shows the job and the
-  query before it spends, and it never transmits the key. Kosmos is a
-  chat session that fans out into many tasks, and the skill will not
-  start one unless you ask for that run.
+- **`lab-edison`** — the Edison research platform, which Edison Scientific
+  runs: cited literature answers, precedent, molecules, and analysis of a
+  dataset you upload, run through `edison-client` in a throwaway
+  environment. No cluster involved. You invoke it yourself
+  (`disable-model-invocation`), it refuses until your key file
+  `~/.claude/compute/edison.env` is in place
+  (`scripts/check-edison-config.sh`), it shows the job and the query
+  before it spends, and it never transmits the key. Kosmos is a chat
+  session that fans out into many tasks, and the skill will not start one
+  unless you ask for that run.
 
 ## Security policy (hard rule)
 

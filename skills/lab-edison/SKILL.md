@@ -1,21 +1,21 @@
 ---
 name: lab-edison
 description: >-
-  Run FutureHouse Edison platform work from a lab machine through the `edison-client` package:
-  literature search, precedent, molecules, data analysis, dataset upload, task history and
-  recovering a lost run, and what to do about Kosmos. Use when the user asks to search the
-  literature with Edison, submit or follow up an Edison task, check or recover a run they already
-  started, upload data to the platform, or set up their Edison API key. Covers the machine-local
-  key file, its preflight, and the rule that the key never reaches the conversation, a command
-  line, a cluster, or a job script. User-invoked only.
+  Run Edison research platform work (the platform is run by Edison Scientific) from a lab machine
+  through the `edison-client` package: literature search, precedent, molecules, data analysis,
+  dataset upload, task history and recovering a lost run, and what to do about Kosmos. Use when
+  the user asks to search the literature with Edison, submit or follow up an Edison task, check
+  or recover a run they already started, upload data to the platform, or set up their Edison API
+  key. Covers the machine-local key file, its preflight, and the rule that the key never reaches
+  the conversation, a command line, a cluster, or a job script. User-invoked only.
 disable-model-invocation: true
 ---
 
 # Edison platform
 
-FutureHouse's Edison research platform, reached from a lab machine through the `edison-client`
-Python package. The key is worth more than any run it pays for and a transcript is forever, so the
-rules below come before the work.
+The Edison research platform — run by Edison Scientific — reached from a lab machine through the
+`edison-client` Python package. The key is worth more than any run it pays for and a transcript is
+forever, so the rules below come before the work.
 
 ## Step 0 — before any Edison command
 

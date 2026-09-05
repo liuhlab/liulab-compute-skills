@@ -86,12 +86,22 @@ after the build succeeds — an image that failed its smoke test must not have o
 
 ### Edison
 
-FutureHouse's Edison research platform, reached from a lab machine through the
+The Edison research platform, run by **Edison Scientific** — FutureHouse's commercial
+spinout, which the platform transitioned to — and reached from a lab machine through the
 `edison-client` Python package: cited answers over the published literature, precedent
 searches, chemistry, and a data-analysis agent that runs code on a dataset the user
 uploads. It is a cloud API, and the one thing this repo teaches that has no cluster in it
 at all. `lab-edison` is the skill that drives it — user-invoked only, and in the same
 plugin as the rest. See `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`.
+
+This entry is the **single authority** on who runs the platform. Every other page — the
+skill body, its trigger description, `README.md`, the published page — names Edison
+Scientific in its own register and carries none of the lineage above, because no one
+sentence passes every register's checks. The platform's own job names still read
+`job-futurehouse-…` and its persona picker still offers `@FutureHouse/…`: naming residue
+of the spinout, not evidence of who runs it. They are live API values, so never "correct"
+one or argue from one back to a vendor. The gate fails a commit re-attributing the
+platform, and exempts those strings.
 
 ### Edison key file
 

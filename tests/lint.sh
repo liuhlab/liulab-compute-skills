@@ -151,6 +151,58 @@ if [ "$hleak" -eq 0 ]; then
   ok "no local ssh-config hostnames leaked (checked $hcount names)"
 fi
 
+echo "== vendor attribution =="
+# The Edison platform is run by Edison Scientific, FutureHouse's commercial spinout, and the
+# Edison entry in CONTEXT.md is the single authority on that. Four other registers say it in
+# their own words — the skill body, its trigger description, README.md and the published page
+# — and nothing can lint five registers for "says the right thing". This lints all of them
+# for "never says the wrong thing". Same shape as the eval suite's DENY assertions, which
+# guard one specific wrong job value the same way.
+#
+# Three appearances of the old name are CORRECT and must survive:
+#   * the platform's job-name strings, `job-futurehouse-...`;
+#   * the persona picker's handle, `@FutureHouse/...`;
+#   * CHANGELOG.md, whose entries record what shipped and are not rewritten afterwards.
+# The first two are naming residue of the spinout and are live API values — eliding them here
+# is what stops this rule being "fixed" by editing a string the client has to send verbatim.
+#
+# Narrow on purpose: a regression test for one known error, not a factual-claims checker. It
+# matches the shapes that put FutureHouse in charge of the platform and nothing else, so
+# "Edison Scientific, FutureHouse's commercial spinout" passes and must keep passing.
+VENDOR_WRONG='future[ -]?house[^[:space:]]{0,2}[[:space:]]+'
+VENDOR_WRONG="$VENDOR_WRONG"'(edison|research|platform|product|service|api|client'
+VENDOR_WRONG="$VENDOR_WRONG"'|runs?|operates?|owns?|hosts?|provides?)'
+VENDOR_WRONG="$VENDOR_WRONG"'|(run|built|operated|owned|made|developed|provided|hosted|created)'
+VENDOR_WRONG="$VENDOR_WRONG"'[[:space:]]+by[[:space:]]+future[ -]?house'
+vendor_elide() { sed -e 's/job-futurehouse-[A-Za-z0-9._-]*//g' -e 's|@FutureHouse/[A-Za-z0-9._-]*||g'; }
+
+# Both directions, every run. A sweep that can no longer fire looks exactly like a sweep that
+# passes, and this one guards prose that nothing else re-checks.
+vendor_probe() { # <label> <trips|clears> <text>
+  local label="$1" want="$2" text="$3" got
+  if printf '%s\n' "$text" | vendor_elide | grep -qiE "$VENDOR_WRONG"; then got=trips; else got=clears; fi
+  if [ "$got" = "$want" ]; then ok "vendor probe: $label $want the check"
+  else err "vendor probe: $label — wanted '$want', got '$got': $text"; fi
+}
+vendor_probe "the possessive re-attribution" trips  "FutureHouse's Edison research platform, reached from a lab machine"
+vendor_probe "the bare adjective form"       trips  "the FutureHouse Edison platform"
+vendor_probe "the run-by form"               trips  "the Edison platform, run by FutureHouse"
+vendor_probe "the corrected attribution"     clears "run by Edison Scientific — FutureHouse's commercial spinout"
+vendor_probe "a job-name string"             clears "get_session returns job-futurehouse-data-analysis-aries"
+vendor_probe "the persona picker handle"     clears "the picker offers @FutureHouse/data-analysis-aries"
+
+# CHANGELOG.md is excluded by name rather than by pattern: its older entries carry the wrong
+# attribution as shipped history, and rewriting a release note to satisfy a linter hides the
+# error instead of correcting it.
+vendor_hits=$(SWEEP '[Ff]uture[ -]?[Hh]ouse' | grep -v '^\./CHANGELOG\.md:' \
+              | vendor_elide | grep -iE "$VENDOR_WRONG")
+if [ -n "$vendor_hits" ]; then
+  printf '%s\n' "$vendor_hits"
+  err "the Edison platform is attributed to FutureHouse (above, with job names elided) — Edison Scientific runs it; CONTEXT.md's Edison entry is the authority"
+else
+  ok "no FutureHouse attribution of the Edison platform (CHANGELOG history exempt)"
+fi
+
 echo "== check-hpc-config.sh self-test =="
 out=$(bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)
 rc=$?
