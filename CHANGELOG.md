@@ -5,6 +5,53 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.2 — 2026-09-05
+
+- **New skill: `lab-edison`.** It runs work on FutureHouse's Edison
+  research platform from your own machine: literature answers with
+  citations, precedent, molecules, and analysis of a dataset you upload.
+  No cluster is involved, which is a first for this plugin.
+- **You have to ask for it by name.** It never loads on its own, because
+  every run spends credits from your own account. Type
+  `/lab-compute:lab-edison` and then your question. The setting behind
+  that is Claude Code's; other agent tools ignore it and will trigger the
+  skill like any other.
+- **To use it, put your key in a file.** Copy `templates/edison.env` to
+  `~/.claude/compute/edison.env`, paste your own key over the
+  placeholder, and `chmod 600` it. Until you do, the skill refuses the
+  task and says which check failed. It offers to write the file for you,
+  and it will never ask you to type your key into the chat.
+- **The key goes beside `personal.md`, never inside it.** An agent reads
+  `personal.md` into the chat, so a key written there lands in every
+  transcript. The skill also never sends the key anywhere — not to a
+  cluster, not into a job script, not onto a command line.
+- **It shows the job and the query before it spends.** Deep literature
+  runs, analysis runs, and batches of more than three tasks stop and ask
+  first. A follow-up continues the earlier task instead of paying again.
+  No prices are written down anywhere: they change, and a stale one is
+  worse than none.
+- **Kosmos runs in your browser and nowhere else.** No API can start one.
+  The skill says so before it tries, then helps you draft the goal and
+  check the data, because you pay for that run by hand.
+- **The first run on a machine is slow.** The client installs into
+  nothing you maintain, so it downloads dozens of packages the first
+  time. It looks hung. It is not. Later runs come from the cache.
+- **Edison cannot reach ircbc.** Its compute nodes have no route out, so
+  the skill says so and stops. For data on arc it brings the files down
+  and uploads from your machine, keeping your key off a shared cluster.
+- **For maintainers: the combined description budget no longer fails the
+  gate.** The 1536-character figure is the cap on one skill's
+  description, not on the sum across a plugin. The per-skill check stays
+  and the running total is still printed, now as information. A comment
+  where the old check stood records why, so nobody puts it back. The gate
+  also gained a rule that fails any commit setting the Edison key to
+  anything but the shipped placeholder, and the agent-doc word cap rose
+  from 1000 to 1200.
+- **The plugin's own description widened.** It read "Liu Lab HPC clusters
+  and remote-compute workflow", which no longer covers a skill with no
+  cluster in it. It now reads "Liu Lab HPC clusters, remote-compute
+  workflow, and the research platforms the lab runs work on".
+
 ## 2026.9.1 — 2026-09-05
 
 Both fixes here were found by running the agent evals, which had not run
