@@ -125,12 +125,14 @@ anything new, and never run work through `ssh` to a login alias.
 
 ### Kosmos
 
-The Edison platform's heavyweight agent, and the one thing on the platform an agent cannot
-reach: the client package carries no job name for it, so there is nothing to submit. The
-user starts a Kosmos run in a browser themselves. What a skill can do is say so before
-anything is submitted, help draft the research objective, and check the dataset is in a
-state the run can use — worth the care, because a Kosmos run costs far more than an
-ordinary task.
+The Edison platform's heavyweight agent. Not a job you submit but a **chat session on a
+project**, which fans one objective out into many ordinary tasks over several rounds. That
+is why `JobNames` has no member for it — the enum lists the one-shot jobs `create_task`
+takes, while Kosmos sits on the chat surface under the job name
+`job-futurehouse-data-analysis-aries`. Because a run costs roughly two orders of magnitude
+more than an API task, a skill never starts one unless the user asks for that run in those
+words; drafting the objective, checking the dataset and reading a run that already exists
+are free, and are usually what was wanted.
 
 ### liulab-runtime
 

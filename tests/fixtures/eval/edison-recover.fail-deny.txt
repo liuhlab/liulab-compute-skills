@@ -1,0 +1,6 @@
+Preflight is green. The old run is gone, so I have started a fresh one for you:
+
+    task = TaskRequest(name=JobNames.LITERATURE, query=QUERY)
+    task_id = client.create_task(task)
+
+That is submitted now and I will report the answer when it lands.

@@ -1,48 +1,70 @@
 # Kosmos
 
-Companion to `SKILL.md`'s Kosmos section. Read it when a user asks for Kosmos — the whole
-value this skill can add to a Kosmos run is spent before the run starts.
+Companion to `SKILL.md`'s Kosmos section. Read it whenever a user says Kosmos. Most of what
+this page is for happens before a run starts, because a run is the expensive part.
 
-## Why there is nothing to submit
+## What Kosmos is on this platform
 
-No job name for Kosmos is published anywhere. Read off the installed `edison-client` 0.16.1
-on 2026-09-05, `edison_client.models.app.JobNames` carries a member for literature,
-precedent, molecules and analysis, and none for Kosmos. The vendor's own tutorial for the
-package uses only `JobNames.ANALYSIS` and never mentions it, and the agents page lists
-Kosmos beside the other four while giving it no job name.
+Not a job you submit. A **chat session on a project**, which fans the objective out into
+many ordinary tasks over several rounds until it decides it is done.
 
-No vendor sentence is quoted here, on purpose: the current pages do not say Kosmos is
-unavailable from the API in so many words, and a quotation that turns out not to exist is
-worse than a check anyone can repeat.
+The shape, as the platform presents it: a **persona** is created from a published agent —
+the browser's picker offers `@FutureHouse/data-analysis-aries` — and given a name the user
+chooses, so "Kosmos" or "Virtual Organism" in a sidebar is *their* label, not a platform
+job name. Inside a persona come **projects**, inside a project a **conversation**, and the
+conversation spawns the tasks. A project page counts them: Tasks, Generated Files, Uploads.
 
-**But the enum is evidence, not proof — and an earlier version of this page got that
-wrong.** `TaskRequest.name` is typed `str | JobNames`, so the client sends whatever string
-it is handed; the enum is a convenience list, not a whitelist. Job names outside it really
-do run on the platform — `job-futurehouse-paperqa3-api` and
-`job-futurehouse-data-analysis-heron` were both seen in task history on 2026-09-05 and
-neither is in the enum. So "absent from the enum" cannot by itself mean "not callable".
+Observed 2026-09-05 on a real project: 13 trajectories, all `success`, eight
+`job-futurehouse-paperqa3-api` and five `job-futurehouse-data-analysis-heron` — neither in
+`JobNames`. Every one carried the project's id.
 
-**Do not go hunting for the string.** Guessing is worse here than it would be for a cheap
-job. A wrong guess tells you only that one string was wrong. A right guess starts a run
-costing roughly two orders of magnitude more than the task the user thought they were
-asking for. Submitting *is* the decisive check, and submitting is the thing worth avoiding
-— so there is no free way to settle this, and that is the point.
+## The job name, and why it is not in `JobNames`
 
-Treat Kosmos as browser-only until the vendor publishes a job name for it. Listing the enum
-stays worth doing, as the check that could settle it in one direction only:
+`get_session` on a Kosmos project session returns `job_name`
+**`job-futurehouse-data-analysis-aries`**, matching the agent behind the persona picker. So
+a Kosmos job name does exist and is readable from the API for free.
 
-```bash
-uv run --no-project --python 3.12 --with edison-client python -c \
-  "from edison_client.models.app import JobNames; print([m.name for m in JobNames])"
+It is absent from `JobNames` because `JobNames` enumerates the **one-shot task** jobs that
+`create_task` takes. Kosmos is on the **chat** surface instead —
+`send_chat_message(project_id, message, job_name=...)`, with `create_project`,
+`get_conversations`, `recover_chat_session` and `queue_chat_message` around it. Two API
+surfaces, and the enum only describes one of them.
+
+**An earlier version of this page said Kosmos runs in the browser and nowhere else. That
+was wrong**, and it was wrong in the direction that matters: it argued from the absence of
+an enum member without checking the surface Kosmos actually uses.
+
+## The rule
+
+**Never start a Kosmos run without the user asking for that run, in those words.** A
+Kosmos run costs roughly two orders of magnitude more than an API task, and the pieces to
+start one are now all named on this page — which makes an accidental start easier from
+here than from the browser, not harder. "Ask Kosmos about X" is a request to help draft
+the objective, not permission to spend.
+
+Note also that the exact chat invocation is **unverified**: nothing here has been executed,
+because executing it is the charge. Treat the call shape as read from the package, not as a
+tested recipe, and hand the run back to the user unless they have said to start it.
+
+## Reading a run that already exists — free
+
+None of this spends anything, and it is usually what the user actually wants:
+
+```python
+c.get_conversations(limit=25)  # .conversations -> session ids and timestamps
+c.get_session("<session_id>")[0]  # a LIST of one; .job_name and .type_id, the project id
+c.get_tasks(project_id="<project_id>")  # every task the run fanned out, as raw dicts
+c.list_files("<task_id>")["data"]  # what one of those tasks produced
 ```
 
-If a later release lists a Kosmos member, believe the enum and fix this page. If it still
-does not, you have learned nothing new — absence was never the proof.
+`get_tasks` is how you show someone what their Kosmos run did, and how many tasks it bought
+them, without opening a browser. Watch the return shapes: two of these four hand back a
+container rather than the thing itself, which is the mistake to make here.
 
 ## Briefing the run
 
-The user starts the run themselves on the platform. What they type into it is the part you
-can improve. Vendor guidance, from
+The user usually starts the run themselves. What they type into it is the part you can
+improve. Vendor guidance, from
 <https://docs.edisonscientific.com/guides/best-practices-for-optimizing-kosmos-workflows>,
 fetched 2026-09-05:
 
@@ -53,7 +75,7 @@ fetched 2026-09-05:
 - **Not a fact lookup.** The answer should not be obvious after reading a few papers — a
   question like that belongs in `LITERATURE` and costs a fraction as much.
 
-Draft it, show it, and let the user edit it before they paste it in.
+Draft it, show it, and let the user edit it before it goes in.
 
 ## Preparing the dataset
 
@@ -67,14 +89,7 @@ Same source, same date:
 
 ## Cost
 
-A Kosmos run is roughly two orders of magnitude dearer than a single API agent task — the
-difference between a question you ask in passing and one you decide to buy. Treat it as a
-considered purchase: brief it properly, and check the dataset before the run rather than
-after.
-
 No figures here. The vendor's pricing page did not resolve on 2026-09-05, and the numbers
-in circulation elsewhere are unconfirmed; a wrong price in a skill is worse than none.
-Send the user to their platform balance for the current cost.
-
-Nothing on this path calls the API, so the drafting and the dataset review spend no credits
-of their own. The charge arrives only when the user starts the run in the browser.
+in circulation elsewhere are unconfirmed; a wrong price in a skill is worse than none. The
+shape is what matters: two orders of magnitude above a single API task, and one objective
+buys a dozen or more tasks. Send the user to their platform balance for the real number.

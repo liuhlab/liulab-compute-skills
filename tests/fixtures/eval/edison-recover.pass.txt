@@ -1,0 +1,20 @@
+Preflight is green (edison: CONFIGURED, key file mode 600), so the key is not the problem here.
+
+Losing the shell did not lose the run. The task is still on the platform, it is almost
+certainly still running or already finished, and the credit has already been spent — so the
+one thing I am not going to do is submit it again. A second create_task call would buy a
+second copy of an answer you have already paid for.
+
+Instead I will list your own task history and find it:
+
+    for r in client.get_tasks(limit=25):
+        print(r["created_at"], r["crow"], r["status"], r["id"], r["task"][:60])
+
+get_tasks lists your trajectories newest first and costs nothing. A standard literature run
+shows up under crow `job-futurehouse-paperqa3`; yours will be the one created about ten
+minutes ago. Once I have matched it on the query text and the timestamp I will take its id
+and poll it with get_task(task_id, lite=True) until the status is terminal, then print the
+formatted_answer with its citations.
+
+If the status comes back `fail` or `truncated`, that is when resubmitting is the right call —
+and I will show you the query and ask first.

@@ -219,6 +219,45 @@ else
   err "version $pver is already tagged v$pver but the tree has moved — bump the version. Changed: $(git diff --name-only "v$pver" -- . | tr '\n' ' ')"
 fi
 
+echo "== eval guard self-test =="
+# These lines RUN tests/eval.sh. If its guard ever regressed they would launch real headless
+# sessions and spend tokens from inside `pixi run check` — the exact failure the guard exists
+# to prevent, set off by the test for it. So `claude` is shadowed by a stub that spends
+# nothing and records every call. The test is then safe when the guard is broken, and it can
+# assert the stub was never reached, which is a stronger claim than an exit code alone.
+gd=$(mktemp -d "${TMPDIR:-/tmp}/lab-eval-guard.XXXXXX")
+trap 'rm -rf "$gd"' EXIT
+mkdir -p "$gd/bin"
+printf '#!/bin/sh\necho "$@" >>"%s/claude-calls"\n' "$gd" >"$gd/bin/claude"
+chmod +x "$gd/bin/claude"
+
+guard_case() { # <label> <eval.sh args...>
+  local label="$1"; shift
+  local out rc
+  out=$(PATH="$gd/bin:$PATH" bash tests/eval.sh "$@" 2>&1)
+  rc=$?
+  if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -q "Nothing was run"; then
+    ok "eval guard: $label is refused"
+  else
+    err "eval guard: $label — wanted exit 2 and a refusal, got exit $rc: $out"
+  fi
+}
+
+# The four ways to ask for nothing runnable. A bare run is the one that matters most: it is
+# what an agent types when it decides to "just run the tests".
+guard_case "a bare run"
+guard_case "--live on its own" --live
+guard_case "an unknown case name" --only nope
+guard_case "--only beside --all" --only trigger --all
+
+if [ -s "$gd/claude-calls" ]; then
+  err "eval guard: a refused invocation still launched $(grep -c . "$gd/claude-calls") claude session(s)"
+else
+  ok "eval guard: no refused invocation launched a session"
+fi
+rm -rf "$gd"
+trap - EXIT
+
 echo "== eval assertions =="
 # Test the eval regexes without an API call. `--dump` prints the assertions the harness
 # actually uses, so this checks THOSE and not a copy that would drift out of step with them.

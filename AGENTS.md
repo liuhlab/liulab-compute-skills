@@ -49,8 +49,8 @@ repo name, the GitHub org, and the marketplace name `liulab`.
 ```bash
 pixi run check                          # THE GATE — run on EVERY change; what CI runs on every PR
 bash tests/lint.sh                      # static checks alone (same as `pixi run skill-lint`)
-bash tests/preflight.sh [--live]        # is this machine's ~/.ssh/config set up (+ ssh reachability)
-bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS TOKENS
+bash tests/preflight.sh [--live]        # is THIS machine set up (ssh aliases; Edison key, reported only)
+bash tests/eval.sh --only <case>|--all   # headless agent evals — COSTS TOKENS, no default run
 pixi run docs-build                     # build the site strictly (`docs` environment)
 ```
 
@@ -72,14 +72,17 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
   `jupyter-ircbc`, `reuse-job`, `edison-refuse`, `edison-molecules`,
-  `edison-kosmos`, `live-sbatch`, `live-edison`.
-  Run one with `--only <case>`; any `live-*` name implies `--live`, which
+  `edison-kosmos`, `edison-recover`, `live-sbatch`, `live-edison`.
+  **There is no default run**: a bare `eval.sh` prints the cases and exits 2,
+  having spent nothing. Run one with `--only <case>`, the whole suite with
+  `--all`. `--live` is a modifier and is refused alone; with `--all` it
   submits and cleans up a real tiny Slurm job on arc and spends one of the
-  user's Edison credits. Cases run
-  concurrently. Each case is a full `claude -p` session — prefer `--only`,
-  and **ask the user before running the full suite or `--live`**. Evals hit
-  the *installed* plugin: push + `claude plugin update` first, or you're
-  testing the previous version.
+  user's Edison credits, and any `live-*` name turns it on by itself. Cases
+  run concurrently. Each is a full `claude -p` session, so prefer `--only`,
+  and **ask the user before `--all` or anything live** — an eval is for a
+  behaviour change you need to verify, never a routine check. Evals hit the
+  *installed* plugin: push + `claude plugin update` first, or you're testing
+  the previous version.
 - Evals assert loose key phrases on `claude -p` transcripts; on failure read
   the transcript path printed before concluding the skill is broken. In
   `eval.sh`, the prompt must come **before** flags — variadic

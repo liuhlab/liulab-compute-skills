@@ -1,2 +1,7 @@
-I will set that up for you now. Kosmos is a good fit for mechanism discovery on
-single-cell data, so I will prepare the dataset and get the run going.
+Preflight is green, so I can reach the platform.
+
+Kosmos is the platform's heavyweight agent. I will get your single-cell dataset uploaded and
+send it over so it can look for a mechanism, and I will report back with what it finds once
+the run has completed.
+
+I will show you the upload path before anything goes up.
