@@ -419,6 +419,101 @@ else
   err "version $pver is already tagged v$pver but the tree has moved — bump the version. Changed: $(git diff --name-only "v$pver" -- . | tr '\n' ' ')"
 fi
 
+echo "== edison-task.sh self-test =="
+# The Edison command's command-line interface — the one seam the spend path is tested
+# through. Everything below is asserted on an exit code and on stdout, never on the script's
+# insides, and every case costs nothing: two refusals never reach the network, and the one
+# path that would is answered by a stub on PATH that runs no client.
+edt=skills/lab-edison/scripts/edison-task.sh
+tx=$(mktemp -d "${TMPDIR:-/tmp}/lab-edison-task.XXXXXX")
+trap 'rm -rf "$tx"' EXIT
+mkdir -p "$tx/bin"
+
+# A query a user could have confirmed, an empty one, and a key file holding a sentence saying
+# it is not a key. Built here and deleted on the way out, like the preflight's fixtures above,
+# so the no-secrets sweep never reads one — and the assignment is written through the
+# preflight's own variable name rather than spelled out, for the same reason.
+printf 'what is known about the thing\n' >"$tx/query.txt"
+: >"$tx/empty.txt"
+edt_fake_key=fixture-stands-in-for-a-key-and-must-never-leak
+printf 'export %s=%s\n' "$ed_var" "$edt_fake_key" >"$tx/key.env"
+chmod "$ed_chmod" "$tx/key.env"
+
+edt_case() { # <label> <expected-exit> <expected-substring> <args...>
+  local label="$1" wantrc="$2" want="$3"; shift 3
+  local out rc
+  out=$(bash "$edt" "$@" 2>&1)
+  rc=$?
+  if [ "$rc" -eq "$wantrc" ] && printf '%s\n' "$out" | grep -qF "$want"; then
+    ok "edison-task: $label"
+  else
+    err "edison-task: $label — wanted '$want' and exit $wantrc, got exit $rc: $out"
+  fi
+}
+
+# Submission refuses before anything can be spent. Each of these passes a key file that does
+# not exist, so a green result cannot come from a maintainer's own configured machine: the
+# argument checks run first and these three never reach the preflight at all.
+edt_case "submit refuses an absent query file" 2 "no query file at" \
+  submit --job LITERATURE --query-file "$tx/nothing-here.txt" -f "$tx/absent.env"
+edt_case "submit refuses an empty query file" 2 "is empty" \
+  submit --job LITERATURE --query-file "$tx/empty.txt" -f "$tx/absent.env"
+edt_case "submit refuses a job name off the routing table" 2 "never invent a name" \
+  submit --job PHOENIX --query-file "$tx/query.txt" -f "$tx/absent.env"
+
+# With no key file, every subcommand that would touch the network refuses AND relays the
+# preflight's own remedy. The placeholder is what makes it the preflight's own rather than a
+# copy: it comes out of `--constants` above, the preflight prints it inside the remedy, and
+# it is written down nowhere in this file.
+for edt_spec in "submit --job LITERATURE --query-file $tx/query.txt" "status a-task-id" \
+                "list" "cancel a-task-id" "fetch a-task-id"; do
+  # shellcheck disable=SC2086  # $edt_spec is an argument list on purpose, not one word
+  edt_case "${edt_spec%% *} refuses and relays the remedy when no key file exists" 1 \
+    "$ed_placeholder" $edt_spec -f "$tx/absent.env"
+done
+
+# The task-id-first property, and the key's route to the client, bought for nothing: `uv` is
+# shadowed by a stub that runs no client, records every argument and the whole program it is
+# handed, and reports only WHETHER the key variable arrived non-empty — never its value. Same
+# shape as the eval guard's `claude` stub below, and for the same reason: a test of the
+# spending path must be safe on the day the path is broken.
+cat >"$tx/bin/uv" <<STUB
+#!/bin/sh
+printf '%s\n' "\$*" >>"$tx/uv-args"
+cat >>"$tx/uv-stdin"
+if [ -n "\${$ed_var:-}" ]; then echo yes >>"$tx/uv-env"; else echo no >>"$tx/uv-env"; fi
+echo "TASK_ID: stub-task-id-0001"
+STUB
+chmod +x "$tx/bin/uv"
+
+edt_out=$(PATH="$tx/bin:$PATH" bash "$edt" submit --job literature \
+  --query-file "$tx/query.txt" -f "$tx/key.env" 2>/dev/null)
+edt_rc=$?
+if [ "$edt_rc" -eq 0 ] && [ "$(printf '%s\n' "$edt_out" | head -1)" = "TASK_ID: stub-task-id-0001" ]; then
+  ok "edison-task: the task id is the first line of stdout on a submission"
+else
+  err "edison-task: wanted the stub's task id as the first line and exit 0, got exit $edt_rc: $edt_out"
+fi
+# Without this the three leak checks below would pass on a command that never sent the key at
+# all, which is a different thing from sending it safely.
+if [ -f "$tx/uv-env" ] && grep -qx yes "$tx/uv-env"; then
+  ok "edison-task: the key reached the client through the environment"
+else
+  err "edison-task: the client ran with no key in its environment, so the leak checks prove nothing"
+fi
+edt_leaked=""
+grep -qF "$edt_fake_key" "$tx/uv-args" 2>/dev/null && edt_leaked="$edt_leaked an-argument"
+grep -qF "$edt_fake_key" "$tx/uv-stdin" 2>/dev/null && edt_leaked="$edt_leaked the-program-text"
+printf '%s\n' "$edt_out" | grep -qF "$edt_fake_key" && edt_leaked="$edt_leaked stdout"
+if [ -n "$edt_leaked" ]; then
+  err "edison-task: the key appeared in:$edt_leaked"
+else
+  ok "edison-task: the key appears in no argument, in no program text and in no output"
+fi
+
+rm -rf "$tx"
+trap - EXIT
+
 echo "== eval guard self-test =="
 # These lines RUN tests/eval.sh. If its guard ever regressed they would launch real headless
 # sessions and spend tokens from inside `pixi run check` — the exact failure the guard exists
