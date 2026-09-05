@@ -126,8 +126,9 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   choosing one, and submitting. The recipe skills carry their own
   `references/` for detail their SKILL.md is too small to hold.
 - Cluster facts in references are **verified on the clusters** and dated —
-  don't edit them from memory; re-verify with read-only commands on the
-  login nodes. The two clusters differ sharply (arc: modern Slurm, cost/queue
+  don't edit them from memory; re-verify with read-only commands from a
+  compute node, which is where the skills say to work and the only place
+  several of these facts are observable at all. The two clusters differ sharply (arc: modern Slurm, cost/queue
   tiers; ircbc: Slurm 18.08 without `squeue --me`, no internet on compute
   nodes, SOCKS-proxy-on-login gotchas) — read the relevant reference before
   writing cluster commands.
