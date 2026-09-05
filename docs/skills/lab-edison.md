@@ -1,9 +1,9 @@
 # lab-edison — cited answers from the Edison platform
 
-Edison is FutureHouse's research platform. It reads the published
-literature and answers with citations. It can also run code on a dataset
-you upload. This skill drives it from your machine through the
-`edison-client` package.
+Edison is a research platform. The company that runs it is Edison
+Scientific. It reads the published literature and answers with
+citations. It can also run code on a dataset you upload. This skill
+drives it from your machine through the `edison-client` package.
 
 No cluster is involved. This is the one skill in the plugin that talks
 only to a cloud service.
