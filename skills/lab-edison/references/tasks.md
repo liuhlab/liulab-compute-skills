@@ -1,9 +1,11 @@
 # Running a task without losing it
 
-Companion to `SKILL.md`'s "Never block, never lose the run". Everything here was read off the
-installed `edison-client` 0.16.1 on 2026-09-05 — re-read it the same way when this is next
-touched. `jobs.md` holds the routing table and the ephemeral `uv` invocation, and neither is
-repeated here.
+> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
+
+Companion to `SKILL.md`'s "Never block, never lose the run". Re-read the package the same way
+when this page is next touched. `jobs.md` holds the routing table and the ephemeral `uv`
+invocation, and neither is repeated here.
 
 ## Submit, then print the id
 
@@ -47,7 +49,7 @@ call in a background task, because the session that ends kills it mid-run.
 Reaching for `formatted_answer` on an analysis run raises `AttributeError` on a run that
 succeeded. `has_successful_answer` is the honest check on either: a task can reach `success`
 carrying no answer. `total_cost` and `total_queries` also exist on `PQATaskResponse` and came
-back `None` from a real successful run — do not report a cost from them.
+back `None` from a real successful run `[verified]` — do not report a cost from them.
 
 ## Recover a run whose id was lost
 
@@ -58,8 +60,9 @@ for r in client.get_tasks(limit=25):
 
 `get_tasks` lists your own trajectories, newest first. They are raw dicts rather than models,
 and the job name is under `crow`, the query under `task`. This is the way back to an orphaned
-run, it costs nothing, and it is worth offering before anyone resubmits and pays twice. Match
-on the query text and the timestamp, then `get_task` that id as usual.
+run, it costs nothing, and it is worth offering before anyone resubmits and pays twice —
+`[verified]`, a real lost run was recovered this way, answer and citations intact. Match on the
+query text and the timestamp, then `get_task` that id as usual.
 
 ## Making a run visible in the browser
 

@@ -1,9 +1,11 @@
 # Datasets: upload, attach, fetch what the run made
 
-Companion to `SKILL.md`'s "Analysing a dataset". Everything here was read off the installed
-`edison-client` 0.16.1 on 2026-09-05 — re-read it the same way when this is next touched. The
-`uv` invocation and the routing table are in `jobs.md`; submitting, polling, recovering and
-cancelling are in `tasks.md`. Neither is repeated here.
+> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
+
+Companion to `SKILL.md`'s "Analysing a dataset". Re-read the package the same way when this page
+is next touched. The `uv` invocation and the routing table are in `jobs.md`; submitting, polling,
+recovering and cancelling are in `tasks.md`. Neither is repeated here.
 
 ## Upload
 

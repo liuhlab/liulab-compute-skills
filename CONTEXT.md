@@ -195,6 +195,20 @@ no longer the placeholder and is owner-only — never the key itself. On a machi
 not configured the skill refuses the request rather than improvising around it. Each takes
 a flag naming an alternative file, so the gate can drive it against fixtures.
 
+### Provenance block
+
+The two lines at the head of every `lab-edison` reference page: where the page's facts came
+from, the date they were checked, and the tier that holds unless a claim says otherwise.
+Three tiers, and only three — **verified**, we ran it and saw the result; **read**, taken
+from the package source or a vendor page and not run; **unverified**, inferred or assumed
+with nothing checked. A claim at another tier is tagged where it is made, so the exceptions
+are visible and the page still declares one default. Package or vendor page is a matter for
+the Source line and never the tier: the skill already ranks those two ("believe the package
+over any vendor page"), and encoding the ranking twice would let tier and source contradict
+each other with nothing to catch it. `tests/lint.sh` fails a reference page carrying no block
+and a block whose date will not parse; no check can tell whether a date is honest. See
+`docs/adr/0009-facts-carry-their-provenance.md`.
+
 ### Reservation job
 
 A long-lived Slurm job a user keeps to hold a node on a reserved partition. Never cancel

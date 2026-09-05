@@ -87,8 +87,6 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   the transcript path printed before concluding the skill is broken. In
   `eval.sh`, the prompt must come **before** flags — variadic
   `--allowedTools` swallows a trailing prompt.
-- `claude plugin eval` (native, scored) is early-access-gated; migrate
-  layer-3 cases there when it becomes available (see `tests/README.md`).
 
 ## Release flow
 
@@ -145,13 +143,16 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   asked for in the conversation. Why it is one skill in this plugin:
   `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`; why the key
   file: `docs/adr/0007-edison-key-file-and-never-transmit.md`.
-- Cluster facts in references are **verified on the clusters** and dated —
-  don't edit them from memory; re-verify with read-only commands from a
-  compute node, which is where the skills say to work and the only place
-  several of these facts are observable at all. The two clusters differ
-  sharply (arc: modern Slurm, cost/queue tiers; ircbc: Slurm 18.08 without
-  `squeue --me`, no internet on compute nodes, SOCKS-proxy-on-login gotchas)
-  — read the relevant reference before writing cluster commands.
+- Facts in references are **checked and dated**, never written from memory.
+  Cluster facts are re-verified with read-only commands from a compute node,
+  the only place several of them are observable at all; the two clusters
+  differ sharply (arc: modern Slurm, cost/queue tiers; ircbc: Slurm 18.08
+  without `squeue --me`, no internet on compute nodes, SOCKS-proxy-on-login
+  gotchas), so read the relevant reference before writing cluster commands.
+  Vendor and package facts carry a **provenance block** giving their source,
+  date and default tier — verified, read or unverified (`CONTEXT.md`,
+  `docs/adr/0009-facts-carry-their-provenance.md`); lint fails a `lab-edison`
+  reference page without one.
 - **Record configuration, never measurements.** Configuration is what an
   agent must type — partition wall limits, `MaxNodes`, `DefaultTime`, ports,
   module names, topology — and is what the dating rule above governs. A

@@ -1,9 +1,11 @@
 # Jobs, and how to run one
 
+> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
+
 Companion to `SKILL.md`'s "Choosing the job". Read it before the first submission of a session.
-Everything here was read off the installed `edison-client` 0.16.1 on 2026-09-05 — re-read it the
-same way when this is next touched, and believe the package over any vendor page. The submit /
-poll / recover loop is in `tasks.md`.
+Re-read the package the same way when this page is next touched, and believe the package over
+any vendor page. The submit / poll / recover loop is in `tasks.md`.
 
 ## Which job answers which question
 
@@ -66,8 +68,8 @@ Both flags are load-bearing:
 - **`--no-project`.** This repo has a `pyproject.toml` of its own. Without the flag `uv` tries to
   sync *this* project instead of an ephemeral one, so the failure lands exactly where a
   maintainer is standing.
-- **`--python 3.12`.** Not cosmetic. Unpinned runs resolved a different interpreter and
-  re-downloaded the whole dependency set a second time.
+- **`--python 3.12`.** Not cosmetic. `[verified]` Unpinned runs resolved a different interpreter
+  and re-downloaded the whole dependency set a second time.
 
 An activated pixi shell does not disturb it — `VIRTUAL_ENV` and `CONDA_PREFIX` do not leak into
 the run, so nothing needs deactivating first. `pixi exec` is not an alternative: conda-forge does
