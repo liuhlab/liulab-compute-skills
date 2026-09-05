@@ -120,9 +120,10 @@ That list covers one-shot tasks. Kosmos sits on the chat side of the
 same platform, under its own name.
 
 The skill will not start one unless you ask for that run in plain words.
-A Kosmos run costs far more than an ordinary task, and now that the
-skill knows how one starts, that rule is what stands between you and a
-large bill.
+A run pays for every task it fans out to, so the cost depends on how far
+it goes. There is no flat price to quote you — check your own balance.
+Now that the skill knows how one starts, that rule is what stands
+between you and a large bill.
 
 What it does instead is free. It drafts the goal with you. It checks
 your data is in a shape Kosmos can use. And it can show you a run you
