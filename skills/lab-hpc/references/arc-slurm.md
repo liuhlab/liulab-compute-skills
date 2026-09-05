@@ -5,11 +5,10 @@ Which partition to ask for, and how to submit. Hosts, network, toolchain and sto
 
 ## The Slurm client runs on the compute node (verified 2026-09-04)
 
-Slurm is **25.11.0**, and the whole client — `squeue`, `sbatch`, `salloc`, `scancel`, `sinfo`,
-`sacct`, `scontrol`, `sstat`, `srun` — is in `/usr/bin` on the compute nodes and works there:
-`squeue --me`, `sinfo -s`, `sacct -X` and `scontrol show partition` all returned real data from a
-node. `sbatch --test-only` runs there too, reporting when a job *would* start without submitting — a
-safe dry run.
+Slurm is modern (**25.x**), and the whole client — `squeue`, `sbatch`, `salloc`, `scancel`, `sinfo`,
+`sacct`, `scontrol`, `sstat`, `srun` — is in `/usr/bin` on the compute nodes and works there, so
+managing the queue is never a reason to ssh to the login node. `sbatch --test-only` runs there too,
+reporting when a job *would* start without submitting — a safe dry run.
 
 ## Partitions (verified 2026-07-04)
 
@@ -30,9 +29,10 @@ Lab members submit under account `zhoulab` (QOS `normal`), so you rarely need `-
 | `zhoulab_gpu_priority` | 14 d | **Lab-reserved**, account `zhoulab` only: one node, ≤ 176 CPUs, 4 GPUs, `MaxMemPerCPU=4096`, `PriorityTier=1000`, `PreemptMode=REQUEUE` (verified 2026-09-04). Long-lived reservations live here. |
 
 Free: `zhoulab_gpu_priority` and the preemptible tiers; the other GPU partitions are billed extra, so
-default to the free ones. For GPU work try **`zhoulab_gpu_priority` first**: a `--test-only` submit on
-2026-09-04 started the job *immediately* there, ~*1 h 40 m* out on shared `gpu`. Jobs there are preemptible,
-so a foothold can vanish mid-task — re-submit and land again rather than drifting back to the login node.
+default to the free ones. For GPU work try **`zhoulab_gpu_priority` first** — the lab's own node starts
+work far sooner than the contended shared queues; confirm with `sbatch --test-only`, which prints the
+projected start time. Jobs there are preemptible, so a foothold can vanish mid-task — re-submit and
+land again rather than drifting back to the login node.
 Requeue-tolerant fan-outs: `preemptible` (GPU) or `cpu_preemptible`; smoke tests `quick_preemptible`.
 
 ## Submitting

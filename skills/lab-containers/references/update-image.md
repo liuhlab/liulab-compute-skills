@@ -32,17 +32,17 @@ ssh ircbc 'sbatch --wait -p compute_cpu -t 02:00:00 -c 8 -J sif_<env> \
 `--wait` blocks through the queue *and* the build, maybe the full time limit — background it or use a long
 timeout. If the connection drops the job survives, so do **not** resubmit: check `squeue -u $USER` and tail
 the log. The `unset` earns its keep — six proxy variables leak in from the login shell, pointing at a SOCKS
-port only the login node listens on; without it a failure reads as "Connection refused on port 1080", which
-looks like a broken proxy rather than "compute has no internet". The trailing `rm` deletes the transient
-tarball, and only on success. Write the sidecar only after the job exits 0 — nonzero means the build failed:
+port only the login node listens on; without it the failure reads as "Connection refused", which looks like
+a broken proxy rather than "compute has no internet". The trailing `rm` deletes the transient tarball, and
+only on success. Write the sidecar only after the job exits 0 — nonzero means the build failed:
 `ssh ircbc 'echo <digest> > $LIU_LAB_PACKAGES/liulab-runtime_<env>.sif.digest'`
 
 ## 3. Smoke-test in a compute job
 
 Canonical per-env checks, the ones the image build itself runs — `ml`/`ml-gpu`:
 `python -c "import torch, scvi, scanpy, anndata"`; `default`: `python -c "import pandas, numpy, seaborn, jupyterlab"`;
-`align-rna`: `STAR --version`; `align-dna`: `chromap --version`. Fuller Jupyter check:
-`$LIU_LAB_PACKAGES/bin/test-jupyter-ml.sh` under `srun` (ml image; adapt for others).
+`align-rna`: `STAR --version`; `align-dna`: `chromap --version`. Envs are examples, not a catalogue — for another env,
+check its headline tool. Fuller Jupyter check: `$LIU_LAB_PACKAGES/bin/test-jupyter-ml.sh` under `srun` (ml image; adapt for others).
 
 ```bash
 ssh ircbc 'srun -p compute_cpu -t 10 -J sif_test bash -c "\

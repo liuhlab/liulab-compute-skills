@@ -1,7 +1,8 @@
 # Using the lab container images
 
-Verified patterns for running work inside a `liulab-runtime` SIF on ircbc (Singularity 3.2.1).
-Getting or refreshing an image: `SKILL.md`, then `references/update-image.md`.
+Verified patterns for running work inside a `liulab-runtime` SIF on ircbc, where Singularity is an
+old 3.x (`module load singularity && singularity --version` reports the exact build). Getting or
+refreshing an image: `SKILL.md`, then `references/update-image.md`.
 
 All of this is compute-node work — none of it belongs on the login node. Activation inside the
 container is always `source /app/.pixi/activate-<env>.sh` (fallback:

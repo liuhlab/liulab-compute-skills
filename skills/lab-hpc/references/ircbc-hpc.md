@@ -15,11 +15,11 @@ The whole cluster sits behind a **VPN** (the atrust app) that the user manages b
 - **Login:** `ircbc`. A doorway. Two reasons to be here (`SKILL.md`): submitting your first job, and the two things compute nodes lack —
   internet and `git`.
 - **Compute:** `cpu01`…`cpu08`, ProxyJumping through `ircbc`.
-- **Transfer:** `ircbc-transfer` — separate shared lab account, direct internet, ~1 TB local disk, but it does **not mount `/share`**, so it
-  cannot see lab code or the image store. Fetch there and copy over; never compute there. It does have `git` and `rsync`.
+- **Transfer:** `ircbc-transfer` — separate shared lab account, direct internet, local disk of its own, but it does **not mount `/share`**,
+  so it cannot see lab code or the image store. Fetch there and copy over; never compute there. It does have `git` and `rsync`.
 
-**ircbc has no `pam_slurm_adopt` gate.** With `squeue -u $USER` empty, `ssh cpu02` and `ssh cpu05` both connected in 3-4 s. Sweeping the
-eight aliases finds a node fast — and a trap, because **reachable never means permitted**. Working on a node you hold no allocation for
+**ircbc has no `pam_slurm_adopt` gate.** ssh to a `cpu0X` alias connects even with `squeue -u $USER` empty, so sweeping the eight aliases
+finds a reachable node fast — and a trap, because **reachable never means permitted**. Working on a node you hold no allocation for
 steals CPU from the job the scheduler put there. Nothing technical stops you; this rule does. arc does enforce it.
 
 Only some `cpu0X` aliases are in `known_hosts`; the rest fail under `BatchMode` with `Host key verification failed`, so probe with
@@ -42,18 +42,18 @@ which reads like a broken proxy but means "no internet here". `unset` all six at
 | --- | --- | --- |
 | `git` | present | **absent, and no module for it** |
 | `rsync`, `python3`, `pixi`, `uv`, `module` | present | present, `module` included even non-interactively |
-| `singularity` | module only, `singularity/3.2.1` | same, `3.2.1-7.1.ohpc.1.3.8` |
+| `singularity` | module only, `singularity/3.2.1` | same module, an old 3.x — `module avail singularity` if that name has moved |
 | `crane`, `conda` / `mamba` | `crane` in the image store, and useful | `crane` useless (no internet); no conda or mamba |
 
 The missing `git` is the one that bites: even an offline `git status` or `git log` needs a login-node hop. Drive git from `ircbc` against
-`/share`, or put git inside your container or pixi env so compute-side sessions stand alone. Compute PATH is bare —
-`~/.pixi/bin:/usr/local/bin:/usr/bin:/opt/ibutils/bin`.
+`/share`, or put git inside your container or pixi env so compute-side sessions stand alone. Compute PATH is bare — `~/.pixi/bin:/usr/local/bin:/usr/bin:/opt/ibutils/bin`.
 
 ## Storage and the `$LIU_LAB_PACKAGES` image store
 
-`/share` is mounted and writable on login and compute alike (428 T, 77% used, ~102 T free). Lab code lives in `/share/home/<user>/src`, one
+`/share` is mounted and writable on login and compute alike. It is the big shared filesystem and it does fill up — `df -h /share` before
+writing large outputs or pulling an image, and never assume the headroom is there. Lab code lives in `/share/home/<user>/src`, one
 directory per repo, names matching local ones, synced local → GitHub → `git pull`; `rsync`/`scp` from a laptop through `ircbc` lands
 straight on `/share` (2026-07-05). `$LIU_LAB_PACKAGES` is set on both hosts and the store sits on `/share`, so jobs can read the images;
 only the network *fetch* is login-bound. It holds the `*.sif` images, a `*.sif.digest` sidecar each (a `sha256:` line, compared against
 `crane digest` for updates), `bin/` (`crane`, smoke-test scripts), `oci/` (transient tarballs) and `logs/`. Which images exist changes —
-**list the store rather than assuming** (no `default` image yet). It is group-writable with setgid dirs so any member can add images; keep it that way.
+**list the store rather than assuming**. It is group-writable with setgid dirs so any member can add images; keep it that way.

@@ -19,7 +19,7 @@ Which cluster is the user's call: ask or infer, never pick silently. One lifecyc
 
 ## 1. Reuse before you submit
 
-Reusing an idle job is not just courtesy — it is how you avoid the login node altogether. Find the node you already hold (`lab-hpc`'s SOP). On arc a node you hold no job on refuses ssh in ~2 s; ircbc has no such gate, so confirm a node is yours before working on it.
+Reusing an idle job is not just courtesy — it is how you avoid the login node altogether. Find the node you already hold (`lab-hpc`'s SOP). On arc a node you hold no job on refuses ssh quickly — probing never hangs; ircbc has no such gate, so confirm a node is yours before working on it.
 The whole Slurm client works from a compute node on both clusters, so list jobs from there — `squeue --me -h -o "%i %j %T %N %L"`, falling back to `ssh arc '<same>'` only when you hold no job anywhere.
 For each RUNNING job that looks reusable (`reserve`, `jupyter`, `ray`, …), probe its node: `ssh <node> 'ss -tln | grep -E "127\.0\.0\.1:<port>"'`.
 
@@ -29,14 +29,14 @@ For each RUNNING job that looks reusable (`reserve`, `jupyter`, `ray`, …), pro
 ## 2. Submit — only when there is nothing to reuse
 
 Here the login node earns its one use: you hold no allocation, so nothing else can submit the first job. Resources are the user's call — ask for `--cpus-per-task`, `--mem-per-cpu`, `--gpus` and `--time` (`personal.md` may carry defaults).
-`zhoulab_gpu_priority` is free and starts at once where the shared `gpu` queue is over an hour out, but it is `PreemptMode=REQUEUE`: warn that a requeue moves the job and kills the tunnel.
-**Show the exact command and get confirmation before submitting**, offering `sbatch --test-only` beside it — a dry run that reports when the job would start and submits nothing.
+`zhoulab_gpu_priority` is the lab's own partition — no cost, and usually a far shorter wait than the shared `gpu` queue — but it is `PreemptMode=REQUEUE`: warn that a requeue moves the job and kills the tunnel.
+**Show the exact command and get confirmation before submitting**, offering `sbatch --test-only` beside it — a dry run that submits nothing and prints the projected start time, so check the wait rather than guess.
 Jupyter binds to **localhost on the compute node only** — never `0.0.0.0`; the tunnel is the only thing that should reach it.
 
 ```bash
 ssh arc 'mkdir -p sbatch && sbatch --job-name=jupyter --partition=zhoulab_gpu_priority --time=<time> --cpus-per-task=<cpus> \
   --mem-per-cpu=<mem> --gpus=<gpus> --output=sbatch/jupyter.%j.log --error=sbatch/jupyter.%j.log --wrap "<jupyter> lab --no-browser --port=<port>"'
-ssh arc 'squeue -j <jobid> -h -o "%T %N"'   # poll to RUNNING, then re-probe the port (10-30 s)
+ssh arc 'squeue -j <jobid> -h -o "%T %N"'   # poll to RUNNING, then re-probe until the port answers
 ```
 
 ## 3. Token

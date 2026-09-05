@@ -128,10 +128,20 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 - Cluster facts in references are **verified on the clusters** and dated —
   don't edit them from memory; re-verify with read-only commands from a
   compute node, which is where the skills say to work and the only place
-  several of these facts are observable at all. The two clusters differ sharply (arc: modern Slurm, cost/queue
-  tiers; ircbc: Slurm 18.08 without `squeue --me`, no internet on compute
-  nodes, SOCKS-proxy-on-login gotchas) — read the relevant reference before
-  writing cluster commands.
+  several of these facts are observable at all. The two clusters differ
+  sharply (arc: modern Slurm, cost/queue tiers; ircbc: Slurm 18.08 without
+  `squeue --me`, no internet on compute nodes, SOCKS-proxy-on-login gotchas)
+  — read the relevant reference before writing cluster commands.
+- **Record configuration, never measurements.** Configuration is what an
+  agent must type — partition wall limits, `MaxNodes`, `DefaultTime`, ports,
+  module names, topology — and is what the dating rule above governs. A
+  measurement is free space, percentages, node states, queue waits, timings,
+  how many images exist: true for one afternoon, a confident lie after, and
+  the agent cannot tell which. Don't record it; write the guidance it stood
+  for plus the command giving a live value ("`/large_storage` fills up, check
+  `df -h`", not "81% used"). A version is configuration when behavior depends
+  on it (Slurm 18.08 is why ircbc needs `squeue -u $USER`), a measurement
+  otherwise.
 - Behavior changes to a skill are tested with `tests/eval.sh` (agent evals),
   not just lint — lint only proves the files are well-formed.
 - `templates/` holds per-user onboarding files users copy to their machines

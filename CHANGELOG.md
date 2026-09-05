@@ -5,6 +5,42 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.0 — 2026-09-05
+
+- **Work belongs on a compute node, not a login node.** The old rule was
+  about load: no heavy work on a login node, light commands fine. That left
+  `ssh arc '<cmd>'` as the normal reflex, and many agents each running
+  "small" commands is what overloads a shared machine. The rule is now about
+  place. There are two reasons to touch a login node, and no others: you hold
+  no job yet and must submit one, or the compute node lacks what you need. On
+  ircbc that means internet and `git`. On arc it means nothing at all.
+- **Checked on both clusters, not recalled from memory.** The whole Slurm
+  client works from a compute node on arc and ircbc alike, so job management
+  never needs a login node. Two things the references claimed turned out to
+  be wrong. ircbc lets you ssh to a compute node you hold no job on, so
+  "reachable" is not "allowed" and working there takes CPU from the job the
+  scheduler put on that node. And `git` is not installed on ircbc compute
+  nodes at all.
+- **Skills split into smaller files.** Five long documents became fourteen
+  short ones. `lab-hpc` gained `arc-slurm.md` and `ircbc-slurm.md`;
+  `lab-jupyter` and `lab-containers` gained reference folders. Each file now
+  covers one thing.
+- **No measurements in skill docs.** Free space, percentages, queue waits and
+  timings were recorded during the cluster survey. They were true that
+  afternoon and misleading after, and an agent reading them cannot tell.
+  They are replaced by the guidance they stood for and the command that
+  gives a live answer. `AGENTS.md` now states the rule and the line between a
+  measurement and a setting an agent must type.
+- **One gate command, and CI runs it.** The repo gained a pixi workspace and
+  `pixi run check`, which CI now runs on every pull request. It checks
+  formatting, types, shell scripts, prose and markdown structure: ruff,
+  pyright, shellcheck, vale, markdownlint and a conformance check. The prose
+  gates cap agent-facing pages by word count and human-facing pages by
+  reading grade.
+- **Repo furniture.** An MIT licence. A one-command installer in place of
+  hand-made symlinks. A glossary, a set of agent conventions and five
+  decision records. The docs site now builds with zensical.
+
 ## 2026.7.6 — 2026-07-21
 
 - **Editorial concision pass (no behavior change).** Tightened the
