@@ -5,6 +5,39 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.9 — 2026-09-05
+
+The code that spends your Edison credits moved out of a shell script and into a
+Python package, `src/edison_cli/`. Every check this repo runs now reads it. Kosmos
+gets real commands for the first time.
+
+- **The spending code is checked like the rest of the repo.** It used to be Python
+  written inside a shell script, where the linter and the type checker could not see
+  it. It is a package now, so both read it, and it has its own unit tests.
+- **One command, `edison-cli`, in place of two shell scripts.** `task submit`,
+  `task status`, `task list`, `task fetch` and `task cancel` do what the old script
+  did, with the same flags. `preflight` is the key-file check that used to be a
+  script of its own.
+- **Kosmos can be driven from here now.** `kosmos start`, `status`, `tasks`,
+  `sessions` and `stop`, with `persona list` and `project ensure` to get the two ids
+  a run needs. Starting a run prints the exact line that stops it, before anything
+  else can happen. Stopping queues the halt first and cancels the leftover tasks
+  second, which is the order that works.
+- **Uploading data is a command too.** `data upload` and `data search`. The one
+  place that handles your own files is no longer code typed out by hand.
+- **You now need pixi.** It takes over from `uv` as the tool this skill wants on
+  your PATH. No other skill here needs it, and there is still nothing to install by
+  hand: the first Edison command builds the environment it runs in. That took about
+  22 seconds on the machine it was measured on. A plugin update lands in a fresh
+  folder, so the build runs again once per release, faster the second time.
+- **A promise the docs used to make is gone.** The page said the client could not
+  touch your pixi setup, because it ran from a throwaway environment. That is no
+  longer how it works. The new environment lives inside the plugin's own folder,
+  which is still not a project of yours.
+- **Why the whole change was worth it** is written down in
+  `docs/adr/0011-the-spend-path-became-a-package.md`, including the two things the
+  design had to give up along the way.
+
 ## 2026.9.8 — 2026-09-05
 
 Docs only, in `lab-edison`. The Kosmos page described a call nobody had ever run.

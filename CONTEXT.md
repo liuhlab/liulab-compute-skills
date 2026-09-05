@@ -87,9 +87,9 @@ after the build succeeds — an image that failed its smoke test must not have o
 ### Edison
 
 The Edison research platform, run by **Edison Scientific** — FutureHouse's commercial
-spinout, which the platform transitioned to — and reached from a lab machine through the
-`edison-client` Python package: cited answers over the published literature, precedent
-searches, chemistry, and a data-analysis agent that runs code on a dataset the user
+spinout, which the platform transitioned to — and reached from a lab machine through
+`edison-cli` and the `edison-client` package: cited answers over the published literature,
+precedent searches, chemistry, and a data-analysis agent that runs code on a dataset the user
 uploads. It is a cloud API, and the one thing this repo teaches that has no cluster in it
 at all. `lab-edison` is the skill that drives it — user-invoked only, and in the same
 plugin as the rest. See `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`.
@@ -188,13 +188,16 @@ See `docs/adr/0001-repo-root-is-the-plugin.md`.
 
 ### Preflight
 
-Step 0 of a skill: a script reporting, condition by condition, whether this machine holds
-what the task needs. `lab-hpc` runs `scripts/check-hpc-config.sh`, which says per cluster
-whether `~/.ssh/config` carries the aliases; `lab-edison` runs
-`scripts/check-edison-config.sh`, which says whether the key file exists, is non-empty, is
-no longer the placeholder and is owner-only — never the key itself. On a machine that is
-not configured the skill refuses the request rather than improvising around it. Each takes
-a flag naming an alternative file, so the gate can drive it against fixtures.
+Step 0 of a skill: a check reporting, condition by condition, whether this machine holds
+what the task needs. The two are no longer the same kind of thing. `lab-hpc` runs a bash
+script, `scripts/check-hpc-config.sh`, which says per cluster whether `~/.ssh/config`
+carries the aliases. `lab-edison` runs `edison-cli preflight`, a subcommand of the package
+that spends, which says whether the key file exists, is non-empty, is no longer the
+placeholder and is owner-only — never the key itself. That module imports only the standard
+library, so the no-secrets sweep can read its constants without a hundred packages
+resolving. On a machine that is not configured the skill refuses the request rather than
+improvising around it. Each takes a flag naming an alternative file, so the gate can drive
+it against fixtures.
 
 ### Provenance block
 

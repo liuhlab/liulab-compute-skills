@@ -116,7 +116,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   reference.
 - **Repo-wide convention:** skills never submit sbatch/srun work on the
   user's behalf without showing the exact script and getting confirmation
-  first (stated in `lab-hpc`'s hard rules; keep new recipes consistent).
+  first (`lab-hpc`'s hard rules; keep new recipes consistent).
 - **Ownership split for Jupyter-on-ircbc:** `lab-jupyter` owns the session
   lifecycle; `lab-containers` owns the container invocations, including the
   ircbc Jupyter sbatch command. Neither duplicates the other's half — keep it
@@ -131,16 +131,17 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   unconfigured machines. Per-cluster truth is split two ways, and a fact
   belongs in exactly one: `arc-hpc.md` / `ircbc-hpc.md` for hosts, network,
   toolchain and storage; `arc-slurm.md` / `ircbc-slurm.md` for partitions,
-  choosing one, and submitting. The recipe skills carry their own
-  `references/` for detail their SKILL.md is too small to hold.
+  choosing one, and submitting.
 - `skills/lab-edison/` is the one skill with no cluster in it — the Edison
   cloud platform — and the one that is **user-invoked only**
   (`disable-model-invocation: true`, a Claude Code key other agent tools
   ignore), so it never triggers on its own and never spends a credit
-  unprompted. Its step 0 runs `scripts/check-edison-config.sh` and refuses
-  on a machine with no key. The key lives in a machine-local file beside
-  `personal.md`, never inside it, and is never transmitted, printed or
-  asked for in the conversation. Why it is one skill in this plugin:
+  unprompted. Its spend path is the `src/edison_cli/` package run through
+  pixi, not a script; step 0 is `edison-cli preflight`, which refuses on a
+  machine with no key (`docs/adr/0011-the-spend-path-became-a-package.md`).
+  The key lives in a machine-local file beside `personal.md`, never inside
+  it, and is never transmitted, printed or asked for. Why it is one skill in
+  this plugin:
   `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`; why the key
   file: `docs/adr/0007-edison-key-file-and-never-transmit.md`.
 - Facts in references are **checked and dated**, never written from memory.

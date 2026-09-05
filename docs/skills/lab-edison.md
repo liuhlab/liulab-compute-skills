@@ -3,7 +3,8 @@
 Edison is a research platform, run by Edison Scientific. It answers questions from
 the published literature with citations, runs code on a dataset you upload, and in
 Kosmos has a research agent that works a whole goal over many rounds. This skill
-drives it from your machine through the `edison-client` package. No cluster is involved. It is the one skill here that talks only to a
+drives it from your machine through `edison-cli`, a command that ships with the
+plugin. No cluster is involved. It is the one skill here that talks only to a
 cloud service.
 
 ## You ask for it by name
@@ -125,12 +126,17 @@ Edison on arc, but only after you put the key there yourself, in your own sessio
 The skill never copies your key anywhere: not to a cluster, not into a job script,
 not onto a command line.
 
-## The first run is slow
+## What it needs, and why the first run waits
 
-The client is never installed into anything you maintain. It runs from a throwaway
-environment, so it cannot break your pixi setup, and an active pixi shell does not
-disturb it.
+You need [pixi](https://pixi.sh) on your machine. It is the only extra tool this
+skill asks for, and no other skill here asks for it.
 
-The cost is the first run on a new machine. Dozens of packages download before your
-question is even sent, and it can look hung for a minute or two. It is not. Every
-later run reads from the cache and starts at once.
+Nothing else has to be installed. The first Edison command builds the environment
+it runs in, and dozens of packages download before your question is even sent.
+That took about 22 seconds on the machine where it was measured. It can look hung.
+It is not.
+
+That environment lives inside the plugin's own folder, not in any project of
+yours. An update puts the new version of the plugin in a fresh folder, so the
+build runs once more after each update. It is quicker then, a few seconds, because
+the downloads are already on your disk.
