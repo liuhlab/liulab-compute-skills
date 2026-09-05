@@ -1,0 +1,29 @@
+# Word cap for skill bodies: skills/*/SKILL.md, and nothing else. The reference pages behind
+# them and the repo's own agent guidance keep Lab.LengthDoc at 1200; ADRs keep Lab.LengthAdr
+# at 400.
+#
+# Split out of Lab.LengthDoc, which is what that rule's own comment asked for. One dial used
+# to govern skill bodies, reference pages and AGENTS.md together, so raising it because
+# AGENTS.md had one more skill to name silently handed every skill body room nobody asked
+# for — 200 words, the last time it moved.
+#
+# A skill body is an interface: it holds what must be true before the first tool call, and
+# every procedure behind it belongs in references/, which this rule does not cap. So the cap
+# is set off the sibling bodies rather than off the largest one. Measured with vale's own
+# `words` counter: lab-hpc 427, lab-jupyter 373, lab-containers 327, lab-edison 547. Six
+# hundred is the largest sibling plus about forty per cent of headroom (427 × 1.4 ≈ 598) —
+# all four pass untouched, and the Edison body at the 950 words it reached before it was cut
+# back to its interface would have failed here.
+#
+# This is a dial, not a law. Raising it is a one-line diff here, made deliberately, with the
+# reason in the commit message. Do not raise it because a body ran long: a long body is
+# detail that belongs in references/, which is the seam this cap exists to keep open.
+#
+# `metric` rules are summary-scoped: the variables are computed over the whole file and
+# the alert is reported at 1:1. The condition must be floating point — "> 600.0" and not
+# "> 600", which vale does not parse.
+extends: metric
+message: "This skill body is %s words; the cap is 600. Move detail into references/."
+level: error
+formula: words
+condition: "> 600.0"

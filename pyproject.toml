@@ -166,20 +166,28 @@ reportMissingTypeStubs = "none"
 # ============================== liulab ==============================
 # Read by `scripts/conformance.py`; its docstring has the rules.
 
-# The agent-facing files, and the Vale Length rule that caps each. Keys are plain path
-# prefixes matched against `git ls-files`, not globs; a trailing `/` matches a directory.
-# Every key must appear verbatim in exactly one `.vale.ini` section header — conformance
-# rule 3 pairs them by substring, and a key in zero sections or in two fails. `skills/`
-# pairs with the `skills/**/*.md` header, which is wider than the template's so that the
-# per-cluster reference pages are capped too.
+# The agent-facing files, and the Vale Length rule that caps each. A key does two jobs, and
+# the two read it differently. Conformance rule 2 resolves it against `git ls-files` as a
+# plain path prefix — a trailing `/` matches a directory, any other key matches that one
+# path — and reads only the keys under the site source, so the `skills/` keys never reach
+# it. Conformance rule 3 looks for the key verbatim INSIDE a `.vale.ini` section header, and
+# there a glob is what pairs. The two `skills/` keys below are globs for that reason.
+#
+# Every key must appear verbatim in exactly one `.vale.ini` section header — a key in zero
+# sections is checked by nothing, and a key in two cannot be paired. That is why there is no
+# plain `skills/` key: it is a substring of the references header AND of the skill-body
+# header, so it would match twice and fail. Skill bodies carry LengthSkill at 600; the
+# reference pages keep LengthDoc, a glob wider than the lab template's `skills/*/SKILL.md`
+# so that the per-cluster and per-platform pages are capped at all.
 #
 # `docs/research/` is absent because this repo has no research notes; declaring a key for a
 # directory nobody wrote would fail rule 3 on the section that has no key to pair with.
 [tool.liulab.agent-docs]
 "AGENTS.md" = "LengthDoc"
-"CONTEXT.md" = false          # capped per entry by conformance rule 4, not per file
+"CONTEXT.md" = false                   # capped per entry by conformance rule 4, not per file
 "docs/agents/" = "LengthDoc"
-"skills/" = "LengthDoc"
+"skills/*/references/" = "LengthDoc"
+"skills/*/SKILL.md" = "LengthSkill"
 "docs/adr/" = "LengthAdr"
 
 # Conformance rules this repo does not meet on purpose. Keyed by rule name, value the
