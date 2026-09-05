@@ -90,9 +90,14 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 2. Bump `version` in `.claude-plugin/plugin.json` and add a `CHANGELOG.md`
    entry (same commit). Versioning is **CalVer `YYYY.M.PATCH`** (e.g.
    `2026.7.0`) — `docs/adr/0004-calver-and-manual-updates.md`.
-3. Push. Installed machines pick it up via
-   `claude plugin marketplace update liulab` — manual on purpose (ADR 0004).
-4. To test locally before/after: `claude plugin update lab-compute@liulab`
+3. Tag the bump commit `v<version>` (`git tag v2026.7.7`). The tag is a
+   pointer and nothing reads it — no GitHub Release; the `CHANGELOG.md`
+   entry is the release notes. A version heading with no tag leaves whoever
+   installed that version no commit to check out.
+4. Push both: `git push origin main --tags`. Installed machines pick it up
+   via `claude plugin marketplace update liulab` — manual on purpose
+   (ADR 0004).
+5. To test locally before/after: `claude plugin update lab-compute@liulab`
    (plain `install` does not upgrade in place).
 
 ## Architecture / editing skills

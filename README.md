@@ -113,5 +113,6 @@ config, so they stay a pre-push control — run the gate locally before you push
    `~/.ssh/config` / `~/.claude/compute/personal.md`.
 3. Run `pixi run check`; bump `version` (CalVer `YYYY.M.PATCH`) in
    `.claude-plugin/plugin.json` and add a `CHANGELOG.md` entry in the same
-   commit; push. Installed machines pick it up on
+   commit; tag that commit `v<version>`; push with `git push origin main
+   --tags`. Installed machines pick it up on
    `claude plugin marketplace update liulab`.
