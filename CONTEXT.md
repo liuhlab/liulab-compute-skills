@@ -105,10 +105,12 @@ platform, and exempts those strings.
 
 ### Edison key file
 
-`~/.claude/compute/edison.env` on the user's own machine, mode 600: one exported assignment
-of the variable the client reads, and nothing else. It sits beside the per-user config and
-never inside it, because a skill reads that file into context and a key placed there would
-land in every transcript. `templates/edison.env` is the blank copy; a filled-in one never
+`~/.claude/compute/edison.env` on the user's own machine, at owner-only permissions: one
+exported assignment of the variable the client reads, and nothing else. The preflight owns
+those constants — the name, the placeholder, the location and which modes pass — and prints
+them on request, so nothing else in the tree may restate one. It sits beside the per-user
+config and never inside it, because a skill reads that file into context and a key placed
+there would land in every transcript. `templates/edison.env` is the blank copy; a filled-in one never
 lands here, and the no-secrets sweep fails a commit that brings one. A skill sources the
 file into the process that needs it and never transmits, prints or asks for its contents.
 See `docs/adr/0007-edison-key-file-and-never-transmit.md`.

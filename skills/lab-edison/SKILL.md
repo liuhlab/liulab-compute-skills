@@ -26,7 +26,7 @@ forever, so the rules below come before the work.
 
 ## The key file
 
-`~/.claude/compute/edison.env`, mode 600. It sits **beside** `personal.md` and never inside it:
+`~/.claude/compute/edison.env`, owner-only. It sits **beside** `personal.md` and never inside it:
 skills read `personal.md` into context, so a key written there is copied into every transcript.
 Source it into the shell that runs the client: `. ~/.claude/compute/edison.env`.
 
