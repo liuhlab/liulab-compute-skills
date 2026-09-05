@@ -1,6 +1,6 @@
 # Kosmos
 
-> **Provenance** — Source: `edison-client` 0.16.1, the live run of 2026-09-05, and the vendor's Kosmos guide · Checked: 2026-09-05 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1, the live run of 2026-09-05, and the vendor's Kosmos and client guides · Checked: 2026-09-05 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`. Read it whenever a user says Kosmos. Most of what this page is for
@@ -28,12 +28,17 @@ nothing in the API caps it.
 
 `[verified]` A persona carries `metadata.persona_job_name` — for this one,
 **`job-futurehouse-data-analysis-aries`**, matching the agent behind the browser's picker.
-That is the authoritative source and it is free to read *before* anything is spent.
+It is the authoritative source and free to read *before* anything is spent.
 `get_session` on a running session returns the same name.
 
 It is absent from `JobNames` because `JobNames` enumerates the **one-shot task** jobs that
 `create_task` takes. Kosmos is on the **chat** surface instead. Two API surfaces, and the
 enum describes one of them.
+
+`[read]` The vendor's client page says, just after that enum, that Kosmos is not available via
+the API. That is a claim about job names: there is no `JobNames.KOSMOS`, and `create_task`
+cannot start a run. The chat methods that do — `send_chat_message`, `queue_chat_message`,
+`get_conversation` — are ordinary typed client surface. The vendor's tasks page covers tasks.
 
 **An earlier version of this page said Kosmos runs in the browser and nowhere else. That was
 wrong**, and wrong in the direction that matters: it argued from the absence of an enum
@@ -45,32 +50,33 @@ member without checking the surface Kosmos actually uses.
 This page is where it bites — everything needed is named here, which makes an accidental
 start easier from here than from the browser, not harder.
 
-`[verified]` **with the persona correction**, end to end on 2026-09-05:
+`[verified]` **with the persona correction**, end to end on 2026-09-05. Three commands; only the
+last one spends:
 
-```python
-c.client.get("/v0.1/personas", params={"limit": 50})  # id, name, metadata.persona_job_name
-pid = c.create_project(name=..., description=..., persona_id=PERSONA)
-owned = {str(p["id"]) for p in c.list_persona_owned_projects(PERSONA, limit=50)}
-assert str(pid) in owned  # do this BEFORE spending
-c.send_chat_message(pid, objective, job_name=JOB)  # the spend; returns the session id
+```bash
+edison-cli persona list                                   # id, name, persona_job_name
+edison-cli project ensure --name <name> --persona <id>    # reuse-or-create; prints the id
+edison-cli kosmos start --project <id> --persona <id> --objective-file <file>
 ```
 
-**`persona_id` is not optional.** `create_project` without it returns a project no persona
-owns; the API accepts that happily and the chat endpoint then answers **500**. A 500 is in the
-client's retryable set, so it is re-raised raw instead of being wrapped, and the response body
-never reaches you — which is why the error names no field. Nothing is created and nothing is
-charged. Confirmed both ways: the persona-less project 500'd, the persona-owned one started at
-once.
+`kosmos start` prints the project id, the session id and the runnable `kosmos stop …` line
+before anything can block. There is no other stop path, so keep it.
+
+**A persona is not optional, and the surface has no persona-less form.** `create_project`
+without one returns a project no persona owns; the API accepts that happily and the chat
+endpoint then answers **500**. A 500 is in the client's retryable set, so it is re-raised raw
+instead of being wrapped, and the response body never reaches you — which is why the error names
+no field. Nothing is created and nothing is charged. Confirmed both ways: the persona-less
+project 500'd, the persona-owned one started at once.
 
 The persona id has no route through the client. No method lists personas;
 `list_persona_owned_projects` and `create_project` both want the id you are hunting for, and
-`get_project_by_name` will not find one either. Go under the client to `GET /v0.1/personas`
-on the authenticated httpx client it already exposes as `.client`.
+`get_project_by_name` will not find one either. `persona list` goes under the client to
+`GET /v0.1/personas` on the authenticated httpx client it already exposes as `.client`.
 
-The ownership check is not a nicety. A run in an orphan project never appears under the
-persona in the browser, and a run nobody can find is a failed run however good the answer.
-
-Send the objective from a file, and print the project and session ids the moment they exist.
+Ownership comes with construction: `create` and `ensure` both take `--persona`. A run in an
+orphan project never appears under the persona in the browser, and a run nobody can find is a
+failed run.
 
 ## Stopping a run
 
@@ -84,34 +90,34 @@ Cancelling tasks alone loses the race — one cancel was answered a minute later
 replacement task, and four more children after that. What halts the orchestrator is the queue
 endpoint, and the order matters:
 
-```python
-c.queue_chat_message(session_id=SID, project_id=PID, message="Stop this run now. …")
-for t in c.get_tasks(project_id=PID, limit=200):
-    if t["status"] in {"in progress", "queued"}:
-        c.cancel_task(t["id"])
+```bash
+edison-cli kosmos stop --project <id> --session <id>
 ```
 
-Queue the halt **first**, then clean up what is in flight; the other way round the
-orchestrator refills them while you work. `cancel_task` returning `False` means the task went
-terminal between the listing and the call — its documented behaviour, not an error. A raw
-traceback out of `cancel` means **the task id does not exist**; against a real running task
-the shipped command is clean and silent.
+One command, two steps in a fixed order: queue the halt **first**, then cancel every task still
+`queued` or `in progress`. The other way round the orchestrator refills them
+while you work, which is why the order is pinned by a test. `cancel_task` returning `False`
+means the task went terminal between the listing and the call — its documented behaviour, not an
+error, and the command reports it as such. A task id that does not exist is a 404 out of the
+`get_task` that `cancel_task` does first; against a real running task the stop is clean and
+silent.
 
 ## Reading a run that already exists — free
 
 None of this spends anything, and it is usually what the user actually wants:
 
-```python
-c.get_conversations(limit=25)  # .conversations -> session ids and timestamps
-c.get_session("<session_id>")[0]  # a LIST of one; .job_name and .type_id, the project id
-c.get_tasks(project_id="<project_id>")  # every task the run fanned out, as raw dicts
-c.get_conversation("<session_id>")  # the transcript
-c.list_files("<task_id>")["data"]  # what one of those tasks produced
+```bash
+edison-cli kosmos sessions [--limit <n>]                 # session ids and timestamps
+edison-cli kosmos status --project <id> --session <id>   # job name, and the transcript
+edison-cli kosmos tasks --project <id> --session <id>    # every task the run fanned out
+edison-cli task fetch <task-id> --out <dir>              # what one of those tasks produced
 ```
 
-`[verified]` From the session id alone the project id, the whole fan-out and the transcript
-all come back. Watch the return shapes: some of these hand back a container rather than the
-thing itself, which is the mistake to make here.
+`[verified]` From the session id alone the project id, the whole fan-out and the transcript all
+come back — `get_session` returns the project id as `type_id`, and `kosmos sessions` is the way
+back to a session id nobody wrote down. Underneath: `get_conversations`, `get_session` (a
+**list** of one), `get_tasks(project_id=…)`, `get_conversation`, `list_files(...)["data"]`.
+Several hand back a container rather than the thing itself; the commands unwrap them.
 
 `[verified]` **Assistant `content` is empty on every turn.** What the browser shows lives in
 `tool_calls[].function.arguments`: a `send_message` call carries the reply as `display_text`,
@@ -121,8 +127,7 @@ timeout — read them before deciding a run has hung.
 
 ## Briefing the run
 
-The user usually starts the run themselves. What they type into it is the part you can
-improve. Vendor guidance, from
+What the user types into a run is the part you can improve. Vendor guidance, from
 <https://docs.edisonscientific.com/guides/best-practices-for-optimizing-kosmos-workflows>,
 fetched 2026-09-05:
 
@@ -147,8 +152,8 @@ Same source, same date:
 
 ## Cost
 
-No figures here. The vendor's pricing page did not resolve on 2026-09-05, and the numbers in
-circulation elsewhere are unconfirmed; a wrong price in a skill is worse than none. The shape
+No figures here: the vendor's pricing page did not resolve on 2026-09-05 and the numbers in
+circulation are unconfirmed. The shape
 is not a multiplier: **a run is billed as the sum of the ordinary tasks it fans out to**, and
 that sum grows round after round, with a second level of children the run never had to ask
 for. The one run made here was still dispatching when it was deliberately stopped. The
