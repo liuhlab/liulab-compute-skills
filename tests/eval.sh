@@ -5,7 +5,7 @@
 #
 # Agents/automation: prefer a targeted `--only <case>` run; ASK the user
 # before running the full suite or anything with --live (touches the real
-# cluster). Cases run CONCURRENTLY, so a full run's wall time is roughly the
+# cluster and spends an Edison credit). Cases run CONCURRENTLY, so a full run's wall time is roughly the
 # slowest single case.
 #
 # NOTE: evals exercise the INSTALLED plugin (plugin cache), not this working
@@ -13,11 +13,13 @@
 # reflect the previous version.
 #
 # Usage: eval.sh [--live] [--only <case>]
-#   --live         also run the end-to-end case: the agent must ssh to arc
-#                  and submit+clean up a tiny hostname job (real cluster).
+#   --live         also run the end-to-end cases: a tiny hostname job submitted
+#                  and cleaned up on arc (real cluster), and one real Edison
+#                  literature call (spends one of the user's platform credits).
 #   --only <case>  run a single case
 #                  (trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|
-#                   edison-refuse|live-sbatch)
+#                   edison-refuse|edison-molecules|live-sbatch|live-edison)
+#                  Any `live-*` case implies --live.
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
@@ -29,7 +31,9 @@ LIVE=false ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --live) LIVE=true ;;
-    --only) shift; ONLY="$1"; [ "$ONLY" = "live-sbatch" ] && LIVE=true ;;
+    # Every live case is named `live-*`, so asking for one by name turns --live on.
+    # Without this, `--only live-<x>` would report "no cases matched" and spend nothing.
+    --only) shift; ONLY="$1"; case "$ONLY" in live-*) LIVE=true ;; esac ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
   shift
@@ -115,17 +119,42 @@ launch_eval edison-refuse 'refus|not configured|edison\.env|chmod 600' \
   "/lab-compute:lab-edison Suppose the Edison preflight just reported 'key file: MISSING' and exited 1 on this machine. My request: find recent literature on m6A readers using Edison. What do you do? Run nothing." \
   --permission-mode plan
 
-# 8. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
+# 8. Edison routing, chemistry: the request must reach the current molecules job.
+#    The retired alias is the trap — the package returns 404 for new submissions
+#    against it — so this case carries a DENY as well. The DENY matches the retired
+#    JOB VALUE and the qualified member, not the bare word: a correct answer may well
+#    name the retired member while warning about it, and the value string appears
+#    nowhere in this repo, so a transcript holding it came from the model, not the
+#    skill. The prompt says "compound" and never "molecule", so only the skill can
+#    produce the asserted name. The preflight verdict is supplied as in cases 3 and 7:
+#    whether THIS machine holds an Edison key must not decide the result.
+DENY="job-futurehouse-phoenix|JobNames\.PHOENIX"
+launch_eval edison-molecules 'MOLECULES|data-analysis-molecules' \
+  "/lab-compute:lab-edison Suppose the Edison preflight just reported 'edison: CONFIGURED' and exited 0. I want to ask Edison about the predicted properties and a plausible synthesis route for a small drug-like compound. Which job would you submit that to, and what would you show me before submitting? Plan only, run nothing." \
+  --permission-mode plan
+
+# 9. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   launch_eval live-sbatch '[0-9]{5,}' \
     "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
     --allowedTools "Bash(ssh:*)"
+
+  # 10. Live Edison: one real standard literature call, one credit, and the answer
+  #     has to come back cited. The assertion looks for citation furniture the
+  #     platform emits and the prompt does not contain — page spans, a DOI, an
+  #     "et al", a reference list — so a confident summary with no sources fails.
+  #     `Bash` unqualified, unlike case 9's `Bash(ssh:*)`: the run sources the key
+  #     file and pipes a heredoc into `uv`, which no command-prefix rule expresses.
+  #     The key stays in the environment, never on the command line.
+  launch_eval live-edison 'pages [0-9]|et al|doi\.org|doi:|^ *#{0,3} *references *$' \
+    "/lab-compute:lab-edison You have my explicit approval to spend one credit on ONE standard literature run — not the high-reasoning job, not a batch, nothing else. Ask Edison exactly this: 'What is the role of the METTL3 methyltransferase in mRNA modification?' Print the answer exactly as the platform returns it, then stop." \
+    --allowedTools "Bash"
 else
-  [ -z "$ONLY" ] && echo "-- live-sbatch skipped (pass --live to run)"
+  [ -z "$ONLY" ] && echo "-- live cases skipped (pass --live to run)"
 fi
 
 if [ "${#E_NAME[@]}" -eq 0 ]; then
-  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|edison-refuse|live-sbatch)"
+  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|edison-refuse|edison-molecules|live-sbatch|live-edison)"
   exit 2
 fi
 

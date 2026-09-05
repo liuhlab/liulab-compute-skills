@@ -64,7 +64,20 @@ To use it, source the file in the same shell as the run:
 
 ## Choosing the job
 
-<!-- filled by #16 -->
+Route from the shape of the question — literature, high-reasoning literature, precedent,
+molecules. `references/jobs.md` holds the routing table, the retired chemistry job that returns
+404, the exact ephemeral `uv` invocation, and continuation. Read it before the first submission.
+
+**Show before you spend.** Name the job and print the exact query, then submit. A run the user
+never saw is a charge they cannot audit.
+
+**Ask, and wait for an answer**, before a high-reasoning literature run, before an analysis run,
+and before any batch of more than three tasks. Those are the expensive shapes. A single
+literature, precedent or molecules run needs only the showing above.
+
+**A follow-up continues the prior task.** When the user pushes on an answer you just returned,
+pass that task id as `runtime_config.continued_job_id` — a fresh task pays again for context the
+old one already holds. Keep the task id of every run so the next question can use it.
 
 ## Kosmos
 
