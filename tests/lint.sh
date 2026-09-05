@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # Layer 1 — static lint. No network, no model. Run on every change.
 set -u
-cd "$(dirname "$0")/.."
+# `|| exit 1`, because every check below is relative to the repo root. A failed cd would
+# otherwise leave the sweep running somewhere else, finding no secrets because it is
+# looking at nothing, and reporting LINT PASS. A gate that cannot reach the tree it
+# guards must fail, not pass.
+cd "$(dirname "$0")/.." || exit 1
 fail=0
 err() { echo "FAIL: $*"; fail=1; }
 ok()  { echo "  ok: $*"; }

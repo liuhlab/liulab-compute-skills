@@ -52,6 +52,10 @@ pyright = "==1.1.411"
 # anyone editing a rule.
 vale = "3.19.0.*"
 markdownlint-cli2 = "*"
+# The one gate that reads this repo's actual executable surface. Everything that runs here
+# is bash — the three test suites, the gate runner and the skill's config check — so
+# without this the linters above would all be checking an empty set.
+shellcheck = "*"
 
 [tool.pixi.tasks]
 lint = "ruff check ."
@@ -70,9 +74,14 @@ skill-lint = "bash tests/lint.sh"
 vale = "vale --glob='!{.pixi,site,dist,build}/**' ."
 # No glob here: `.markdownlint-cli2.yaml` carries both the file set and `gitignore: true`.
 markdownlint = "markdownlint-cli2"
+# `git ls-files`, not a hand-written glob: the file set is then "every tracked script",
+# so a script added in a directory nobody thought of is checked rather than skipped.
+# Default severity — a finding this repo disagrees with is silenced at its line with a
+# `shellcheck disable` directive saying why, never by turning a whole class off here.
+shellcheck = "shellcheck $(git ls-files '*.sh')"
 # The static step list lives here and nowhere else; `check.sh` takes it as arguments, and
 # `ci.yml` invokes this task by name, so the local gate and CI cannot drift.
-check-static = "bash scripts/check.sh lint fmt-check typecheck vale markdownlint"
+check-static = "bash scripts/check.sh lint fmt-check typecheck vale markdownlint shellcheck"
 check = { depends-on = ["check-static", "skill-lint"] }
 
 # ============================== ruff ==============================

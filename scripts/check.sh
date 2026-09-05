@@ -38,6 +38,13 @@
 #
 # Portable to bash 3.2, which is what macOS ships: no `wait -n`, no associative
 # arrays, nothing beyond coreutils.
+#
+# SC2004 below is correct and is still ignored: an array subscript is arithmetic
+# context, so the `$` in `pids[$i]` really is unnecessary. But this file is a verbatim
+# copy of the lab template's runner, and restyling four lines of a file we re-copy on
+# every template sync would trade a permanent merge conflict for a style note. Silenced
+# for that reason, and for no other — it is scoped to this one code, not to a severity.
+# shellcheck disable=SC2004
 
 set -muo pipefail
 
