@@ -63,8 +63,13 @@ echo "== no-secrets sweep =="
 # material, and `.ruff_cache/` stores absolute paths (so, the local username):
 # sweeping either would turn this gate permanently red the day someone runs
 # `pixi run check`, which is the fastest way to get the gate disabled.
+# `--exclude=.git` is NOT redundant with `--exclude-dir=.git`: in a linked git
+# worktree `.git` is a FILE holding `gitdir: <absolute path>`, which contains the
+# local username — so without it this gate flags its own plumbing and reports a
+# leak that is not there. A false positive here is how a security gate gets
+# switched off, so both spellings stay.
 SWEEP() { grep -rnE "$1" \
-  --exclude-dir=.git --exclude-dir=.claude --exclude-dir=.pixi \
+  --exclude-dir=.git --exclude=.git --exclude-dir=.claude --exclude-dir=.pixi \
   --exclude-dir=site --exclude-dir=dist --exclude-dir=build \
   --exclude-dir=.cache --exclude-dir=__pycache__ \
   --exclude-dir=.ruff_cache --exclude-dir=.mypy_cache \
@@ -87,12 +92,19 @@ else ok "no key material"; fi
 # lab username, so exempting it costs the sweep nothing.
 users=$( (awk 'tolower($1)=="user"{print $2}' ~/.ssh/config 2>/dev/null; whoami) \
          | grep -vxE 'runner' | sort -u)
+uleak=0
 for u in $users; do
   if SWEEP "(^|[^a-zA-Z0-9_-])$u([^a-zA-Z0-9_-]|\$)"; then
     err "local username '$u' appears in the repo (above)"
+    uleak=1
   fi
 done
-ok "no local ssh-config usernames leaked (checked $(printf '%s\n' "$users" | grep -c .) names)"
+# Guarded, because an unconditional success line printed `ok: no usernames leaked`
+# directly beneath `FAIL: username appears in the repo`. A gate that contradicts
+# itself in the same breath teaches the reader to skim past both.
+if [ "$uleak" -eq 0 ]; then
+  ok "no local ssh-config usernames leaked (checked $(printf '%s\n' "$users" | grep -c .) names)"
+fi
 # Hostnames likewise come from THIS machine's ssh config at test time — the
 # repo may reference hosts only by alias. Only dotted values are swept
 # (single-label names are indistinguishable from alias vocabulary); wildcards
@@ -102,14 +114,18 @@ hosts=$(awk 'tolower($1)=="hostname"{print $2}' ~/.ssh/config 2>/dev/null \
         | grep -viE '^(localhost|127\.0\.0\.1|github\.com|gitlab\.com|bitbucket\.org)$' \
         | sort -u)
 hcount=0
+hleak=0
 for h in $hosts; do
   hcount=$((hcount + 1))
   hre=$(printf '%s' "$h" | sed 's/[][\.^$*+?(){}|]/\\&/g')
   if SWEEP "(^|[^a-zA-Z0-9._-])$hre([^a-zA-Z0-9._-]|\$)"; then
     err "local ssh-config hostname '$h' appears in the repo (above)"
+    hleak=1
   fi
 done
-ok "no local ssh-config hostnames leaked (checked $hcount names)"
+if [ "$hleak" -eq 0 ]; then
+  ok "no local ssh-config hostnames leaked (checked $hcount names)"
+fi
 
 echo "== check-hpc-config.sh self-test =="
 out=$(bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)
