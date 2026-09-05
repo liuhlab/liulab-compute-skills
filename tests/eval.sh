@@ -16,7 +16,8 @@
 #   --live         also run the end-to-end case: the agent must ssh to arc
 #                  and submit+clean up a tiny hostname job (real cluster).
 #   --only <case>  run a single case
-#                  (trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|live-sbatch)
+#                  (trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|
+#                   edison-refuse|live-sbatch)
 #
 # Assertions are loose key-phrase greps: evals are non-deterministic. On
 # failure, read the saved transcript before concluding the skill is broken.
@@ -36,16 +37,24 @@ done
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/lab-skill-eval.XXXXXX")
 echo "transcripts: $tmp"
 
-declare -a E_NAME E_EXPECT E_PID
+declare -a E_NAME E_EXPECT E_DENY E_PID
+
+# Set DENY on the line before a launch_eval call to give that one case a second,
+# NEGATIVE assertion: the transcript must not match this pattern. One regex cannot
+# say "contains this and not that", and the Edison case needs both — a refusal that
+# then asks for the key in chat is the failure the case exists to catch. The call
+# consumes DENY, so it can never leak into the next case.
+DENY=""
 
 launch_eval() { # <name> <expected-regex> <prompt> [extra claude flags...]
   local name="$1" expect="$2" prompt="$3"; shift 3
-  [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && return 0
+  [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && { DENY=""; return 0; }
   echo "-- $name: launched"
   # NOTE: prompt must precede flags — variadic flags (--allowedTools) would
   # otherwise swallow it.
   claude -p "$prompt" "$@" >"$tmp/$name.txt" 2>&1 &
-  E_NAME+=("$name"); E_EXPECT+=("$expect"); E_PID+=($!)
+  E_NAME+=("$name"); E_EXPECT+=("$expect"); E_DENY+=("$DENY"); E_PID+=($!)
+  DENY=""
 }
 
 # 1. Auto-trigger: HPC-flavored prompt, skill never named, plan mode (no
@@ -94,7 +103,19 @@ launch_eval reuse-job 'reuse|idle|foothold|existing (interactive )?job|already (
   "I already keep an interactive GPU job running on arc. Run my repo's train.py on the cluster." \
   --permission-mode plan
 
-# 7. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
+# 7. Edison refusal: with no key on the machine, the skill must refuse and offer
+#    to create the key file — and must never ask for the key in the chat, which
+#    would put a credential in the transcript. The preflight verdict is supplied
+#    in the prompt, as case 3 does, because whether THIS machine has an Edison
+#    key is not something the case may depend on. The prompt carries none of the
+#    words asserted on, so only the skill can produce them. `lab-edison` is
+#    user-invoked only, hence the slash command.
+DENY="what('s| is) your[^.]{0,30}key|(paste|type|enter|send|share|provide) your[^.]{0,30}key (here|in (this|the) (chat|conversation|message))"
+launch_eval edison-refuse 'refus|not configured|edison\.env|chmod 600' \
+  "/lab-compute:lab-edison Suppose the Edison preflight just reported 'key file: MISSING' and exited 1 on this machine. My request: find recent literature on m6A readers using Edison. What do you do? Run nothing." \
+  --permission-mode plan
+
+# 8. Live end-to-end: ssh + sbatch + cleanup, tiny and self-cleaning.
 if $LIVE; then
   launch_eval live-sbatch '[0-9]{5,}' \
     "Using the lab-hpc skill: ssh to the arc cluster and submit a minimal smoke-test Slurm job (payload just 'hostname', 5-minute time limit) to a no-cost partition suitable for smoke tests. You have my explicit approval to submit this job — no need to ask again. Report the job id and its state, then ensure nothing is left behind: scancel it if it is still pending or running. Do not touch any other jobs." \
@@ -104,18 +125,27 @@ else
 fi
 
 if [ "${#E_NAME[@]}" -eq 0 ]; then
-  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|live-sbatch)"
+  echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|edison-refuse|live-sbatch)"
   exit 2
 fi
 
 fail=0
 for i in "${!E_NAME[@]}"; do
   wait "${E_PID[$i]}"
-  if grep -qiE "${E_EXPECT[$i]}" "$tmp/${E_NAME[$i]}.txt"; then
-    echo "ok: ${E_NAME[$i]} matched /${E_EXPECT[$i]}/"
-  else
-    echo "FAIL: ${E_NAME[$i]} no match for /${E_EXPECT[$i]}/ — transcript: $tmp/${E_NAME[$i]}.txt"
+  transcript="$tmp/${E_NAME[$i]}.txt"
+  if ! grep -qiE "${E_EXPECT[$i]}" "$transcript"; then
+    echo "FAIL: ${E_NAME[$i]} no match for /${E_EXPECT[$i]}/ — transcript: $transcript"
     fail=1
+  # Negated lines are dropped before the forbidden pattern is applied: a correct
+  # answer SAYS it will never ask for the key, and grep cannot tell that sentence
+  # from the request it forbids. Dropping too much only weakens this check, which
+  # is the right way for a loose assertion to be wrong.
+  elif [ -n "${E_DENY[$i]}" ] &&
+    grep -viE "never|not|n't|avoid|instead" "$transcript" | grep -qiE "${E_DENY[$i]}"; then
+    echo "FAIL: ${E_NAME[$i]} matched forbidden /${E_DENY[$i]}/ — transcript: $transcript"
+    fail=1
+  else
+    echo "ok: ${E_NAME[$i]} matched /${E_EXPECT[$i]}/"
   fi
 done
 
