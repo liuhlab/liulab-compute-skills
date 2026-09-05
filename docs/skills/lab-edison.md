@@ -1,9 +1,9 @@
 # lab-edison: cited answers from the Edison platform
 
-Edison is a research platform, run by Edison Scientific. It reads the published
-literature and answers with citations, and it can run code on a dataset you
-upload. This skill drives it from your machine through the `edison-client`
-package. No cluster is involved. It is the one skill here that talks only to a
+Edison is a research platform, run by Edison Scientific. It answers questions from
+the published literature with citations, runs code on a dataset you upload, and in
+Kosmos has a research agent that works a whole goal over many rounds. This skill
+drives it from your machine through the `edison-client` package. No cluster is involved. It is the one skill here that talks only to a
 cloud service.
 
 ## You ask for it by name
@@ -83,7 +83,26 @@ same question twice, because asking twice means paying twice for an answer you
 already own. It can also cancel a run you started by mistake, which is worth
 knowing before a long data analysis job.
 
-## Which job answers which question
+## Kosmos, for a goal rather than a question
+
+Kosmos is the platform's heavyweight agent, and the reason to come here when what
+you have is bigger than one query. It is not a task you send off. You pick a
+persona, make a project inside it, and talk to it there. Kosmos splits your goal
+into many smaller tasks and works through them in rounds until it decides it is
+done. One real project ran thirteen of them.
+
+That shape is also what makes it cost. A run pays for every task it fans out to,
+so there is no flat price to quote, and the skill will not start one unless you
+ask for that run in plain words.
+
+Everything it does around a run is free. It drafts the goal with you, checks your
+data is in a shape Kosmos can use, and shows you a run you already started, task
+by task, without opening a browser.
+
+## One question, one job
+
+For a single question the skill picks one of the platform's one-shot jobs and
+routes to it.
 
 | You are asking | What it picks |
 | --- | --- |
@@ -95,19 +114,6 @@ knowing before a long data analysis job.
 
 Ask in plain words and the skill picks for you. Say which one you want and it uses
 that.
-
-## Kosmos is a conversation, not a job
-
-Kosmos is the platform's heavyweight agent, and it is not one task you send off.
-You pick a persona, make a project inside it, and talk to it there. It splits your
-goal into many smaller tasks and works through them in rounds until it decides it
-is done. One real project ran thirteen of them.
-
-A run pays for every task it fans out to, so the cost depends on how far it goes
-and there is no flat price to quote. The skill will not start one unless you ask
-for that run in plain words. What it does instead is free: it drafts the goal with
-you, checks your data is in a shape Kosmos can use, and shows you a run you
-already started, task by task, without opening a browser.
 
 ## Where your data sits
 

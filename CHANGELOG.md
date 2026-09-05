@@ -18,6 +18,11 @@ say. No skill, script or template changed, so nothing an agent reads is differen
 - **Plainer sentences.** Long dashes are out of the human-facing pages entirely,
   bullet lists that were really paragraphs are paragraphs again, and page titles
   read as titles rather than as two ideas joined by punctuation.
+- **Kosmos leads the `lab-edison` page instead of trailing it.** It is the reason
+  to reach for the platform when a goal is bigger than one question, and the page
+  had it last, below the one-shot jobs, reading as a hazard to be fenced off. It
+  now comes first, and the one-shot jobs follow. The rule is unchanged: the skill
+  starts a Kosmos run only when you ask for that run.
 - **`lab-edison` says "job" where the skill says job.** The page called them
   agents; the skill and its references call them jobs, and one word for one thing
   is easier to follow. Its key setup, spend rules and task-id recovery are
