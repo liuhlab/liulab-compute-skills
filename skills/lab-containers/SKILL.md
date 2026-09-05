@@ -47,9 +47,10 @@ ssh ircbc 'ls -lh $LIU_LAB_PACKAGES/liulab-runtime_*.sif* 2>/dev/null; \
   to keep the local image or update.
 - **No SIF for that env** → update, pinning the remote digest just printed.
 
-Env names such as `ml`, `align-rna` and `align-dna` are examples, not a catalogue — the `ls`
-above is the authority on what is actually built. These are shared lab images: never delete or
-overwrite someone else's without asking, and keep the store group-writable (dirs carry setgid).
+Env names such as `ml`, `align-rna` and `align-dna` are examples, not a catalogue — the `ls -lh`
+above is the authority on what is actually built and how much space each image takes. These are
+shared lab images: never delete or overwrite someone else's without asking, keep the store
+group-writable (dirs carry setgid), and mind the shared disk before building another SIF.
 
 ## Where the rest lives
 

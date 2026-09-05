@@ -5,7 +5,7 @@ Which partition to ask for, and how to submit. Hosts, network, toolchain and the
 
 ## The Slurm client runs on the compute node (verified 2026-09-04)
 
-Slurm is **18.08.8**, and the whole client — `squeue`, `sbatch`, `scancel`, `sinfo`, `scontrol`, `srun`,
+Slurm is **18.08**, and the whole client — `squeue`, `sbatch`, `scancel`, `sinfo`, `scontrol`, `srun`,
 `salloc` — is installed and working on `cpu0X`, where `scontrol ping` reports the controller UP. Managing the
 queue is never a reason to ssh to the login node.
 
@@ -23,11 +23,11 @@ No accounting or QOS caps are exposed (`sacctmgr` returns nothing), so no `--acc
 | --- | --- | --- | --- |
 | `compute_cpu` (default) | `cpu01`–`cpu08`, 448 CPUs | 56 CPUs, 125 GB | **`MaxNodes=2` per job**, `MaxTime=UNLIMITED`, **`DefaultTime=NONE`** |
 | `compute_fat` | 2 fat nodes | 160 CPUs, ~1–2 TB RAM | Big-memory jobs |
-| `compute_gpu_2080` | 2 nodes | 4× RTX 2080 | Both **drained** when checked — treat ircbc as CPU-only in practice |
+| `compute_gpu_2080` | 2 nodes | 4× RTX 2080 | Habitually **drained** — treat ircbc as CPU-only unless `sinfo` says otherwise |
 
 `DefaultTime=NONE` means a job submitted without `-t` has no walltime to fall back on, so **always pass `-t`**.
-Node states when sampled: one drained, one mixed with another user's job, the rest idle — the queue is short,
-but you still share nodes.
+Nodes are shared and some are usually drained, so read `sinfo -p compute_cpu` for what is free right now
+rather than assuming a node is idle.
 
 ## Submitting
 

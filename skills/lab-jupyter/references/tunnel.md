@@ -35,7 +35,8 @@ The log line to look for is `http://127.0.0.1:<port>/lab?token=<token>`.
 
 - **A job you just submitted, either cluster** → grep its log (path in `SKILL.md`'s table):
   `grep -m1 "?token=" sbatch/jupyter.<jobid>.log`, run from the node you hold or via
-  `ssh arc '…'`. Allow 10-30 s: the line is written only once Jupyter finishes starting.
+  `ssh arc '…'`. Re-grep until it appears rather than waiting a fixed time: the line is written
+  only once Jupyter has finished starting, so an empty grep early on means not yet, not broken.
 - **A job you reused, arc** → it may log somewhere you cannot guess, so ask the running server
   instead: `ssh <node> 'bash -lc "<jupyter> server list"'`. The login shell is what makes
   user-installed tools visible; a plain `ssh <node> '<jupyter> server list'` will not find them.

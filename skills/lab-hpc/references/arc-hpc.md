@@ -8,13 +8,12 @@ needing a current OS/glibc. **No VPN** (that is ircbc's rule): if `ssh arc` hang
 
 ## Hosts
 
-- **Login:** `arc` or `chimera-login`, one machine. A doorway: submit the first job, then leave.
-  Once you hold a node the login node has no remaining use — everything below, Slurm included,
-  works from the node itself.
+- **Login:** `arc` or `chimera-login`, one machine. A doorway: submit the first job, then leave —
+  once you hold a node, everything below, Slurm included, works from the node itself.
 - **Bulk transfer:** `chimera-transfer`, for genuinely large moves only. Ordinary files go straight
-  to the compute node: `rsync` from a laptop is ~3 s round trip through the ProxyJump (2026-09-04).
+  to the compute node — an `rsync` from a laptop through the ProxyJump is quick (2026-09-04).
 - **Compute nodes:** Slurm node names (`GPU****` / `CPU****` style) double as ssh aliases that
-  ProxyJump through the login host — roughly 31 of them, in one shared `Host` stanza.
+  ProxyJump through the login host, declared in one shared `Host` stanza. `sinfo -N` lists them.
 
 ## Landing on a node (verified 2026-09-04)
 
@@ -22,10 +21,10 @@ needing a current OS/glibc. **No VPN** (that is ircbc's rule): if `ssh arc` hang
 cgroup, setting `$SLURM_JOB_ID` alone (`SLURM_JOB_NAME` and `SLURM_NODELIST` stay empty). Hence:
 
 - **The session is cgroup-confined.** `nproc` and `nvidia-smi` report your *allocation*, not the
-  machine — 48 CPUs / 1 GPU observed where the node has 184 / 4. Size work from Slurm, never from
-  `nproc`. Nodes are shared; three other jobs were resident at the same time.
-- **A node you hold no job on refuses you** in ~2 s, exit 255, stderr `Access denied by
-  pam_slurm_adopt: you have no active jobs on this node` — so sweeping all ~31 aliases for your
+  machine, so they undercount it. Size work from what you asked Slurm for (`scontrol show job
+  $SLURM_JOB_ID`), never from `nproc`. Nodes are shared with other users' jobs.
+- **A node you hold no job on refuses you** quickly, exit 255, stderr `Access denied by
+  pam_slurm_adopt: you have no active jobs on this node` — so sweeping the aliases for your
   foothold is cheap. But exit 255 also means `Host key verification failed`: a minority of aliases
   are missing from `known_hosts`, and the effective `StrictHostKeyChecking ask` would hang an agent
   on a prompt. Probe with `-o BatchMode=yes` (fails cleanly) or `-o StrictHostKeyChecking=accept-new`.
@@ -36,12 +35,12 @@ cgroup, setting `$SLURM_JOB_ID` alone (`SLURM_JOB_NAME` and `SLURM_NODELIST` sta
 ## Internet and toolchain on the compute node (verified 2026-09-04)
 
 Internet is direct and unproxied — no `*_proxy` variables set at all. GitHub, `pypi.org` and
-conda-forge repodata answer 200; `ghcr.io/v2/` answers 401, its unauthenticated challenge, so the
-registry is reachable; `git ls-remote` over HTTPS returns real SHAs. Outbound *ssh* to GitHub finds
-no key (`Permission denied (publickey)`), so use HTTPS — `gh` 2.4.0 is token-authenticated and set
-to HTTPS. Also present: `git` 2.34.1, `python3` 3.10.12, `nvidia-smi`, `rsync`, `tmux`, `screen`,
-`singularity`, `apptainer`, `docker`, `curl`, `wget`, `jq`, `node`, and the `sh_gpu` / `sh_dev`
-wrappers in `/usr/local/bin`.
+conda-forge repodata all answer; `ghcr.io/v2/` answers 401, its unauthenticated challenge, so the
+registry is reachable too; `git ls-remote` over HTTPS returns real SHAs. Outbound *ssh* to GitHub
+finds no key (`Permission denied (publickey)`), so use HTTPS — `gh` is token-authenticated and set
+to HTTPS. Also present: `git`, `python3`, `nvidia-smi`, `rsync`, `tmux`, `screen`, `singularity`,
+`apptainer`, `docker`, `curl`, `wget`, `jq`, `node`, and the `sh_gpu` / `sh_dev` wrappers in
+`/usr/local/bin`. Ask a tool for its own `--version`; never assume one from a document.
 
 - **`module` does not exist on arc** — no Lmod, no environment-modules; `/etc/profile.d` holds plain
   per-app scripts. Any `module load` line is simply wrong here; that is ircbc's habit, not arc's.
@@ -52,8 +51,9 @@ wrappers in `/usr/local/bin`.
 ## Storage (verified 2026-09-04)
 
 `$HOME` and `/large_storage` are both wekafs network filesystems, mounted identically on login and
-compute nodes, so there is nothing to stage between them. `$HOME` is ~932 G with ~751 G free;
-`/large_storage` is 2.3 P, 81% used, ~455 T free. `/tmp` is node-local ext4, ~916 G with ~777 G
-free, and writable, as is `/dev/shm`; `/scratch` exists but is not writable, and there is no
-`/local` or `/localscratch`. Lab code lives in `/large_storage/zhoulab/<user>/pkg`, one directory
-per repo with the same names as local ones, synced local → GitHub → `git pull` on the node.
+compute nodes, so there is nothing to stage between them. `$HOME` is the small one; `/large_storage`
+is the big shared one and it does fill up — `df -h` the target before writing large outputs, and
+never assume the headroom is there. `/tmp` is node-local ext4 and writable, as is `/dev/shm`;
+`/scratch` exists but is not writable, and there is no `/local` or `/localscratch`. Lab code lives in
+`/large_storage/zhoulab/<user>/pkg`, one directory per repo, names matching the local ones, synced
+local → GitHub → `git pull` on the node.

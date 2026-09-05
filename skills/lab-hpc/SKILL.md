@@ -42,7 +42,7 @@ reasons, and only two**, to run anything on a login node:
 
 1. **Find the node you already hold.** The lab parks a long-lived idle GPU job on arc for this.
    Check `personal.md`, then probe aliases with `ssh -o BatchMode=yes -o ConnectTimeout=10
-   <alias> true` — probes fail in ~2-4 s, so sweeping is cheap. Judge by exit status, not stderr.
+   <alias> true` — probes fail fast, so sweeping every alias is cheap. Judge by exit status, not stderr.
 2. **Land and stay.** On arc, wrap commands in a login shell — `ssh <node> 'bash -lc "…"'` — or
    `pixi` and other user-installed tools are invisible.
 3. **No node anywhere?** Only then use the login node, and only to fix that: show the exact
