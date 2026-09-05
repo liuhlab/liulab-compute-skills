@@ -104,7 +104,7 @@ else ok "no key material"; fi
 # the name `edison-client` actually reads, and `EDISON_KEY` is the near miss a
 # user who set it up from memory would write — a real key committed under the
 # wrong name is exactly as leaked as one committed under the right name.
-if SWEEP '(EDISON_PLATFORM_API_KEY|EDISON_KEY)[[:space:]]*=' | grep -v 'PASTE-YOUR-EDISON-KEY-HERE'; then
+if SWEEP '(EDISON_PLATFORM_API_KEY|EDISON_KEY)[[:space:]]*=' | grep -vF "$(bash skills/lab-edison/scripts/check-edison-config.sh --constants | sed -n 's/^PLACEHOLDER=//p' | grep . || echo NO-PLACEHOLDER-FROM-THE-PREFLIGHT)"; then
   err "Edison API key assigned to something other than the placeholder (above)"
 else ok "no Edison API key (only the PASTE-YOUR-... placeholder)"; fi
 # Usernames come from THIS machine's ssh config at test time — none are
@@ -167,10 +167,23 @@ echo "== check-edison-config.sh self-test =="
 # outside the tree the sweep reads.
 # Every case passes `-f`, which also suppresses the environment variable: on a
 # maintainer's machine the real key IS exported, and without that suppression
-# all three fixtures would report configured and prove nothing.
+# every fixture would report configured and prove nothing.
 edison_pf=skills/lab-edison/scripts/check-edison-config.sh
 fx=$(mktemp -d "${TMPDIR:-/tmp}/lab-edison-fixtures.XXXXXX")
 trap 'rm -rf "$fx"' EXIT
+
+# The preflight owns the constants describing the key file, so the fixtures are built from
+# what it prints rather than from literals of their own. A placeholder fixture that restated
+# the string would go on passing after the preflight's placeholder moved, which is the drift
+# the section below exists to catch.
+edison_consts=$(bash "$edison_pf" --constants)
+edison_const() { printf '%s\n' "$edison_consts" | sed -n "s/^$1=//p"; }
+ed_var=$(edison_const VAR)
+ed_placeholder=$(edison_const PLACEHOLDER)
+ed_keyfile=$(edison_const KEYFILE)
+ed_mode_glob=$(edison_const MODE_GLOB)
+ed_mode_label=$(edison_const MODE_LABEL)
+ed_chmod=$(edison_const CHMOD_MODE)
 
 edison_case() { # <label> <key-file> <expected-verdict-substring> <expected-exit>
   local label="$1" file="$2" want="$3" wantrc="$4" out rc
@@ -183,18 +196,100 @@ edison_case() { # <label> <key-file> <expected-verdict-substring> <expected-exit
   fi
 }
 
-printf 'export EDISON_PLATFORM_API_KEY=PASTE-YOUR-EDISON-KEY-HERE\n' >"$fx/placeholder.env"
-chmod 600 "$fx/placeholder.env"
+printf 'export %s=%s\n' "$ed_var" "$ed_placeholder" >"$fx/placeholder.env"
+chmod "$ed_chmod" "$fx/placeholder.env"
 # Not a key: 22 characters of the word "fixture", at a mode the preflight must reject.
-printf 'export EDISON_PLATFORM_API_KEY=fixture-not-a-real-key\n' >"$fx/open-perms.env"
+printf 'export %s=fixture-not-a-real-key\n' "$ed_var" >"$fx/open-perms.env"
 chmod 644 "$fx/open-perms.env"
+# The path that lets work PROCEED, which nothing covered until 2026-09: a replaced value at
+# an owner-only mode. Mode 400 on purpose — it is owner-only without being 600, so this case
+# fails the moment someone narrows the rule back to the one mode the remedy hands out.
+printf 'export %s=fixture-stands-in-for-a-replaced-key\n' "$ed_var" >"$fx/replaced.env"
+chmod 400 "$fx/replaced.env"
+: >"$fx/empty.env"
+chmod "$ed_chmod" "$fx/empty.env"
+# Present, correctly permissioned, and assigning nothing — what a user who edited the file
+# and deleted the wrong line leaves behind.
+printf '# no assignment here\n' >"$fx/no-assignment.env"
+chmod "$ed_chmod" "$fx/no-assignment.env"
 
 edison_case "missing file"       "$fx/absent.env"      "key file: MISSING"                 1
 edison_case "placeholder unreplaced" "$fx/placeholder.env" "key: PLACEHOLDER"              1
 edison_case "over-permissive mode"   "$fx/open-perms.env"  "key file: PERMISSIONS TOO OPEN" 1
+edison_case "empty key file"         "$fx/empty.env"       "key file: EMPTY"               1
+edison_case "file assigns no key"    "$fx/no-assignment.env" "key: NOT SET"                1
+edison_case "replaced key, owner-only" "$fx/replaced.env"  "edison: CONFIGURED"            0
 
 rm -rf "$fx"
 trap - EXIT
+
+echo "== edison key-file constants =="
+# One owner for the four constants describing the key file — the variable name the client
+# reads, the shipped placeholder, the file's location, and which modes are acceptable — and
+# it is the preflight above. Everything else in the tree has to AGREE with what it prints
+# rather than restate it. The failure this catches is specific: let the onboarding
+# template's placeholder drift from the preflight's, and a user who never replaced it is
+# told CONFIGURED and then fails minutes later at authentication — the exact failure the
+# placeholder check exists to prevent.
+if [ -z "$edison_consts" ]; then
+  err "$edison_pf --constants printed nothing, so nothing could be cross-checked"
+else
+  cmissing=""
+  for k in VAR PLACEHOLDER KEYFILE MODE_GLOB MODE_LABEL CHMOD_MODE; do
+    printf '%s\n' "$edison_consts" | grep -q "^$k=." || cmissing="$cmissing $k"
+  done
+  if [ -n "$cmissing" ]; then err "--constants printed no value for:$cmissing"
+  else ok "--constants prints every key-file constant"; fi
+  # The shape is the contract: one KEY=value per line and nothing else, so a shell or a
+  # python check can parse it. A stray sentence here would also be the first place a future
+  # edit could print something that is not a constant.
+  if printf '%s\n' "$edison_consts" | grep -qvE '^[A-Z_]+=.'; then
+    printf '%s\n' "$edison_consts" | grep -vE '^[A-Z_]+=.'
+    err "--constants printed a line that is not KEY=value (above)"
+  else ok "--constants prints KEY=value lines only"; fi
+
+  const_case() { # <label> <file> <literal-that-must-appear>
+    local label="$1" file="$2" want="$3"
+    if [ ! -f "$file" ]; then err "$label — $file is missing"
+    elif grep -qF -- "$want" "$file"; then ok "$label"
+    else err "$label — '$want' appears nowhere in $file"; fi
+  }
+
+  tmpl=templates/edison.env
+  page=docs/skills/lab-edison.md
+  const_case "$tmpl assigns the owned variable and placeholder" "$tmpl" \
+    "export $ed_var=$ed_placeholder"
+  const_case "$tmpl names the owned location"   "$tmpl" "$ed_keyfile"
+  const_case "$tmpl hands out the owned chmod"  "$tmpl" "chmod $ed_chmod"
+  const_case "$page names the owned variable"    "$page" "$ed_var"
+  const_case "$page prints the owned placeholder" "$page" "$ed_placeholder"
+  const_case "$page names the owned location"    "$page" "$ed_keyfile"
+  const_case "$page hands out the owned chmod"   "$page" "chmod $ed_chmod"
+
+  # The remedy every document repeats has to be a mode the preflight actually accepts.
+  # Unquoted so the glob globs; shellcheck reads that as word splitting.
+  # shellcheck disable=SC2254
+  case "$ed_chmod" in
+    $ed_mode_glob) ok "chmod $ed_chmod satisfies the $ed_mode_label rule ($ed_mode_glob)" ;;
+    *) err "the remedy hands out chmod $ed_chmod, which the preflight's own $ed_mode_glob test rejects" ;;
+  esac
+
+  # The sweep's Edison exemption, two ways. First: it must not restate the placeholder
+  # anywhere in this file — a second copy is a second thing to forget.
+  if grep -qF -- "$ed_placeholder" tests/lint.sh; then
+    err "tests/lint.sh restates the placeholder; it must read it from $edison_pf"
+  else
+    ok "the no-secrets sweep reads the placeholder from the preflight"
+  fi
+  # Second, and behavioural: the template's assignment is the one line in the tree that may
+  # hold the placeholder, so the sweep's own regex over it, minus what the preflight prints,
+  # must come out empty. This is what fails when the template's placeholder drifts.
+  if grep -E "($ed_var|EDISON_KEY)[[:space:]]*=" "$tmpl" | grep -vF "$ed_placeholder"; then
+    err "$tmpl assigns something the preflight's placeholder does not exempt (above)"
+  else
+    ok "$tmpl's assignment is exactly what the sweep exempts"
+  fi
+fi
 
 echo "== release =="
 # The version has to identify the content. This plugin's source is the repo ROOT, so

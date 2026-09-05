@@ -10,22 +10,40 @@
 # ~/.claude/compute/edison.env. An interactive shell rc is invisible here — agent tool calls
 # run non-interactive shells — which is why the file exists.
 #
-# Usage: check-edison-config.sh [-f <key_file>]. `-f` reads that file INSTEAD of the
-# default and ignores the environment variable — the gate drives this against fixtures, and
-# on a maintainer's machine (where the real key IS exported) they would all report
-# configured and prove nothing. Exit: 0 configured, 1 not.
+# Usage: check-edison-config.sh [-f <key_file>] [--constants]. `-f` reads that file INSTEAD
+# of the default and ignores the environment variable — the gate drives this against
+# fixtures, and on a maintainer's machine (where the real key IS exported) they would all
+# report configured and prove nothing. Exit: 0 configured, 1 not.
+#
+# This file is the ONE owner of the four constants describing the key file: the variable
+# name the client reads, the shipped placeholder, the file's location, and which permission
+# modes are acceptable. `--constants` prints them and exits 0 without reading any key file,
+# one `KEY=value` per line, so the gate can assert that the onboarding template, the
+# published page and the no-secrets sweep still agree with these rather than each restating
+# a literal. Nothing there is secret: the placeholder is the shipped value, and a real key
+# is never read, let alone printed. `KEYFILE` reports the file this invocation would check,
+# so `-f` moves it; call it without `-f` to read the shipped location.
 
 set -u
 
 VAR=EDISON_PLATFORM_API_KEY
 PLACEHOLDER=PASTE-YOUR-EDISON-KEY-HERE
 KEYFILE="$HOME/.claude/compute/edison.env"
+# Owner-only is the rule; 600 is only the mode the remedy hands out. MODE_GLOB is what the
+# test below actually applies, MODE_LABEL is the word prose should use for it, and
+# CHMOD_MODE is what `chmod` is told. Saying "must be 600" anywhere is narrower than the
+# check and made four documents disagree with this script.
+MODE_GLOB='*00'
+MODE_LABEL=owner-only
+CHMOD_MODE=600
 OVERRIDE=false
+CONSTANTS=false
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -f) shift; [ $# -gt 0 ] || { echo "-f needs a file" >&2; exit 2; }
         KEYFILE="$1"; OVERRIDE=true ;;
+    --constants) CONSTANTS=true ;;
     *)  echo "unknown arg: $1" >&2; exit 2 ;;
   esac
   shift
@@ -34,6 +52,16 @@ done
 # $HOME collapsed to a tilde: an absolute home directory carries a username.
 shown="$KEYFILE"
 case "$KEYFILE" in "$HOME"/*) shown="~${KEYFILE#"$HOME"}" ;; esac
+
+if $CONSTANTS; then
+  echo "VAR=$VAR"
+  echo "PLACEHOLDER=$PLACEHOLDER"
+  echo "KEYFILE=$shown"
+  echo "MODE_GLOB=$MODE_GLOB"
+  echo "MODE_LABEL=$MODE_LABEL"
+  echo "CHMOD_MODE=$CHMOD_MODE"
+  exit 0
+fi
 
 # 1. The environment. Tested for emptiness, never printed.
 envnote="$VAR is not exported here"
@@ -52,7 +80,7 @@ not_configured() { # <reason>
 --- how to fix ---
 mkdir -p ${shown%/*}
 printf 'export ${VAR}=${PLACEHOLDER}\n' > ${shown}
-chmod 600 ${shown}
+chmod ${CHMOD_MODE} ${shown}
 
 Then open ${shown} in your own editor and replace ${PLACEHOLDER} with the key from the
 Edison platform. Never paste a key into a chat, a command line, or a job script.
@@ -87,12 +115,15 @@ else
   echo "key: SET (${#value} chars)"
 fi
 
-# Owner-only means group and other bits are zero, so 600 and 400 both pass. `stat -c` first:
+# MODE_GLOB means group and other bits are zero, so 600 and 400 both pass. `stat -c` first:
 # GNU accepts it and BSD rejects it, whereas BSD's `-f` reads a FILESYSTEM under GNU.
 mode=$(stat -c '%a' "$KEYFILE" 2>/dev/null || stat -f '%Lp' "$KEYFILE" 2>/dev/null || echo "?")
+label=$(printf '%s' "$MODE_LABEL" | tr '[:lower:]' '[:upper:]')
+# Unquoted on purpose: the glob has to glob. shellcheck reads it as a word-splitting risk.
+# shellcheck disable=SC2254
 case "$mode" in
-  *00) echo "key file: PERMISSIONS OWNER-ONLY (mode $mode)" ;;
-  *)   echo "key file: PERMISSIONS TOO OPEN (mode $mode — run: chmod 600 $shown)"
+  $MODE_GLOB) echo "key file: PERMISSIONS $label (mode $mode)" ;;
+  *)   echo "key file: PERMISSIONS TOO OPEN (mode $mode — run: chmod $CHMOD_MODE $shown)"
        reason="${reason:+$reason; }mode $mode lets other people read it" ;;
 esac
 

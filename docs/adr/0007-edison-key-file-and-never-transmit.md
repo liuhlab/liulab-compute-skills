@@ -5,7 +5,7 @@ search:
 
 # The Edison key gets its own file, and the skill never transmits it
 
-The platform API key lives in `~/.claude/compute/edison.env` at mode 600 — its own file,
+The platform API key lives in `~/.claude/compute/edison.env`, owner-only — its own file,
 beside the per-user config and never inside it. A placeholder copy ships in `templates/`.
 The skill sources that file into the process that needs the key, and reaches it no other
 way.
