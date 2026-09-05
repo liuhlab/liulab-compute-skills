@@ -53,13 +53,13 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 pixi run docs-build                     # build the site strictly (`docs` environment)
 ```
 
-- `pixi run check` = `check-static` (ruff, ruff format, pyright, vale,
-  markdownlint, via `scripts/check.sh`) + `skill-lint` (`tests/lint.sh`). The
-  static steps start together and **every** failure is reported in one run, so
-  read to the bottom. The step list lives in the `check-static` task in
-  `pyproject.toml` and nowhere else — `.github/workflows/ci.yml` invokes the
-  task by name, so the local gate and CI cannot drift. Add a step there, not
-  in the workflow.
+- `pixi run check` = `check-static` (the static steps, via
+  `scripts/check.sh`) + `skill-lint` (`tests/lint.sh`). The static steps start
+  together and **every** failure is reported in one run, so read to the bottom.
+  The step list lives in the `check-static` task in `pyproject.toml` and
+  nowhere else — not here either, which is why this sentence does not repeat
+  it. `.github/workflows/ci.yml` invokes the task by name, so the local gate
+  and CI cannot drift. Add a step there, not in the workflow.
 - The writing gates: vale reads language, markdownlint reads structure. The
   caps, the per-file-class sections of `.vale.ini` and how to measure against
   them are in `docs/agents/writing.md`. Read it before writing anything — this
