@@ -44,10 +44,22 @@ repo name, the GitHub org, and the marketplace name `liulab`.
 ## Commands
 
 ```bash
-bash tests/lint.sh                      # static checks — run on EVERY change
+pixi run check                          # THE GATE — run on EVERY change; what CI runs on every PR
+bash tests/lint.sh                      # static checks alone (same as `pixi run skill-lint`)
 bash tests/preflight.sh [--live]        # is this machine's ~/.ssh/config set up (+ ssh reachability)
 bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS TOKENS
 ```
+
+- `pixi run check` = `check-static` (ruff, ruff format, pyright, via
+  `scripts/check.sh`) + `skill-lint` (`tests/lint.sh`). The static steps start
+  together and **every** failure is reported in one run, so read to the bottom.
+  The step list lives in the `check-static` task in `pyproject.toml` and
+  nowhere else — `.github/workflows/ci.yml` invokes the task by name, so the
+  local gate and CI cannot drift. Add a step there, not in the workflow.
+- `tests/preflight.sh` and `tests/eval.sh` deliberately **never run in CI**
+  (one reads a real ssh config, the other spends API tokens). The no-secrets
+  sweep is also half-blind in CI — its username/hostname checks read the local
+  ssh config — so it stays a **local pre-push control**. See `tests/README.md`.
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
   `jupyter-ircbc`, `reuse-job`, `live-sbatch`.
@@ -66,7 +78,7 @@ bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS T
 
 ## Release flow
 
-1. Edit skills; run `bash tests/lint.sh`.
+1. Edit skills; run `pixi run check`.
 2. Bump `version` in `.claude-plugin/plugin.json` and add a `CHANGELOG.md`
    entry (same commit). Versioning is **CalVer `YYYY.M.PATCH`** (e.g.
    `2026.7.0`): year, month without zero-padding (keeps semver parsers

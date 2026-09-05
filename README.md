@@ -82,10 +82,16 @@ claude plugin update lab-compute@liulab
 Three layers under [tests/](tests/) — see [tests/README.md](tests/README.md):
 
 ```bash
+pixi run check                          # the gate: linters + tests/lint.sh, all at once, every failure reported
 bash tests/lint.sh                      # static: manifests, frontmatter, naming, no-secrets sweep
 bash tests/preflight.sh --live          # this machine's ssh config + login-node reachability
 bash tests/eval.sh [--live] [--only <case>]  # headless claude -p behavior evals (costs tokens; --live submits a real job on arc)
 ```
+
+`pixi run check` is what CI runs on every pull request. The other two layers
+are local-only: one reads your ssh config, the other spends API tokens. The
+no-secrets sweep's username and hostname checks only see *your* machine's ssh
+config, so they stay a pre-push control — run the gate locally before you push.
 
 ## Adding a new skill
 
@@ -95,7 +101,7 @@ bash tests/eval.sh [--live] [--only <case>]  # headless claude -p behavior evals
 2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
    `~/.ssh/config` / `~/.claude/compute/personal.md`.
-3. Run `bash tests/lint.sh`; bump `version` (CalVer `YYYY.M.PATCH`) in
+3. Run `pixi run check`; bump `version` (CalVer `YYYY.M.PATCH`) in
    `.claude-plugin/plugin.json` and add a `CHANGELOG.md` entry in the same
    commit; push. Installed machines pick it up on
    `claude plugin marketplace update liulab`.
