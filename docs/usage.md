@@ -1,9 +1,13 @@
 # Basic usage
 
-You don't call these skills explicitly — just talk to your agent about
-cluster work and the right skill loads itself. In Claude Code you can also
-invoke one directly with `/lab-compute:lab-hpc` (or `lab-jupyter`,
+You don't call the cluster skills explicitly — just talk to your agent
+about cluster work and the right skill loads itself. In Claude Code you can
+also invoke one directly with `/lab-compute:lab-hpc` (or `lab-jupyter`,
 `lab-containers`).
+
+[lab-edison](skills/lab-edison.md) is the exception. It never loads on its
+own, because every run of it spends your own credits. Ask for it by name:
+`/lab-compute:lab-edison` and then your question.
 
 ## Things you can ask
 
@@ -36,6 +40,12 @@ internet.
 It runs the command inside the right lab container (the bare OS is too old
 for modern tools), in a Slurm job, with the container environment
 activated.
+
+**"/lab-compute:lab-edison what is known about …"**
+The [lab-edison](skills/lab-edison.md) flow: it checks your key file
+first, names the Edison agent it picked, prints your question in full,
+and only then sends it. You get an answer with citations. Nothing on this
+path involves a cluster.
 
 ## What the agent will ask you
 
