@@ -124,7 +124,7 @@ already lives on one), **ask the user**. Per-cluster factors:
 ## Quick reference
 
 | Cluster | Login alias | Transfer alias | Get a compute node | Code dir |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | arc_hpc (chimera) | `arc` / `chimera-login` | `chimera-transfer` | `sbatch`/`salloc` on `zhoulab_gpu_priority` | `/large_storage/zhoulab/<user>/pkg` |
 | ircbc_hpc | `ircbc` | `ircbc-transfer` (no `/share` mount — copy onward after landing; see `references/ircbc-hpc.md`) | Slurm job → ssh `cpu01`…`cpu08` | `/share/home/<user>/src` |
 

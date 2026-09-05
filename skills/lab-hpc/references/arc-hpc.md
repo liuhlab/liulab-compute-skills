@@ -43,7 +43,7 @@ belong on the login node.
   partition). `PreemptMode=REQUEUE` on the preemptible tiers.
 
 | Partition | Wall limit | Purpose / limits |
-|---|---|---|
+| --- | --- | --- |
 | `cpu` (default) | 5 d | Interactive CPU work. QOS `cpu_interact`: ≤ 64 CPUs and **≤ 2 running jobs per user**; ≤ 4 GB per CPU. |
 | `cpu_batch` | 14 d | CPU batch. QOS `cpu_batch`: ≤ 20 running / 200 queued per user. |
 | `gpu` | 1 d | Interactive GPU work; ≤ 32 CPUs per node per job; ≤ 10 GB per CPU. |

@@ -1,3 +1,7 @@
+<!-- A fragment, not a document: append the whole file to your
+     `~/.claude/CLAUDE.md`. The heading is `##` so it nests under whatever
+     that file already says, which is why MD041 is waived on the next line. -->
+<!-- markdownlint-disable-next-line MD041 -->
 ## Remote compute (lab HPC) — always applies
 
 - I work on lab HPC clusters (arc/chimera, ircbc). Before ANY ssh, Slurm, or

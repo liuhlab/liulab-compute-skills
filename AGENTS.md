@@ -50,12 +50,20 @@ bash tests/preflight.sh [--live]        # is this machine's ~/.ssh/config set up
 bash tests/eval.sh [--live] [--only <case>]   # headless agent evals — COSTS TOKENS
 ```
 
-- `pixi run check` = `check-static` (ruff, ruff format, pyright, via
-  `scripts/check.sh`) + `skill-lint` (`tests/lint.sh`). The static steps start
-  together and **every** failure is reported in one run, so read to the bottom.
-  The step list lives in the `check-static` task in `pyproject.toml` and
-  nowhere else — `.github/workflows/ci.yml` invokes the task by name, so the
-  local gate and CI cannot drift. Add a step there, not in the workflow.
+- `pixi run check` = `check-static` (ruff, ruff format, pyright, vale,
+  markdownlint, via `scripts/check.sh`) + `skill-lint` (`tests/lint.sh`). The
+  static steps start together and **every** failure is reported in one run, so
+  read to the bottom. The step list lives in the `check-static` task in
+  `pyproject.toml` and nowhere else — `.github/workflows/ci.yml` invokes the
+  task by name, so the local gate and CI cannot drift. Add a step there, not
+  in the workflow.
+- The writing gates: vale reads language, markdownlint reads structure.
+  `.vale.ini` scopes the `styles/Lab/` rules per file class, and **every rule
+  is named in every section** — vale's `*` matches `/`, so the sections overlap
+  and an omitted rule inherits rather than defaulting on. Agent-facing prose,
+  `skills/**/*.md` and `AGENTS.md`, carries a 1000-word cap. A cap is a dial,
+  not a law: raise one deliberately, in its own commit, with the reason in the
+  message — never to make a document that ran long fit.
 - `tests/preflight.sh` and `tests/eval.sh` deliberately **never run in CI**
   (one reads a real ssh config, the other spends API tokens). The no-secrets
   sweep is also half-blind in CI — its username/hostname checks read the local

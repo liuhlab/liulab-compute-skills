@@ -47,6 +47,11 @@ python = "3.13.*"
 ruff = "*"
 # Exact: Pylance is pyright, so the editor and CI must give one verdict.
 pyright = "==1.1.411"
+# The writing gates. Exact on vale: the jargon map and the grade-11 cap in `styles/Lab/`
+# were measured against this version, so a floating pin would move the verdict without
+# anyone editing a rule.
+vale = "3.19.0.*"
+markdownlint-cli2 = "*"
 
 [tool.pixi.tasks]
 lint = "ruff check ."
@@ -58,9 +63,16 @@ typecheck = "pyright"
 # Layer 1 only: `tests/preflight.sh` reads a real `~/.ssh/config` and `tests/eval.sh`
 # spends API tokens on headless agent sessions, so neither belongs on a pull request.
 skill-lint = "bash tests/lint.sh"
+# vale reads language, markdownlint reads structure. `.`, never an absolute path: an
+# absolute path matches no `.vale.ini` section and exits 0 having checked nothing. The glob
+# keeps vale out of trees it never lints — `check.sh` runs the steps concurrently, and a
+# walk of `.pixi/` races whatever else is writing there.
+vale = "vale --glob='!{.pixi,site,dist,build}/**' ."
+# No glob here: `.markdownlint-cli2.yaml` carries both the file set and `gitignore: true`.
+markdownlint = "markdownlint-cli2"
 # The static step list lives here and nowhere else; `check.sh` takes it as arguments, and
 # `ci.yml` invokes this task by name, so the local gate and CI cannot drift.
-check-static = "bash scripts/check.sh lint fmt-check typecheck"
+check-static = "bash scripts/check.sh lint fmt-check typecheck vale markdownlint"
 check = { depends-on = ["check-static", "skill-lint"] }
 
 # ============================== ruff ==============================

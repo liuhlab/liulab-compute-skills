@@ -25,7 +25,7 @@ Which cluster is the user's call — ask or infer from session context
 commands; on ircbc substitute from this table:
 
 | Parameter | arc_hpc (chimera) | ircbc_hpc |
-|---|---|---|
+| --- | --- | --- |
 | Login alias | `arc` | `ircbc` |
 | List my jobs | `squeue --me` | `squeue -u $USER` (Slurm 18.08 has no `--me`) |
 | Partition | `zhoulab_gpu_priority` | `compute_cpu` (no GPU there) |

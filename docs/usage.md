@@ -46,7 +46,7 @@ activated.
 - **Confirmation before every job submission** — you always see the exact
   command first.
 - **Before cancelling or deleting anything shared** — reservation jobs and
-  lab container images are shared assets; the agent asks first.
+  lab container images belong to the whole group; the agent asks first.
 
 ## What the agent will refuse
 

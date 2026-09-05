@@ -13,12 +13,12 @@ that knowledge as three skills that load automatically when your request
 touches remote compute:
 
 | Skill | What it covers |
-|---|---|
+| --- | --- |
 | [lab-hpc](skills/lab-hpc.md) | The foundation: the two clusters (arc/chimera GPU, ircbc CPU), Slurm usage, safety rules, per-machine setup checks. |
 | [lab-jupyter](skills/lab-jupyter.md) | Jupyter Lab on a cluster compute node, tunneled to your local browser. |
 | [lab-containers](skills/lab-containers.md) | The lab's Singularity container images on ircbc: keep them updated and run work inside them. |
 
-The skills come with guardrails baked in. An agent using them will:
+The skills come with safety rules built in. An agent using them will:
 
 - **never run compute on a login node** — it gets a Slurm job first;
 - **never submit a job without showing you the exact command** and getting

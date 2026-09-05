@@ -7,7 +7,7 @@ skills build on it.
 ## The two clusters
 
 | | arc_hpc (aka chimera / ARC) | ircbc_hpc |
-|---|---|---|
+| --- | --- | --- |
 | Hardware | Modern GPU cluster (H100 nodes) | CPU cluster (GPU nodes drained in practice) |
 | Software | Recent OS, environments run natively via pixi | CentOS 7 — modern tools only work **inside Singularity containers** |
 | Access | ssh aliases `arc` / `chimera-login`, … | ssh alias `ircbc`, behind a **VPN** you manage manually |

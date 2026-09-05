@@ -31,7 +31,7 @@ agent the whole routine.
 
 ## Shared-store etiquette
 
-The images are shared lab assets: the agent asks before overwriting or
+The images belong to the whole lab: the agent asks before overwriting or
 deleting anything another lab member might be using, and keeps the store
 writable for the whole group.
 

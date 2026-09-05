@@ -26,7 +26,7 @@ retry in a loop, do not try alternate routes, do not attempt to fix the VPN.
 ## Network topology (verified 2026-07-04) — plan around this
 
 | Node | Internet | Notes |
-|---|---|---|
+| --- | --- | --- |
 | compute (`cpu01`…) | **none** | Jobs must never assume network. Stage downloads beforehand. |
 | login (`ircbc`) | limited, via **SOCKS proxy** | `socks5h://127.0.0.1:1080` (tunneled from the transfer node); already exported as `http(s)_proxy`/`ALL_PROXY` in the shell profile, so `curl`/`git` just work. Go tools accept it too. |
 | transfer (`ircbc-transfer`) | **full, direct** | Small VM: ~1 TB local disk, few cores, and it does **NOT mount `/share`** — anything fetched there must be copied over afterwards. |
@@ -82,7 +82,7 @@ anyway so runaway jobs die. Slurm 18.08 flag gotchas: `squeue --me` does not
 exist (use `squeue -u $USER`); expect other modern flags to be missing too.
 
 | Partition | Nodes | Per node | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `compute_cpu` (default) | `cpu01`–`cpu08` | 56 CPUs, ~100 GB | **MaxNodes=2 per job.** The workhorse partition. |
 | `compute_fat` | 2 fat nodes | 160 CPUs, ~1–2 TB | Big-memory jobs. |
 | `compute_gpu_2080` | 2 nodes | 4× RTX 2080 | Both nodes were **drained** when checked — treat this cluster as CPU-only in practice. |
