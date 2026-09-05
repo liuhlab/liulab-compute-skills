@@ -1,5 +1,8 @@
 # Kosmos
 
+> **Provenance** — Source: `edison-client` 0.16.1 and the vendor's Kosmos guide · Checked: 2026-09-05 · Default tier: read.
+> A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
+
 Companion to `SKILL.md`'s Kosmos section. Read it whenever a user says Kosmos. Most of what
 this page is for happens before a run starts, because a run is the expensive part.
 
@@ -14,13 +17,13 @@ chooses, so "Kosmos" or "Virtual Organism" in a sidebar is *their* label, not a 
 job name. Inside a persona come **projects**, inside a project a **conversation**, and the
 conversation spawns the tasks. A project page counts them: Tasks, Generated Files, Uploads.
 
-Observed 2026-09-05 on a real project: 13 trajectories, all `success`, eight
+`[verified]` Observed 2026-09-05 on a real project: 13 trajectories, all `success`, eight
 `job-futurehouse-paperqa3-api` and five `job-futurehouse-data-analysis-heron` — neither in
 `JobNames`. Every one carried the project's id.
 
 ## The job name, and why it is not in `JobNames`
 
-`get_session` on a Kosmos project session returns `job_name`
+`[verified]` `get_session` on a Kosmos project session returns `job_name`
 **`job-futurehouse-data-analysis-aries`**, matching the agent behind the persona picker. So
 a Kosmos job name does exist and is readable from the API for free.
 
@@ -42,9 +45,9 @@ start one are now all named on this page — which makes an accidental start eas
 here than from the browser, not harder. "Ask Kosmos about X" is a request to help draft
 the objective, not permission to spend.
 
-Note also that the exact chat invocation is **unverified**: nothing here has been executed,
-because executing it is the charge. Treat the call shape as read from the package, not as a
-tested recipe, and hand the run back to the user unless they have said to start it.
+Note also that the exact chat invocation is `[unverified]`: nothing here has been run, because
+running it is the charge. Treat the call shape as read from the package, not as a tested
+recipe, and hand the run back to the user unless they have said to start it.
 
 ## Reading a run that already exists — free
 
@@ -91,5 +94,6 @@ Same source, same date:
 
 No figures here. The vendor's pricing page did not resolve on 2026-09-05, and the numbers
 in circulation elsewhere are unconfirmed; a wrong price in a skill is worse than none. The
-shape is what matters: two orders of magnitude above a single API task, and one objective
-buys a dozen or more tasks. Send the user to their platform balance for the real number.
+shape is what matters: two orders of magnitude above a single API task `[unverified]` — no
+source states it — and one objective buys a dozen or more tasks. Send the user to their
+platform balance for the real number.

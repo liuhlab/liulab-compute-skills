@@ -196,6 +196,59 @@ edison_case "over-permissive mode"   "$fx/open-perms.env"  "key file: PERMISSION
 rm -rf "$fx"
 trap - EXIT
 
+echo "== edison provenance =="
+# Every Edison reference page opens with a provenance block: the page's default source, the
+# date it was checked, and the tier that holds unless a claim says otherwise — verified, read
+# or unverified. See `docs/adr/0009-facts-carry-their-provenance.md`.
+#
+# Vendor facts are not cluster facts. The vendor moves them without telling anyone, and
+# several of them can only be observed by spending a credit, so a page has to say how it
+# knows. Three wrong claims shipped in four releases before this check existed, each caught by
+# a person rather than by anything here.
+#
+# What this checks is that the block is THERE and PARSES: a real calendar date and one of the
+# three tier words. It cannot check that a date is honest — nothing can — and it must not read
+# as though it did: whether the package still says what the page says is answered only by
+# re-reading the package.
+prov_n=0
+for f in skills/lab-edison/references/*.md; do
+  [ -f "$f" ] || continue
+  prov_n=$((prov_n + 1))
+  # stderr is captured too, so a crash in here is a FAIL and never a silent pass.
+  msg=$(python3 - "$f" 2>&1 <<'EOF'
+import datetime
+import pathlib
+import re
+import sys
+
+BLOCK = re.compile(
+    r"^> \*\*Provenance\*\* — Source: (?P<source>.+?) · Checked: (?P<date>[^ ·]+) ·"
+    r" Default tier: (?P<tier>[A-Za-z]+)"
+)
+TIERS = ("verified", "read", "unverified")
+
+head = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").splitlines()[:6]
+found = [m for m in (BLOCK.match(line) for line in head) if m]
+if not found:
+    print("no provenance block in the first 6 lines")
+elif not found[0]["source"].strip():
+    print("the Source field is empty")
+elif found[0]["tier"] not in TIERS:
+    print(f"default tier '{found[0]['tier']}' is not one of {', '.join(TIERS)}")
+else:
+    try:
+        datetime.date.fromisoformat(found[0]["date"])
+    except ValueError:
+        print(f"Checked date '{found[0]['date']}' is not a real YYYY-MM-DD date")
+EOF
+  )
+  if [ -n "$msg" ]; then err "$f: $msg"
+  else ok "$f carries a provenance block that parses"; fi
+done
+if [ "$prov_n" -eq 0 ]; then
+  err "no pages under skills/lab-edison/references/, so the provenance rule checked nothing"
+fi
+
 echo "== release =="
 # The version has to identify the content. This plugin's source is the repo ROOT, so
 # `claude plugin update` clones the whole tree — tests, docs and tooling included — and two
