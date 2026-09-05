@@ -103,9 +103,10 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 ## Architecture / editing skills
 
 - **Facts vs recipes** (`docs/adr/0002-facts-vs-recipes.md`). New content
-  goes: cluster fact → `lab-hpc/references/`; repeatable multi-step
-  procedure → its own `lab-*` skill; one-liner → a bullet in `lab-hpc`. A
-  recipe never repeats a cluster fact; it points at the reference.
+  goes: cluster fact → the right `references/` file below; repeatable
+  multi-step procedure → its own `lab-*` skill; one-liner → a bullet in
+  `lab-hpc`. A recipe never repeats a cluster fact; it points at the
+  reference.
 - **Repo-wide convention:** skills never submit sbatch/srun work on the
   user's behalf without showing the exact script and getting confirmation
   first (stated in `lab-hpc`'s hard rules; keep new recipes consistent).
@@ -119,8 +120,11 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   goes in `references/`, executable checks in `scripts/`.
 - `skills/lab-hpc/` is the core skill: step 0 runs
   `scripts/check-hpc-config.sh` and must **refuse** HPC requests on
-  unconfigured machines. Per-cluster truth lives in
-  `references/arc-hpc.md` / `references/ircbc-hpc.md`.
+  unconfigured machines. Per-cluster truth is split two ways, and a fact
+  belongs in exactly one: `arc-hpc.md` / `ircbc-hpc.md` for hosts, network,
+  toolchain and storage; `arc-slurm.md` / `ircbc-slurm.md` for partitions,
+  choosing one, and submitting. The recipe skills carry their own
+  `references/` for detail their SKILL.md is too small to hold.
 - Cluster facts in references are **verified on the clusters** and dated —
   don't edit them from memory; re-verify with read-only commands on the
   login nodes. The two clusters differ sharply (arc: modern Slurm, cost/queue
