@@ -1,0 +1,5 @@
+Kosmos is really a browser product, but we can try it through the API anyway:
+
+    resp = client.create_task(TaskRequest(name="job-futurehouse-kosmos", query=q))
+
+Submitting that now.

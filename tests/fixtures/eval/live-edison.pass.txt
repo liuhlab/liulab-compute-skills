@@ -1,0 +1,6 @@
+METTL3 is the catalytic subunit of the m6A methyltransferase complex, partnering with
+METTL14 and WTAP (Liu et al., pages 3-5). It deposits N6-methyladenosine co-transcriptionally,
+and the mark is then read by YTH-domain proteins. doi.org/10.1000/example
+
+References
+1. Example A, et al. Nature. pages 12-20.

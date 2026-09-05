@@ -196,6 +196,101 @@ edison_case "over-permissive mode"   "$fx/open-perms.env"  "key file: PERMISSION
 rm -rf "$fx"
 trap - EXIT
 
+echo "== release =="
+# The version has to identify the content. This plugin's source is the repo ROOT, so
+# `claude plugin update` clones the whole tree — tests, docs and tooling included — and two
+# commits declaring the same version but differing in any tracked file are two different
+# installs wearing one number. That is not hypothetical: 2026.9.3 was tagged, test-only
+# changes merged on top without a bump, and the plugin cache and origin/main both reported
+# 2026.9.3 with different bytes. So an already-tagged version must name this exact tree.
+pver=$(python3 -c 'import json; print(json.load(open(".claude-plugin/plugin.json"))["version"])' 2>/dev/null)
+if [ -z "$pver" ]; then
+  err "cannot read version from .claude-plugin/plugin.json"
+elif [ -z "$(git tag -l 'v*' 2>/dev/null)" ]; then
+  # Silence is not success. A shallow clone with no tags would sail through the branches
+  # below by having nothing to compare against, so the missing input is itself the failure.
+  # CI checks out with fetch-depth: 0 to give this rule something to read.
+  err "no v* tags visible, so the release rule cannot run (CI needs fetch-depth: 0)"
+elif ! git rev-parse -q --verify "refs/tags/v$pver" >/dev/null 2>&1; then
+  ok "version $pver is not tagged yet — an unreleased bump"
+elif git diff --quiet "v$pver" -- . 2>/dev/null; then
+  ok "version $pver matches tag v$pver"
+else
+  err "version $pver is already tagged v$pver but the tree has moved — bump the version. Changed: $(git diff --name-only "v$pver" -- . | tr '\n' ' ')"
+fi
+
+echo "== eval assertions =="
+# Test the eval regexes without an API call. `--dump` prints the assertions the harness
+# actually uses, so this checks THOSE and not a copy that would drift out of step with them.
+# Every fixture here is synthetic; several are regressions from a run that was correct and
+# was reported as failed.
+fixdir=tests/fixtures/eval
+dump=$(bash tests/eval.sh --dump 2>/dev/null)
+if [ -z "$dump" ]; then
+  err "tests/eval.sh --dump printed nothing, so no assertion could be checked"
+else
+  covered=0
+  uncovered=""
+  # Heredoc, not a pipe: a piped `while` runs in a subshell, where `err` would set `fail`
+  # on a copy of it and every failure below would vanish at the closing `done`.
+  while IFS="$(printf '\t')" read -r cname cexp cdeny; do
+    [ -n "$cname" ] || continue
+    hasfx=0
+    if [ -f "$fixdir/$cname.pass.txt" ]; then
+      hasfx=1
+      if grep -qiE "$cexp" "$fixdir/$cname.pass.txt"; then ok "$cname: pass fixture matches expect"
+      else err "$cname: pass fixture does not match its expect regex"; fi
+      if [ -n "$cdeny" ]; then
+        if grep -qiE "$cdeny" "$fixdir/$cname.pass.txt"; then err "$cname: pass fixture trips its DENY"
+        else ok "$cname: pass fixture clears its DENY"; fi
+      fi
+    fi
+    if [ -f "$fixdir/$cname.fail-expect.txt" ]; then
+      hasfx=1
+      if grep -qiE "$cexp" "$fixdir/$cname.fail-expect.txt"; then err "$cname: fail-expect fixture wrongly matches expect"
+      else ok "$cname: fail-expect fixture correctly misses expect"; fi
+    fi
+    if [ -f "$fixdir/$cname.fail-deny.txt" ]; then
+      hasfx=1
+      if [ -z "$cdeny" ]; then err "$cname: has a fail-deny fixture but no DENY assertion"
+      elif grep -qiE "$cdeny" "$fixdir/$cname.fail-deny.txt"; then ok "$cname: fail-deny fixture trips its DENY"
+      else err "$cname: fail-deny fixture does not trip its DENY"; fi
+    fi
+    if [ "$hasfx" -eq 1 ]; then covered=$((covered + 1)); else uncovered="$uncovered $cname"; fi
+  done <<EOF
+$dump
+EOF
+  ok "fixtures cover $covered eval case(s)"
+  [ -n "$uncovered" ] && echo "  note: no fixtures yet for:$uncovered"
+fi
+
+echo "== eval case lists =="
+# Four places name the eval cases: the usage comment, the "no cases matched" line, AGENTS.md
+# and tests/README.md. All four were stale before anyone noticed — tests/README.md had been
+# missing `reuse-job` through two releases — because keeping them in step was a habit and
+# not a check. It is a check now. Lives here rather than in the conformance checker because
+# the case list comes from `--dump`, which is this file's business.
+if [ -z "${dump:-}" ]; then
+  err "no case list to check (tests/eval.sh --dump printed nothing)"
+else
+  listfail=0
+  for f in tests/eval.sh AGENTS.md tests/README.md; do
+    [ -f "$f" ] || { err "$f is missing, so its eval case list cannot be checked"; listfail=1; continue; }
+    missing=""
+    while IFS="$(printf '\t')" read -r cname _rest; do
+      [ -n "$cname" ] || continue
+      grep -qF -- "$cname" "$f" || missing="$missing $cname"
+    done <<EOF
+$dump
+EOF
+    if [ -n "$missing" ]; then
+      err "$f does not name these eval cases:$missing"
+      listfail=1
+    fi
+  done
+  [ "$listfail" -eq 0 ] && ok "every eval case is named in eval.sh, AGENTS.md and tests/README.md"
+fi
+
 echo
 if [ $fail -eq 0 ]; then echo "LINT PASS"; else echo "LINT FAIL"; fi
 exit $fail

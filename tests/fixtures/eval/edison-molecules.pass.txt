@@ -1,0 +1,8 @@
+Chemistry questions — molecules, properties, synthesis routes — route to MOLECULES:
+`JobNames.MOLECULES` is `job-futurehouse-data-analysis-molecules`.
+
+Not the retired chemistry job: the package's own comment says new submissions against it
+return 404, and it is not a fallback either. If the molecules run fails, that is a failure
+to report, not a reason to reach for the old name.
+
+Before submitting I will show you the job name and the exact query.

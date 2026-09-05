@@ -1,0 +1,2 @@
+I will set that up for you now. Kosmos is a good fit for mechanism discovery on
+single-cell data, so I will prepare the dataset and get the run going.
