@@ -26,10 +26,10 @@ is always answered by the copy it was written against.
 
 - A user who wants only the Jupyter recipe installs all of them. Cheap: the skills are
   Markdown, and an unused description costs only its share of the trigger listing.
-- The 1536-character description budget is shared across every skill in the plugin, so
-  adding a skill takes room from the others. `tests/lint.sh` reports the running total, and
-  that pressure is real — it is what keeps the descriptions keyword-dense instead of
-  chatty.
+- Every description loads on every machine that installs the plugin, so adding a skill
+  spends a little of everyone's context whether they use it or not. That pressure is real
+  and is what keeps the descriptions keyword-dense instead of chatty — but it is judgement,
+  not a threshold: the 1536-character limit caps one description, never their sum.
 - Splitting later means a new plugin name, which every installed machine has to install by
   hand. Reversal is not free, which is why this is recorded.
 

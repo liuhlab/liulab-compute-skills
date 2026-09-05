@@ -55,9 +55,14 @@ it and none repeats it. Contrast a task-recipe skill; see
 
 ### Description budget
 
-The combined character count of every skill's frontmatter `description`, capped at 1536
-because that combined text is what an agent reads when it decides which skill to load.
-`tests/lint.sh` reports the running total on every run.
+Room for the trigger text an agent reads when it decides which skill to load. Two limits
+are easily confused. One skill's frontmatter `description` is capped at 1536 characters —
+the platform's limit on a single entry in the skill listing — and the gate fails a
+description longer than that. The other is the share of the model's context window the
+listing occupies: genuinely shared, but across every skill installed on a machine rather
+than the ones in this repo, so no count taken here measures it. The gate prints the total
+of this repo's descriptions as information and fails nothing on it. Keeping each one
+keyword-dense is still the point; that is a judgement, not a threshold.
 
 ### Digest sidecar
 

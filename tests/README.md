@@ -13,17 +13,18 @@ reasons under each heading below.
 ## Layer 1 — static lint (free, seconds): `tests/lint.sh`
 
 Tests the **artifacts**: manifests are valid JSON, every skill has parseable
-`name`/`description` frontmatter, names follow the `lab-*` policy, the
-combined description budget stays under Claude Code's limit, and — most
-importantly — the **no-secrets sweep**: no IP literals, no key material, and
-none of the usernames or dotted HostNames from *your* local `~/.ssh/config`
-appear anywhere in the repo (both are read from your machine at test time,
+`name`/`description` frontmatter, names follow the `lab-*` policy, each
+description stays under the per-skill listing limit (their total is printed,
+but nothing fails on it), and — most importantly — the **no-secrets sweep**:
+no IP literals, no key material, and none of the usernames or dotted
+HostNames from *your* local `~/.ssh/config` appear anywhere in the repo
+(both are read from your machine at test time,
 so the test itself stores none; single-label hostnames are unsweepable but
 still forbidden by policy). Also self-tests `check-hpc-config.sh` against an
 empty ssh config to prove it reports NOT CONFIGURED.
 
 **In CI it is half-blind, and that is expected.** The manifest-JSON,
-frontmatter, `lab-*` naming, description-budget, IP-literal, key-material and
+frontmatter, `lab-*` naming, description-length, IP-literal, key-material and
 `check-hpc-config.sh` layers all work anywhere, so they are the reason the
 suite runs on every pull request (as the `test` job, via the `skill-lint`
 task). The **username and hostname sweeps read the runner's own

@@ -23,7 +23,11 @@ case "$plug" in
 esac
 
 echo "== skills =="
+# 1536 is `skillListingMaxDescChars`: the platform's cap on ONE description in the skill
+# listing. It is enforced per skill, below.
+DESC_MAX=1536
 total_desc=0
+n_skills=0
 for d in skills/*/; do
   s="${d}SKILL.md"
   name=$(basename "$d")
@@ -52,12 +56,20 @@ for ln in lines[1:]:
 print(len(" ".join(w for w in body if w)))
 EOF
   ) || { err "$s frontmatter unparseable"; continue; }
-  if [ "${dlen:-0}" -ge 20 ]; then ok "$s description present (${dlen} chars)"
-  else err "$s description missing or too short"; fi
+  if [ "${dlen:-0}" -lt 20 ]; then err "$s description missing or too short"
+  elif [ "$dlen" -gt "$DESC_MAX" ]; then
+    err "$s description ${dlen} chars exceeds the ${DESC_MAX}-char per-skill listing cap"
+  else ok "$s description present (${dlen}/${DESC_MAX} chars)"; fi
   total_desc=$((total_desc + dlen))
+  n_skills=$((n_skills + 1))
 done
-if [ "$total_desc" -le 1536 ]; then ok "combined description budget ${total_desc}/1536 chars"
-else err "combined descriptions ${total_desc} chars exceed the 1536-char listing budget"; fi
+# The sum is INFORMATION. It carried a FAIL until 2026-09, on the reading that 1536 was a
+# budget the skills shared. It is not: it caps a single description, which is why the check
+# above is per skill. The budget that really is shared is a fraction of the model's context
+# window, and it spans every skill installed on the machine — other plugins, the user's own
+# — not this plugin's. No number here can measure that, so nothing here may fail on it, and
+# adding a skill must not fail the gate. Do not reinstate the sum.
+ok "descriptions total ${total_desc} chars across ${n_skills} skills (informational)"
 
 echo "== no-secrets sweep =="
 # Publishable tree only (what git tracks + working copies), minus this test

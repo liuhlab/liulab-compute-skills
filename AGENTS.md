@@ -115,9 +115,10 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   ircbc Jupyter sbatch command. Neither duplicates the other's half — keep it
   that way (`docs/adr/0003-jupyter-containers-ownership-split.md`).
 - `skills/<name>/SKILL.md` — frontmatter description is the auto-trigger
-  signal; keep it keyword-dense. The **combined** description budget across
-  all skills is 1536 chars (lint tracks it). Keep bodies lean; long detail
-  goes in `references/`, executable checks in `scripts/`.
+  signal; keep it keyword-dense. Lint fails a **single** description over
+  1536 chars — the platform's per-listing cap, never a repo-wide sum; the
+  total is information only. Keep bodies lean; long detail goes in
+  `references/`, executable checks in `scripts/`.
 - `skills/lab-hpc/` is the core skill: step 0 runs
   `scripts/check-hpc-config.sh` and must **refuse** HPC requests on
   unconfigured machines. Per-cluster truth is split two ways, and a fact

@@ -57,9 +57,9 @@ jobs:
       # bash suite is the `test` job below.
       - run: pixi run check-static
 
-  # The repo's own layer-1 suite: manifests, skill frontmatter, the description budget and
-  # the no-secrets sweep. Half of the sweep is machine-local by design — see the note in
-  # `tests/README.md` — but everything it can check on a runner, it checks here.
+  # The repo's own layer-1 suite: manifests, skill frontmatter, the per-skill description
+  # cap and the no-secrets sweep. Half of the sweep is machine-local by design — see the
+  # note in `tests/README.md` — but everything it can check on a runner, it checks here.
   test:
     runs-on: ubuntu-latest
     steps:
