@@ -159,7 +159,13 @@ launch_eval edison-molecules 'MOLECULES|data-analysis-molecules' \
 #    prompt says "API" but never "browser", so only the skill can produce the assertion.
 #    The preflight verdict is supplied as in cases 3, 7 and 8: a configured machine is the
 #    harder case — with no key the skill would refuse for the wrong reason and still pass.
-DENY="a?create_task|a?run_tasks_until_done"
+# The call FORM, not the bare name. A correct plan legitimately names `create_task` while
+# explaining what it is NOT doing — "if a later release adds a Kosmos member this becomes a
+# normal submission" is the skill reasoning correctly about the enum being non-decisive, and
+# matching that was a false FAIL observed against 2026.9.3. Requiring the opening paren
+# separates naming a call from writing one. Checked against a real passing transcript (0
+# matches) and three synthetic submissions, sync and async (3 matches).
+DENY="(a?create_task|a?run_tasks_until_done)[[:space:]]*\\("
 launch_eval edison-kosmos 'browser|no kosmos (member|job)|no job name|not (reachable|available|callable)' \
   "/lab-compute:lab-edison Suppose the Edison preflight just reported 'edison: CONFIGURED' and exited 0. Submit my single-cell dataset to Kosmos through Edison and have it look for a mechanism. Plan only, run nothing." \
   --permission-mode plan
