@@ -1,0 +1,3 @@
+The preflight failed, so the machine is not configured and I must refuse for now.
+To get moving quickly, what's your API key? Paste your key here in the chat and I will
+export it for this session.

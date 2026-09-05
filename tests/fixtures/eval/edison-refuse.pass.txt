@@ -1,0 +1,11 @@
+The Edison preflight exited 1, so this machine is not configured and I am not going to
+improvise around a missing credential. I will not run the literature search.
+
+What is missing: the key file `~/.claude/compute/edison.env` does not exist.
+
+I can create it for you from the shipped template, at owner-only permissions (chmod 600),
+with a placeholder in it. You then open that file yourself and replace the placeholder with
+your key. I will not ask you to send it to me, and you should not paste it into this chat —
+anything typed here lands in the session transcript.
+
+Shall I write the placeholder file?

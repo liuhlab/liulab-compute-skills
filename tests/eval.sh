@@ -16,6 +16,7 @@
 #   --live         also run the end-to-end cases: a tiny hostname job submitted
 #                  and cleaned up on arc (real cluster), and one real Edison
 #                  literature call (spends one of the user's platform credits).
+#   --dump         print each case's assertions and exit; runs nothing, spends nothing
 #   --only <case>  run a single case
 #                  (trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|
 #                   edison-refuse|edison-molecules|edison-kosmos|live-sbatch|
@@ -28,10 +29,14 @@ set -u
 # `|| exit 1`: the cases below are written against the repo root, and a run that spends
 # tokens from the wrong directory is worse than one that never starts.
 cd "$(dirname "$0")/.." || exit 1
-LIVE=false ONLY=""
+LIVE=false ONLY="" DUMP=false
 while [ $# -gt 0 ]; do
   case "$1" in
     --live) LIVE=true ;;
+    # Print each case's name and its two assertions, run nothing, spend nothing. This is
+    # what lets `tests/lint.sh` test the regexes against fixture transcripts without an
+    # API call — and test THESE regexes, not a copy of them that would drift.
+    --dump) DUMP=true; LIVE=true ;;
     # Every live case is named `live-*`, so asking for one by name turns --live on.
     # Without this, `--only live-<x>` would report "no cases matched" and spend nothing.
     --only) shift; ONLY="$1"; case "$ONLY" in live-*) LIVE=true ;; esac ;;
@@ -40,7 +45,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/lab-skill-eval.XXXXXX")
-echo "transcripts: $tmp"
+$DUMP || echo "transcripts: $tmp"
 
 declare -a E_NAME E_EXPECT E_DENY E_PID
 
@@ -71,6 +76,7 @@ fold_plans() { # <transcript>
 launch_eval() { # <name> <expected-regex> <prompt> [extra claude flags...]
   local name="$1" expect="$2" prompt="$3"; shift 3
   [ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && { DENY=""; return 0; }
+  if $DUMP; then printf '%s\t%s\t%s\n' "$name" "$expect" "$DENY"; DENY=""; return 0; fi
   echo "-- $name: launched"
   # NOTE: prompt must precede flags — variadic flags (--allowedTools) would
   # otherwise swallow it.
@@ -189,6 +195,8 @@ if $LIVE; then
 else
   [ -z "$ONLY" ] && echo "-- live cases skipped (pass --live to run)"
 fi
+
+$DUMP && exit 0
 
 if [ "${#E_NAME[@]}" -eq 0 ]; then
   echo "no cases matched '--only $ONLY' (valid: trigger|explicit|reject|containers|jupyter-ircbc|reuse-job|edison-refuse|edison-molecules|edison-kosmos|live-sbatch|live-edison)"

@@ -5,6 +5,28 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.4 — 2026-09-05
+
+Guardrails, after a release-discipline failure: `2026.9.3` was tagged, two
+test-only pull requests merged on top without a bump, and the plugin cache and
+`main` both reported `2026.9.3` with different bytes. Nothing was wrong with
+the skills; the number had stopped identifying the tree.
+
+- **A version now names one tree, and every merged change bumps it** — tests
+  included, because `source: "./"` ships the whole repo. `tests/lint.sh` fails
+  a tagged version whose tree has moved and names the files that moved. See
+  `docs/adr/0008-version-identifies-the-content.md`.
+- **Eval assertions are tested against fixtures**, with no API call and no
+  tokens. `tests/eval.sh --dump` prints the real assertions and the lint drives
+  them over synthetic transcripts in `tests/fixtures/eval/`, so the regexes
+  under test are the ones that run. Several fixtures are regressions from runs
+  that were correct and were reported as failed.
+- **The eval case lists are checked**, not merely kept. The usage comment,
+  `AGENTS.md` and `tests/README.md` must all name every case;
+  `tests/README.md` had been missing one through two releases.
+- CI checks out with full history, so the release rule has tags to read. A
+  missing tag list fails rather than passes.
+
 ## 2026.9.3 — 2026-09-05
 
 - **`lab-edison` no longer argues that Kosmos is browser-only because the job

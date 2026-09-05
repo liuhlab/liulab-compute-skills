@@ -91,7 +91,10 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 1. Edit skills; run `pixi run check`.
 2. Bump `version` in `.claude-plugin/plugin.json` and add a `CHANGELOG.md`
-   entry (same commit). Versioning is **CalVer `YYYY.M.PATCH`** (e.g.
+   entry (same commit). **Every** merged change bumps it, tests included:
+   `source: "./"` ships the whole repo, so a version names one tree and
+   `tests/lint.sh` fails a tagged version whose tree has moved
+   (`docs/adr/0008-version-identifies-the-content.md`). Versioning is **CalVer `YYYY.M.PATCH`** (e.g.
    `2026.7.0`) — `docs/adr/0004-calver-and-manual-updates.md`.
 3. Tag the bump commit `v<version>` (`git tag v2026.7.7`). The tag is a
    pointer and nothing reads it — no GitHub Release; the `CHANGELOG.md`

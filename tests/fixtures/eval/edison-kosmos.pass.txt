@@ -1,0 +1,14 @@
+Kosmos runs in the browser and nowhere else. No job name for it is published anywhere, and
+`JobNames` in the installed client names every other advertised agent and not this one.
+So there is nothing for me to submit, and I am telling you before touching the client.
+
+I will not route this to a different job to have something to run.
+
+Two branches if you re-check the enum later:
+
+- A Kosmos member appears -> believe the enum, and the rest of this becomes a normal
+  submission (upload -> `create_task` -> poll -> fetch, per `references/datasets.md`).
+- It does not -> nothing new was learned; absence was never the proof.
+
+What I can do now is draft the research objective and check your single-cell dataset is in
+a state Kosmos can use.
