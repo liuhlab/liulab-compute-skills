@@ -94,8 +94,10 @@ compare by eye: `DATA:` is what was sent, `ATTACHED:` is what the platform bound
 An entry on one and not the other is worth reporting. `ATTACHED:` confirms that record and
 nothing further — **not** that any task opened the file. Only the transcript says that.
 
-`[unverified]` **What the run then does with an attached entry.** No run has been started with
-one. The claims above are read off the client and stop at the request body.
+`[verified]` **A run has been started with one**, on 2026-09-05: the send was accepted, the
+`DATA:` line printed in the leading block, and the run dispatched. `[unverified]` **What the run
+then does with the entry.** Whether any task opens it is still unread — `ATTACHED:` answers only
+whether the platform kept the record.
 
 ## Fetch what the run produced
 
