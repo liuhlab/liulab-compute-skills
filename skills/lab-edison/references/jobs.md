@@ -58,6 +58,11 @@ Then poll — `tasks.md` has `status` and the rest, and why this is two steps an
 blocking call. The `--job` value is a `JobNames` member from the table above; the command
 sends nothing else, so a name you invented is refused rather than submitted.
 
+`edison-cli <group> <command> --help` prints the flags of any one command, and `--help` is the
+only spelling — there is no `-h`. Where a flag has a short form the long one is written here:
+`-j/--job`, `-q/--query-file`, `-d/--data`, `-c/--continue`, `-p/--project`, `-n/--limit`,
+`-o/--out`, `-s/--storage`, `-f/--key-file`.
+
 ## The environment underneath
 
 `edison-client` is a dependency of this repo's **default** pixi environment, and `edison-cli` is
@@ -89,9 +94,12 @@ A follow-up rides on the previous run instead of re-establishing its context —
 `task submit --continue <prior task id>`, which the command turns into
 `runtime_config=RuntimeConfig(continued_job_id=...)` on the `TaskRequest`.
 
-The id is the `task_id` of the earlier run and is validated as a UUID, so keep it verbatim. The
-field is `continued_job_id`; the vendor's README calls it `continued_task_id`, which `TaskRequest`
-rejects outright because it forbids unknown fields. Believe the package.
+The id is the `task_id` of the earlier run, so keep it verbatim. **It is stricter than a string:**
+`RuntimeConfig.continued_job_id` is typed `UUID | None`, so anything that is not a UUID is refused
+with exit 2 and nothing is submitted. `--continue` never takes a name — only `--project` and
+`--persona` do (`tasks.md`), and `task list` is how a forgotten id is found. The field is
+`continued_job_id`; the vendor's README calls it `continued_task_id`, which `TaskRequest` rejects
+outright because it forbids unknown fields. Believe the package.
 
 ## Cost
 

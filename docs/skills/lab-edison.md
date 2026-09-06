@@ -101,6 +101,22 @@ Everything it does around a run is free. It drafts the goal with you, checks you
 data is in a shape Kosmos can use, and shows you a run you already started, task
 by task, without opening a browser.
 
+## Names, not long ids
+
+The platform gives every persona and project a long random id. You do not have
+to keep track of them. Say the name, and the skill finds the id for you. If
+nothing matches that name, it stops and says so. If more than one thing matches,
+it stops and lists them all with their ids. It never guesses.
+
+Names it has looked up are kept in a small file next to your key. That file
+holds names and ids and nothing else. Anything that spends money, or removes
+something, skips it and asks the platform again. So a name that has since moved
+to a different project cannot point the skill at the wrong one.
+
+Deleting a project is the one step here you cannot undo. The skill prints the
+project, its name and how many runs it holds, and asks whether the run history
+goes with it. Nothing is removed until you say yes.
+
 ## One question, one job
 
 For a single question the skill picks one of the platform's one-shot jobs and

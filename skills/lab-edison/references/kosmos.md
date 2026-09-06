@@ -15,7 +15,7 @@ The shape, as the platform presents it: a **persona** is created from a publishe
 the browser's picker offers `@FutureHouse/data-analysis-aries` — and given a name the user
 chooses, so "Kosmos" or "Virtual Organism" in a sidebar is *their* label, not a platform
 job name. Inside a persona come **projects**, inside a project a **conversation**, and the
-conversation spawns the tasks. A project page counts them: Tasks, Generated Files, Uploads.
+conversation spawns the tasks.
 
 `[verified]` The fan-out carries three job names, none of them in `JobNames`:
 `job-futurehouse-paperqa3-api`, `job-futurehouse-data-analysis-heron` and
@@ -40,10 +40,6 @@ the API. That is a claim about job names: there is no `JobNames.KOSMOS`, and `cr
 cannot start a run. The chat methods that do — `send_chat_message`, `queue_chat_message`,
 `get_conversation` — are ordinary typed client surface. The vendor's tasks page covers tasks.
 
-**An earlier version of this page said Kosmos runs in the browser and nowhere else. That was
-wrong**, and wrong in the direction that matters: it argued from the absence of an enum
-member without checking the surface Kosmos actually uses.
-
 ## Starting a run
 
 `SKILL.md` carries the rule: never start a run the user has not asked for in those words.
@@ -54,13 +50,16 @@ start easier from here than from the browser, not harder.
 last one spends:
 
 ```bash
-edison-cli persona list                                   # id, name, persona_job_name
-edison-cli project ensure --name <name> --persona <id>    # reuse-or-create; prints the id
-edison-cli kosmos start --project <id> --persona <id> --objective-file <file>
+edison-cli persona list                                     # id, name, persona_job_name
+edison-cli project ensure --name <name> --persona ID|NAME   # reuse-or-create; prints the id
+edison-cli kosmos start --project ID|NAME --persona ID|NAME --objective-file <file>
 ```
 
-`kosmos start` prints the project id, the session id and the runnable `kosmos stop …` line
-before anything can block. There is no other stop path, so keep it.
+Both take a name instead of an id (`tasks.md`). `kosmos start` prints, in order and before
+anything can block: `PROJECT_ID`, the `JOB_NAME` it read off the persona,
+`PERSONA_OWNS_PROJECT: yes`, `SESSION_ID`, and runnable `STOP:` and `STATUS:` lines. It
+**refuses before sending** if the persona does not own the project. There is no other stop path,
+so keep the `STOP:` line.
 
 **A persona is not optional, and the surface has no persona-less form.** `create_project`
 without one returns a project no persona owns; the API accepts that happily and the chat
@@ -69,10 +68,10 @@ instead of being wrapped, and the response body never reaches you — which is w
 no field. Nothing is created and nothing is charged. Confirmed both ways: the persona-less
 project 500'd, the persona-owned one started at once.
 
-The persona id has no route through the client. No method lists personas;
-`list_persona_owned_projects` and `create_project` both want the id you are hunting for, and
-`get_project_by_name` will not find one either. `persona list` goes under the client to
-`GET /v0.1/personas` on the authenticated httpx client it already exposes as `.client`.
+The persona id has no route through the client: no method lists personas, and
+`list_persona_owned_projects`, `create_project` and `get_project_by_name` all want the id you
+are hunting for. `persona list` goes under the client to `GET /v0.1/personas` on the
+authenticated httpx client it exposes as `.client`.
 
 Ownership comes with construction: `create` and `ensure` both take `--persona`. A run in an
 orphan project never appears under the persona in the browser, and a run nobody can find is a
@@ -91,15 +90,14 @@ replacement task, and four more children after that. What halts the orchestrator
 endpoint, and the order matters:
 
 ```bash
-edison-cli kosmos stop --project <id> --session <id>
+edison-cli kosmos stop --project ID|NAME --session <id> [--persona ID|NAME]
 ```
 
 One command, two steps in a fixed order: queue the halt **first**, then cancel every task still
 `queued` or `in progress`. The other way round the orchestrator refills them
 while you work, which is why the order is pinned by a test. `cancel_task` returning `False`
 means the task went terminal between the listing and the call — its documented behaviour, not an
-error, and the command reports it as such. A task id that does not exist is a 404 out of the
-`get_task` that `cancel_task` does first; against a real running task the stop is clean and
+error, and the command reports it as such. Against a real running task the stop is clean and
 silent.
 
 ## Reading a run that already exists — free
@@ -107,17 +105,23 @@ silent.
 None of this spends anything, and it is usually what the user actually wants:
 
 ```bash
-edison-cli kosmos sessions [--limit <n>]                 # session ids and timestamps
-edison-cli kosmos status --project <id> --session <id>   # job name, and the transcript
-edison-cli kosmos tasks --project <id> --session <id>    # every task the run fanned out
-edison-cli task fetch <task-id> --out <dir>              # what one of those tasks produced
+edison-cli kosmos sessions [-n <n>]                          # session id, project id, time
+edison-cli kosmos status --project ID|NAME --session <id> [--tail <n>]
+edison-cli kosmos tasks --project ID|NAME --session <id>
+edison-cli task fetch <task-id> --out <dir>                  # what one task produced
 ```
 
+`status` prints the fan-out and the last `--tail` utterances, six by default. It and `tasks`
+take `--persona` to resolve a project name and `--no-cache` to re-list rather than trust a
+remembered one; `start` and `stop` take no `--no-cache`, because they resolve live.
+
 `[verified]` From the session id alone the project id, the whole fan-out and the transcript all
-come back — `get_session` returns the project id as `type_id`, and `kosmos sessions` is the way
-back to a session id nobody wrote down. Underneath: `get_conversations`, `get_session` (a
-**list** of one), `get_tasks(project_id=…)`, `get_conversation`, `list_files(...)["data"]`.
-Several hand back a container rather than the thing itself; the commands unwrap them.
+come back — `get_session` returns the project id as `type_id`, which is why `kosmos sessions`
+prints the project beside the session on every `SESSION:` line. A session id on its own is a
+dead end: `status`, `tasks` and `stop` all need both. It is the way back to a session id nobody
+wrote down. Underneath: `get_conversations`, `get_session` (a **list** of one),
+`get_tasks(project_id=…)`, `get_conversation`, `list_files(...)["data"]`. Several hand back a
+container rather than the thing itself; the commands unwrap them.
 
 `[verified]` **Assistant `content` is empty on every turn.** What the browser shows lives in
 `tool_calls[].function.arguments`: a `send_message` call carries the reply as `display_text`,

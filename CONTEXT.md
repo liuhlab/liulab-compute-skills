@@ -159,6 +159,17 @@ The shared node an ssh login alias lands on. Light commands only — file browsi
 control, small transfers, non-bulk `git`. On ircbc it is also the only node with a route
 out to the internet, so staging downloads belong there.
 
+### Name cache
+
+`~/.claude/compute/edison-cli-names.json` on the user's own machine, at owner-only
+permissions: what `edison-cli` remembers of the persona and project names it has already
+resolved, so `--project` and `--persona` can take a name where the platform wants a UUID. It
+holds names and ids and nothing else — never the key, and never one byte of the key file — and
+it sits beside the Edison key file rather than inside the plugin directory, which a plugin
+update wipes. It is a convenience and never the truth: `--no-cache` refreshes it, every command
+that spends or destroys ignores it and resolves live, and a cache that cannot be read or written
+is simply not used rather than being an error.
+
 ### No-secrets sweep
 
 The part of `tests/lint.sh` that greps the whole publishable tree for connection details:

@@ -23,8 +23,18 @@ gets real commands for the first time.
   a run needs. Starting a run prints the exact line that stops it, before anything
   else can happen. Stopping queues the halt first and cancels the leftover tasks
   second, which is the order that works.
+- **You can use names instead of long ids.** Anywhere a project or a persona is
+  asked for, type its name. The command looks the id up, and stops rather than
+  guessing when the name matches nothing or matches more than one thing. Names it
+  has looked up are kept in a small file beside your key, holding names and ids
+  and nothing else. Anything that spends or deletes skips that file and asks the
+  platform again.
+- **Projects can be tidied up.** `project delete` prints the project, its name and
+  how many runs it holds before anything goes, asks whether the run history goes
+  with it, and removes nothing until you say yes.
 - **Uploading data is a command too.** `data upload` and `data search`. The one
-  place that handles your own files is no longer code typed out by hand.
+  place that handles your own files is no longer code typed out by hand. A folder
+  goes up as one bundle and a single file as itself, with no flag to remember.
 - **You now need pixi.** It takes over from `uv` as the tool this skill wants on
   your PATH. No other skill here needs it, and there is still nothing to install by
   hand: the first Edison command builds the environment it runs in. That took about

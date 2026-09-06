@@ -16,31 +16,37 @@ upload hands back, so the upload comes first.
 
 ```bash
 edison-cli data search --text "<name>"        # is it up already?
-edison-cli data upload /path/to/counts.csv    # prints data_entry:<uuid> as its first line
+edison-cli data upload /path/to/counts.csv    # DATA_URI: data_entry:<uuid>, then SHAPE: file
 ```
 
 Search first: re-uploading a dataset that is already there costs time and leaves two entries
-nobody can tell apart. The URI is the first line of output, and it is what `task submit --data`
-consumes.
+nobody can tell apart. `search` prints one `ENTRY:` line per match, URI first, ten at a time
+unless `-n` says otherwise. The path `upload` takes is a positional argument, not a flag.
+`DATA_URI:` is the first line of output and carries the URI `task submit --data` consumes;
+`SHAPE:` on the second line says which of the two upload shapes it took.
 
-**A directory has two shapes, and only one of them is a collection.** Uploaded as a plain path a
-directory takes the hierarchical route: one entry per file and per subdirectory, each hanging
-off a parent entry, `is_collection` false on all of them, and the URI you get back is the
-parent's. A directory should go up as the other shape instead — one zip, one entry, one URI:
+**The shape is chosen for you.** A directory goes up as a collection and a file as a file.
+Neither `--collection` nor `--no-collection` is required, and the pair exists only to override
+that default:
 
 ```bash
-edison-cli data upload /path/to/dataset-dir --collection \
+edison-cli data upload /path/to/dataset-dir \
   --name "<dataset name>" \
   --description "<what it holds, and what the columns mean>" \
   --ignore '*.bam'
 ```
 
-`--collection` zips the tree into a single collection entry, and `--ignore` is optional — the
-directory's own `.gitignore` is read anyway. Underneath, a plain path is `upload_file`, which
-returns the URI, and `--collection` is `store_file_content`, which returns the entry instead;
-the command builds the URI from `data_storage.id` either way, so both shapes print the same
-first line. A collection also comes back whole: `fetch_data_from_storage` extracts the zip, so
-what you fetch later is a directory again.
+A collection is `store_file_content(as_collection=True)`: one zip, one entry, one URI, and it
+comes back whole — `fetch_data_from_storage` extracts the zip, so what you fetch later is a
+directory again. `--no-collection` on a directory forces the other route instead, `upload_file`
+on the tree: one entry per file and per subdirectory, `is_collection` false on all of them, and
+the URI you get back is only the parent's. The command says on stderr that it is doing that.
+
+`--ignore PATTERN` repeats, and is **refused unless the upload is a collection** — the
+hierarchical route has nothing to apply it to. It is optional even there, because the
+directory's own `.gitignore` is read anyway. `upload_file` returns the URI and
+`store_file_content` returns the entry, so the command builds the URI from `data_storage.id`
+either way and both shapes print the same first line.
 
 ## Attach it to the task
 
@@ -59,6 +65,9 @@ both at once raises `ValueError`.
 edison-cli task fetch <task-id> --out <dir>            # answer, notebook, records
 edison-cli task fetch <task-id> --out <dir> --storage <id>   # one entry
 ```
+
+With `--out` the answer is written as `<task-id>.answer.md` rather than printed, and every line
+names the file it wrote (`tasks.md`).
 
 The answer and the notebook come off the response (`tasks.md`). Files the run *made* are listed
 by provenance, then fetched one at a time — `client.list_files(task_id)["data"]`, then
