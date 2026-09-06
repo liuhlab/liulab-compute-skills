@@ -104,6 +104,23 @@ class _Raw:
         return _Response([])
 
 
+class _NotFoundResponse:
+    status_code = 404
+    text = ""
+
+
+class _NotFound(Exception):
+    """What escapes the client when the platform has no route: the response rides along."""
+
+    response = _NotFoundResponse()
+
+
+def maybe_404(event):
+    """Answer one named call with a 404, so a command's own 404 sentence can be read."""
+    if os.environ.get("EDISON_STUB_404") == event:
+        raise _NotFound(event)
+
+
 class _Dumpable:
     def __init__(self, payload):
         self._payload = payload
@@ -151,6 +168,7 @@ class EdisonClient:
     # ---- one-shot tasks
     def create_task(self, task_data, files=None):
         record("create_task", task=str(task_data), files=files)
+        maybe_404("create_task")
         return TASK_ID
 
     def get_task(self, task_id=None, history=False, verbose=False, lite=False):

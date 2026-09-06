@@ -112,8 +112,12 @@ def _remedy(shown: str, reason: str) -> list[str]:
 
     Nothing here is secret — the placeholder is the shipped value — and the fix is printed
     rather than performed, because the user pastes their own key.
+
+    Every line is printed to be pasted, so the directory comes off the path with `Path` rather
+    than by splitting the string: `"/somewhere.env".rsplit("/", 1)[0]` is `""`, which printed a
+    `mkdir -p` with no operand at all for anyone who pointed `-f` at a root-level file.
     """
-    parent = shown.rsplit("/", 1)[0]
+    parent = Path(shown).parent
     return [
         f"edison: NOT CONFIGURED ({reason})",
         "",

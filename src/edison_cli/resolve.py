@@ -25,7 +25,11 @@ a source of truth:
 * **every command that spends or destroys resolves live and ignores it entirely.** A stale
   entry mapping a name to an id that was deleted and recreated is exactly how the wrong
   project gets deleted, so `project delete`, `kosmos start`, `kosmos stop` and `task submit`
-  never read it.
+  never read it;
+* **and the one command that destroys also forgets.** Resolving live protects `delete`
+  itself and nothing else: the entry it leaves behind is what the seven cached commands go
+  on reading afterwards. `forget` is what stops a dead id being handed out, and it is called
+  where the deletion happens rather than left to the next `--no-cache` somebody remembers.
 """
 
 from __future__ import annotations
@@ -106,6 +110,21 @@ def _read() -> dict[str, Any]:
     return loaded if isinstance(loaded, dict) else {}
 
 
+def _write(known: dict[str, Any]) -> None:
+    """Put the cache back on disk, owner-only. A cache that cannot be written is not used.
+
+    Never a failure: the command this is helping has real work to do, and on `forget` that
+    work has already happened.
+    """
+    try:
+        path = cache_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(known, indent=1, sort_keys=True), encoding="utf-8")
+        path.chmod(0o600)
+    except OSError:
+        return
+
+
 def remember(kind: str, scope: str, rows: list[dict[str, Any]]) -> None:
     """Record the names in one listing. Names and ids only, and a failure is not an error."""
     known = _read()
@@ -119,15 +138,31 @@ def remember(kind: str, scope: str, rows: list[dict[str, Any]]) -> None:
         name, found = str(row.get("name") or ""), str(row.get("id") or "")
         if name and found:
             inner[name] = found
-    try:
-        path = cache_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(known, indent=1, sort_keys=True), encoding="utf-8")
-        path.chmod(0o600)
-    except OSError:
-        # A cache that cannot be written is a cache that is not used. Never a failure: the
-        # command it is helping has real work to do.
+    _write(known)
+
+
+def forget(kind: str, target: UUID) -> None:
+    """Drop every remembered name for one id, because the thing it named is gone.
+
+    By id and across every scope, not by the name and persona the caller happened to type. A
+    project is remembered under the persona whose listing produced it, `project delete` takes
+    `--persona` only when a name has to be resolved, and the same id can have been listed
+    under more than one. Deleting only what this invocation could name would leave exactly the
+    entry that outlives it.
+    """
+    known = _read()
+    bucket = known.get(kind)
+    if not isinstance(bucket, dict):
         return
+    wanted, dropped = str(target), False
+    for inner in bucket.values():
+        if not isinstance(inner, dict):
+            continue
+        for name in [known_name for known_name, found in inner.items() if str(found) == wanted]:
+            del inner[name]
+            dropped = True
+    if dropped:
+        _write(known)
 
 
 def _recall(kind: str, scope: str, name: str) -> UUID | None:

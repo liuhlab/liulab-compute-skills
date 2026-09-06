@@ -1,6 +1,6 @@
 # Running a task without losing it
 
-> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1 and a live smoke test of `edison-cli` on 2026-09-06 · Checked: 2026-09-06 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`. Read it whenever a run has to be submitted, polled, recovered, cancelled
@@ -34,6 +34,8 @@ destroy: `project create`, `project list`, `project ensure`, `project add-task`,
 `kosmos status`, `kosmos tasks` and `task list`. The four that do — `task submit`, `kosmos start`,
 `kosmos stop` and `project delete` — always resolve live and take no such flag, because a
 remembered name pointing at an id that was deleted and made again is how the wrong project goes.
+A successful `project delete` also **forgets** the name it destroyed, in every persona it was
+remembered under: resolving live guards the delete itself and nothing after it.
 
 ## Submit, then print the id — `task submit`
 
@@ -51,6 +53,12 @@ The query is a file so that what the user confirmed is what goes out; an absent 
 refused. `TASK_ID: <id>` is the first line of output, before anything can block. A submission
 whose id was never printed is a spent credit with no handle, recoverable only by the search
 below.
+
+`[unverified]` **against the live platform.** The leading-id property is held up by the test
+suite's stub and by nothing that has been run for real: the only submission that would have cost
+nothing was `DUMMY`, and it 404s (`jobs.md`). Every other job bills, so proving it means paying
+for it. Read it as designed and tested, not as observed — and if a live run ever contradicts it,
+believe the run.
 
 ## Poll — `task status`
 

@@ -104,6 +104,11 @@ def delete(
 
     The summary is printed whether or not the delete proceeds, so a refusal still leaves the
     receipt behind — what was about to go, what it is called, and how much of it there was.
+
+    Resolving live guards this command and no other. The name cache still held the dead
+    project afterwards, so the seven commands that do read it could go on resolving a name to
+    an id the platform had thrown away — which is the hazard resolving live was for, arriving
+    one command later. `resolve.forget` closes it, after the receipt is printed.
     """
     doomed, owner = resolve.both(client, project_value=project, persona_value=persona, live=True)
     rows = client.get_tasks(project_id=doomed.id, limit=200)
@@ -128,6 +133,7 @@ def delete(
 
     client.delete_project(doomed.id, delete_trajectories=delete_tasks)
     say("DELETED: yes")
+    resolve.forget("projects", doomed.id)
     return 0
 
 

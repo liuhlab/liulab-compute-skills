@@ -154,5 +154,5 @@ It is not.
 
 That environment lives inside the plugin's own folder, not in any project of
 yours. An update puts the new version of the plugin in a fresh folder, so the
-build runs once more after each update. It is quicker then, a few seconds, because
-the downloads are already on your disk.
+build runs once more after each update. It is quicker then, about ten seconds
+where it was measured, because the downloads are already on your disk.

@@ -91,11 +91,16 @@ Session = Annotated[str, typer.Option("--session", metavar="ID", help="the chat 
 TaskId = Annotated[str, typer.Argument(metavar="TASK_ID", help="the task's id")]
 
 
-def _guard(work: Callable[[], int]) -> None:
+def _guard(work: Callable[[], int], *, not_found: str = runtime.LOST_ID) -> None:
     """Run one command body, turning any failure into an exit code and never a traceback.
 
     A spend path answers in sentences. A traceback out of here would bury the one line that
     says whether anything was charged.
+
+    `not_found` is what a 404 means for THIS command. This is the only place a client failure
+    is turned into a sentence, and it cannot see which call raised — so the command says in
+    advance. The default fits the many commands that hand the platform an id; `task submit`
+    hands it none, and told the reader to go and find one with `task list`.
     """
     try:
         code = work()
@@ -103,7 +108,7 @@ def _guard(work: Callable[[], int]) -> None:
         note(f"edison-cli: {refusal}")
         raise typer.Exit(refusal.code) from None
     except Exception as exc:
-        note(f"edison-cli: {sentence(exc)}")
+        note(f"edison-cli: {sentence(exc, not_found=not_found)}")
         raise typer.Exit(1) from None
     if code:
         raise typer.Exit(code)
@@ -113,6 +118,8 @@ def _spend(
     key_file: str | None,
     work: Callable[[Any], int],
     precheck: Callable[[], None] | None = None,
+    *,
+    not_found: str = runtime.LOST_ID,
 ) -> None:
     """Check the arguments, then the machine, then build the one client and do the work."""
 
@@ -121,7 +128,7 @@ def _spend(
             precheck()
         return work(runtime.client(key_file))
 
-    _guard(run)
+    _guard(run, not_found=not_found)
 
 
 def _ids(
@@ -465,6 +472,7 @@ def task_submit(
             persona=persona,
         ),
         precheck,
+        not_found=tasks.SUBMIT_404,
     )
 
 

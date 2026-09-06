@@ -1,12 +1,12 @@
 # Kosmos
 
-> **Provenance** — Source: `edison-client` 0.16.1, the live run of 2026-09-05, and the vendor's Kosmos and client guides · Checked: 2026-09-05 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1, the live run of 2026-09-05, a smoke test on 2026-09-06, and the vendor's Kosmos and client guides · Checked: 2026-09-06 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`. Read it whenever a user says Kosmos. Most of what this page is for
 happens before a run starts, because a run is the expensive part.
 
-## What Kosmos is on this platform
+## What Kosmos is
 
 Not a job you submit. A **chat session on a project**, which fans the objective out into
 many ordinary tasks over several rounds until it decides it is done.
@@ -35,16 +35,16 @@ It is absent from `JobNames` because `JobNames` enumerates the **one-shot task**
 `create_task` takes. Kosmos is on the **chat** surface instead. Two API surfaces, and the
 enum describes one of them.
 
-`[read]` The vendor's client page says, just after that enum, that Kosmos is not available via
-the API. That is a claim about job names: there is no `JobNames.KOSMOS`, and `create_task`
+`[read]` The vendor's client page says Kosmos is not available via the API.
+That is a claim about job names: there is no `JobNames.KOSMOS`, and `create_task`
 cannot start a run. The chat methods that do — `send_chat_message`, `queue_chat_message`,
-`get_conversation` — are ordinary typed client surface. The vendor's tasks page covers tasks.
+`get_conversation` — are ordinary typed client surface.
 
 ## Starting a run
 
 `SKILL.md` carries the rule: never start a run the user has not asked for in those words.
-This page is where it bites — everything needed is named here, which makes an accidental
-start easier from here than from the browser, not harder.
+Everything a start needs is named below, which makes an accidental one easier from here than
+from the browser.
 
 `[verified]` **with the persona correction**, end to end on 2026-09-05. Three commands; only the
 last one spends:
@@ -57,25 +57,24 @@ edison-cli kosmos start --project ID|NAME --persona ID|NAME --objective-file <fi
 
 Both take a name instead of an id (`tasks.md`). `kosmos start` prints, in order and before
 anything can block: `PROJECT_ID`, the `JOB_NAME` it read off the persona,
-`PERSONA_OWNS_PROJECT: yes`, `SESSION_ID`, and runnable `STOP:` and `STATUS:` lines. It
-**refuses before sending** if the persona does not own the project. There is no other stop path,
-so keep the `STOP:` line.
+`PERSONA_OWNS_PROJECT: yes`, `SESSION_ID`, runnable `STOP:` and `STATUS:` lines, and last
+`CHAT_STATUS:` — `pending` at the start `[verified]` — plus `CHAT_CLAIM_NAME:`, `CHAT_POD_NAME:`
+and `CHAT_LOGS_URL:` for whichever the response carried. It **refuses before sending** if the
+persona does not own the project. There is no other stop path, so keep the `STOP:` line.
 
 **A persona is not optional, and the surface has no persona-less form.** `create_project`
 without one returns a project no persona owns; the API accepts that happily and the chat
-endpoint then answers **500**. A 500 is in the client's retryable set, so it is re-raised raw
-instead of being wrapped, and the response body never reaches you — which is why the error names
-no field. Nothing is created and nothing is charged. Confirmed both ways: the persona-less
-project 500'd, the persona-owned one started at once.
+endpoint then answers **500**. A 500 is in the client's retryable set, so it comes back raw and
+bodiless — which is why the error names no field. Nothing is created and nothing is charged.
+Confirmed both ways: the persona-less project 500'd, the persona-owned one started at once.
 
 The persona id has no route through the client: no method lists personas, and
 `list_persona_owned_projects`, `create_project` and `get_project_by_name` all want the id you
 are hunting for. `persona list` goes under the client to `GET /v0.1/personas` on the
 authenticated httpx client it exposes as `.client`.
 
-Ownership comes with construction: `create` and `ensure` both take `--persona`. A run in an
-orphan project never appears under the persona in the browser, and a run nobody can find is a
-failed run.
+Ownership comes with construction: `create` and `ensure` both take `--persona`, and a run in an
+orphan project never appears under the persona in the browser.
 
 ## Stopping a run
 
@@ -96,9 +95,8 @@ edison-cli kosmos stop --project ID|NAME --session <id> [--persona ID|NAME]
 One command, two steps in a fixed order: queue the halt **first**, then cancel every task still
 `queued` or `in progress`. The other way round the orchestrator refills them
 while you work, which is why the order is pinned by a test. `cancel_task` returning `False`
-means the task went terminal between the listing and the call — its documented behaviour, not an
-error, and the command reports it as such. Against a real running task the stop is clean and
-silent.
+means the task went terminal between the listing and the call — documented behaviour, not an
+error, and the command reports it as such.
 
 ## Reading a run that already exists — free
 
@@ -112,14 +110,20 @@ edison-cli task fetch <task-id> --out <dir>                  # what one task pro
 ```
 
 `status` prints the fan-out and the last `--tail` utterances, six by default. It and `tasks`
-take `--persona` to resolve a project name and `--no-cache` to re-list rather than trust a
-remembered one; `start` and `stop` take no `--no-cache`, because they resolve live.
+take `--persona` for a project name and `--no-cache` to re-list; `start` and `stop` take no
+`--no-cache` — they resolve live.
+
+`[verified]` **A new project arrives with a session already in it.** On 2026-09-06 a
+`project ensure` produced one about seven seconds later — one canned `Hello! I'm …` greeting,
+no tasks, and no `kosmos start` anywhere near it. It costs nothing, but `kosmos sessions` then
+lists one per project, and a reader hunting a lost run can take it for the run. Zero tasks and a
+lone greeting is that session, not a run that died.
 
 `[verified]` From the session id alone the project id, the whole fan-out and the transcript all
 come back — `get_session` returns the project id as `type_id`, which is why `kosmos sessions`
-prints the project beside the session on every `SESSION:` line. A session id on its own is a
-dead end: `status`, `tasks` and `stop` all need both. It is the way back to a session id nobody
-wrote down. Underneath: `get_conversations`, `get_session` (a **list** of one),
+prints the project beside every session. A session id on its own is a dead end: `status`,
+`tasks` and `stop` all need both. It is the way back to a session id nobody wrote down.
+Underneath: `get_conversations`, `get_session` (a **list** of one),
 `get_tasks(project_id=…)`, `get_conversation`, `list_files(...)["data"]`. Several hand back a
 container rather than the thing itself; the commands unwrap them.
 
@@ -131,9 +135,9 @@ timeout — read them before deciding a run has hung.
 
 ## Briefing the run
 
-What the user types into a run is the part you can improve. Vendor guidance, from
-<https://docs.edisonscientific.com/guides/best-practices-for-optimizing-kosmos-workflows>,
-fetched 2026-09-05:
+The objective is the part you can improve. Vendor guidance, from
+<https://docs.edisonscientific.com/guides/best-practices-for-optimizing-kosmos-workflows>, fetched
+2026-09-05:
 
 - **One well-defined objective**, with room for the run to generate hypotheses and test
   them as it goes. Not a list of separate questions.
@@ -159,10 +163,8 @@ Same source, same date:
 No figures here: the vendor's pricing page did not resolve. `[verified]`
 **Billing is per task execution** — the credit ledger holds one row per task, at an amount
 that differs by job, so the task count is the bill and `kosmos tasks` reads as a cost. That
-sum grows round after round, with a second level of children nobody asked for.
-The one run made here was still dispatching when it was deliberately stopped. The persona's
-`budget_config` is the only ceiling visible anywhere in the API, and whether it stops a
-runaway run is untested.
+sum grows round after round. The persona's `budget_config` is the only ceiling visible
+anywhere in the API, and whether it stops a runaway run is untested.
 
 `[verified]` The client exposes no credits or balance call, so no number can be checked
 before spending. Send the user to their credits page.

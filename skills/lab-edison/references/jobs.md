@@ -1,6 +1,6 @@
 # Jobs, and how to run one
 
-> **Provenance** — Source: `edison-client` 0.16.1 and this repo's own `pyproject.toml` · Checked: 2026-09-05 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1, this repo's own `pyproject.toml`, and a live smoke test of `edison-cli` on 2026-09-06 · Checked: 2026-09-06 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`, and the first page to read in a session: nothing is submitted until a
@@ -20,11 +20,11 @@ one in a response's `job_name` — or under `crow`, which is what task history c
 | Chemistry — molecules, properties, synthesis | `MOLECULES` | `job-futurehouse-data-analysis-molecules` |
 | Something about a dataset the user supplies | `ANALYSIS` | `job-futurehouse-data-analysis-crow-high` |
 
-`ANALYSIS` is driven from `datasets.md`; it is in the table so the routing is complete.
-`DUMMY` (`job-futurehouse-dummy-env`) exercises the plumbing and does no science. `CROW`, `FALCON`, `OWL` and `FINCH` are older spellings of four of the rows above —
-use the canonical member, so the transcript and the table agree. They share their values with
-the canonical members, so Python folds them into aliases and `list(JobNames)` yields **seven**
-members, not eleven: a listing that looks to be missing `CROW` is complete.
+`ANALYSIS` is driven from `datasets.md`; it is in the table so the routing is complete. `CROW`,
+`FALCON`, `OWL` and `FINCH` are older spellings of four of the rows above — use the canonical
+member, so the transcript and the table agree. They share their values with the canonical
+members, so Python folds them into aliases and `list(JobNames)` yields **seven** members, not
+eleven: a listing that looks to be missing `CROW` is complete.
 
 ## Never guess a job-name string
 
@@ -36,13 +36,22 @@ which is exactly the thing to avoid. A wrong guess teaches you that one string w
 guess starts a run the user never asked for and bills it to them. Route from the table above, and
 when no row fits, say so and ask.
 
-## The retired chemistry job
+## The two members this command will not send
 
-The enum still carries `PHOENIX`, and the package's own comment on it is the whole warning:
-kept for historical phoenix jobs only, **new submissions will get 404 and should use `MOLECULES`
-instead**. So every chemistry request routes to `MOLECULES`. If a molecules run fails, that is an
-ordinary failure — the retired name is not a fallback, and reaching for it turns one failure into
-a 404.
+Both are in `JobNames` and neither is on the allow-list, so `--job` refuses them before the
+network and says which one it is rather than calling a real member unknown.
+
+**`PHOENIX`.** The package's own comment is the whole warning: kept for historical phoenix jobs
+only, **new submissions will get 404 and should use `MOLECULES` instead**. So every chemistry
+request routes to `MOLECULES`. If a molecules run fails, that is an ordinary failure — the retired
+name is not a fallback, and reaching for it turns one failure into a 404.
+
+**`DUMMY`** (`job-futurehouse-dummy-env`) was written up here as the cheap way to exercise the
+plumbing — a claim read off the package and never once run. `[verified]` A submission of it
+answered **404** on 2026-09-06 and created nothing. That is one account on one day and not a
+platform-wide retirement — but nothing routes to it, it does no science, and it behaves exactly
+like `PHOENIX`, so it came off the allow-list with it. `tasks.md` records what that cost: the
+one free submission anybody could have made turned out not to exist.
 
 ## Running the client
 
