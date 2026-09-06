@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <url>
+        <loc>https://liuhlab.github.io/liulab-compute-skills/</loc>
+      </url>
+      <url>
+        <loc>https://liuhlab.github.io/liulab-compute-skills/usage/</loc>
+      </url>
+      <url>
+        <loc>https://liuhlab.github.io/liulab-compute-skills/skills/lab-hpc/</loc>
+      </url>
+      <url>
+        <loc>https://liuhlab.github.io/liulab-compute-skills/skills/lab-jupyter/</loc>
+      </url>
+      <url>
+        <loc>https://liuhlab.github.io/liulab-compute-skills/skills/lab-containers/</loc>
+      </url>
+      <url>
+        <loc>https://liuhlab.github.io/liulab-compute-skills/skills/lab-edison/</loc>
+      </url>
+</urlset>
