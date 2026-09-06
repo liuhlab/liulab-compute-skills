@@ -104,7 +104,7 @@ None of this spends anything, and it is usually what the user wants:
 
 ```bash
 edison-cli kosmos sessions [-n <n>]      # session, project, time - back from a lost id
-edison-cli kosmos status --project ID|NAME --session <id> [--tail <n>]
+edison-cli kosmos status --project ID|NAME --session <id> [--tail <n>]   # ATTACHED: what the platform kept of --data
 edison-cli kosmos tasks --project ID|NAME --session <id>
 edison-cli task fetch <task-id> --out <dir>                  # one task's own answer, if it has one
 ```

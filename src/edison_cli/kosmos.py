@@ -23,7 +23,7 @@ from collections import Counter
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from edison_cli import personas, projects, resolve
+from edison_cli import datasets, personas, projects, resolve
 from edison_cli.runtime import (
     Refusal,
     as_dict,
@@ -93,12 +93,44 @@ def _summarise(rows: list[dict[str, Any]]) -> None:
         say(f"ROUND: {minute}\tn={len(batch)}\t{dict(jobs)}")
 
 
-def _utterances(client: EdisonClient, session: Any) -> list[tuple[str, str]]:
-    """Read what the run actually said, out of the tool-call arguments rather than `content`."""
+def _conversation(client: EdisonClient, session: Any) -> list[dict[str, Any]]:
+    """Read the run's turns once. `status` wants two different things out of the same call."""
     detail = as_dict(client.get_conversation(session, limit=1000))
+    return [as_dict(message) for message in detail.get("messages") or []]
+
+
+def _attached(messages: list[dict[str, Any]]) -> list[str]:
+    """Read what the PLATFORM stored as the run's attachments, in the spelling `DATA:` prints.
+
+    `send_chat_message` writes the ids into the outgoing message's `info`, and the
+    conversation hands that dict straight back. So this is the platform's own record of what
+    it bound to the run — the only thing that separates an attachment the field dropped from
+    one the agent simply never opened, and it costs nothing to read.
+
+    It normalises through `datasets.uri` because the two ends spell an entry differently: we
+    send `data_entry:<uuid>` and the platform stores the bare stem. Unnormalised, `DATA:` and
+    `ATTACHED:` cannot be compared by eye, which is the whole point of printing them.
+
+    Guarded like `_project_of`, and for the same reason: `info` is the platform's dict, typed
+    `dict | None`, and one malformed one must not cost the reader the rest of `status`.
+    """
+    stored: list[str] = []
+    for message in messages:
+        info = message.get("info")
+        if not isinstance(info, dict):
+            continue
+        ids = info.get("data_storage_ids")
+        if not isinstance(ids, list | tuple):
+            continue
+        stored.extend(datasets.uri(entry) for entry in ids)
+    return stored
+
+
+def _utterances(messages: list[dict[str, Any]]) -> list[tuple[str, str]]:
+    """Read what the run actually said, out of the tool-call arguments rather than `content`."""
     said: list[tuple[str, str]] = []
-    for message in detail.get("messages") or []:
-        for call in as_dict(message).get("tool_calls") or []:
+    for message in messages:
+        for call in message.get("tool_calls") or []:
             function = as_dict(call).get("function") or {}
             try:
                 arguments = json.loads(function.get("arguments") or "{}")
@@ -186,7 +218,11 @@ def start(
 def status(
     client: EdisonClient, *, project: str, persona: str | None, session: str, tail: int, live: bool
 ) -> int:
-    """Poll one run: the fan-out so far, and the last few things it said."""
+    """Poll one run: the fan-out, what the platform kept of the data, and the last few utterances.
+
+    `ATTACHED:` is the other half of `start`'s `DATA:`. One says what was sent, the other what
+    the platform stored against the message, so a dropped attachment stops being invisible.
+    """
     run_project = resolve.both(client, project_value=project, persona_value=persona, live=live)[
         0
     ].id
@@ -194,7 +230,13 @@ def status(
     say(f"PROJECT_ID: {run_project}")
     say(f"SESSION_ID: {run_session}")
     _summarise(_rows(client, run_project))
-    said = _utterances(client, run_session)
+    messages = _conversation(client, run_session)
+    # Beside the fan-out rather than among the utterances: it is a fact about the run, and it
+    # is what `DATA:` from the start is read against. A run started without data has none, and
+    # a placeholder line here would be indistinguishable from an attachment that was dropped.
+    for entry in _attached(messages):
+        say(f"ATTACHED: {entry}")
+    said = _utterances(messages)
     say(f"N_UTTERANCES: {len(said)}")
     for kind, text in said[-tail:]:
         say(f"[{kind}] {clipped(text, 700)}")

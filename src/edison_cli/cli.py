@@ -378,7 +378,7 @@ def kosmos_status(
     no_cache: NoCache = False,
     key_file: KeyFile = None,
 ) -> None:
-    """Poll one run: the fan-out so far, and the last few things it said."""
+    """Poll one run: the fan-out, what the platform kept of --data, and the last few utterances."""
     _spend(
         key_file,
         lambda client: kosmos.status(

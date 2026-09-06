@@ -28,7 +28,7 @@ CALLED = {
     "create_project": ("name", "description", "persona_id"),
     "list_persona_owned_projects": ("persona_id", "limit"),
     "add_task_to_project": ("project_id", "trajectory_id"),
-    "send_chat_message": ("project_id", "message", "job_name"),
+    "send_chat_message": ("project_id", "message", "job_name", "data_storage_ids"),
     "queue_chat_message": ("session_id", "project_id", "message"),
     "get_conversation": ("session_id", "limit"),
     "get_conversations": ("limit",),
@@ -65,6 +65,18 @@ def test_every_method_this_package_calls_exists_with_the_arguments_it_passes(
     parameters = inspect.signature(function).parameters
     for name in arguments:
         assert name in parameters, f"{method} no longer takes {name}"
+
+
+def test_a_conversation_message_still_carries_what_was_attached_to_it() -> None:
+    """`kosmos status` reads the platform's record of the attachment out of `info`.
+
+    Nothing else on this surface says whether an attachment survived the send. If the field
+    went away, `status` would print nothing — and a run whose attachment was dropped looks
+    exactly like a run that was started without one.
+    """
+    from edison_client.models.chat import ConversationMessage
+
+    assert "info" in ConversationMessage.model_fields
 
 
 def test_the_authenticated_http_client_is_still_reachable_under_the_client() -> None:

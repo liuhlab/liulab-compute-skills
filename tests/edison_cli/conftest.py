@@ -240,7 +240,15 @@ class EdisonClient:
         said = long_text("what the run said")
         call = {{"function": {{"name": "send_message",
                              "arguments": json.dumps({{"display_text": said}})}}}}
-        return _Dumpable({{"messages": [{{"role": "assistant", "content": "", "tool_calls": [call]}}]}})
+        messages = [{{"role": "assistant", "content": "", "tool_calls": [call]}}]
+        # What the platform bound to the user's turn travels back as `info`. A test writes the
+        # whole value as JSON, so it can hand over shapes the model's `dict | None` allows and
+        # shapes no reader would expect.
+        info = os.environ.get("EDISON_STUB_INFO")
+        if info is not None:
+            turn = {{"role": "user", "content": "the objective", "info": json.loads(info)}}
+            messages.insert(0, turn)
+        return _Dumpable({{"messages": messages}})
 
     def get_session(self, session_id):
         record("get_session", session_id=session_id)
