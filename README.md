@@ -114,7 +114,8 @@ claude plugin marketplace update liulab
 claude plugin update lab-compute@liulab
 ```
 
-(or `git pull` for clone-based installs).
+(or `git pull` for clone-based installs). Claude Code loads plugins when it
+starts, so restart your session before the updated skills are there.
 
 ## Testing
 

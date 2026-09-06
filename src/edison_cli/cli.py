@@ -60,7 +60,9 @@ kosmos_app = typer.Typer(
 task_app = typer.Typer(
     help="The one-shot lifecycle: submit, poll, list, fetch, cancel.", no_args_is_help=True
 )
-data_app = typer.Typer(help="Datasets: upload one, find one already there.", no_args_is_help=True)
+data_app = typer.Typer(
+    help="Datasets: upload one, find one already there, download one.", no_args_is_help=True
+)
 app.add_typer(persona_app, name="persona")
 app.add_typer(project_app, name="project")
 app.add_typer(kosmos_app, name="kosmos")
@@ -374,15 +376,29 @@ def kosmos_status(
     project: Project,
     session: Session,
     tail: Annotated[int, typer.Option("--tail", help="how many recent utterances to print")] = 6,
+    full: Annotated[
+        bool,
+        typer.Option("--full", help=f"print them whole, not cut at {kosmos.UTTERANCE_CHARS} chars"),
+    ] = False,
     persona: OwnerOf = None,
     no_cache: NoCache = False,
     key_file: KeyFile = None,
 ) -> None:
-    """Poll one run: the fan-out, what the platform kept of --data, and the last few utterances."""
+    """Poll one run: the fan-out, what the platform kept of --data, and the last few utterances.
+
+    An utterance is cut at 700 characters and the cut is marked. --full prints it whole, and
+    --tail 1 --full is how to read a finished run's answer, which is the one that is long.
+    """
     _spend(
         key_file,
         lambda client: kosmos.status(
-            client, project=project, persona=persona, session=session, tail=tail, live=no_cache
+            client,
+            project=project,
+            persona=persona,
+            session=session,
+            tail=tail,
+            live=no_cache,
+            full=full,
         ),
         lambda: _ids(project=project, persona=persona, session=session),
     )
@@ -584,6 +600,28 @@ def data_upload(
         ),
         precheck,
     )
+
+
+@data_app.command("get")
+def data_get(
+    storage: Annotated[
+        str,
+        typer.Option("-s", "--storage", metavar="URI", help="the data_entry: URI to download"),
+    ],
+    out: Annotated[
+        str | None,
+        typer.Option(
+            "-o", "--out", metavar="DIR", help="keep it here; without this it is temporary"
+        ),
+    ] = None,
+    key_file: KeyFile = None,
+) -> None:
+    """Download one data entry — a Kosmos run's deliverables are entries.
+
+    `task fetch --storage` does the same thing and is kept for the one-shot flow, but it
+    demands a task id it never reads. This is the spelling that asks for nothing it ignores.
+    """
+    _spend(key_file, lambda client: datasets.get(client, storage=storage, out=out))
 
 
 @data_app.command("search")

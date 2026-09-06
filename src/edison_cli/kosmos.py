@@ -53,6 +53,11 @@ HALT = (
 # will render — which is what keeps the `STOP:` line at the bottom of it visible.
 ECHO_LINES = 20
 
+# How much of one utterance `status` prints by default. Six of these is already a wall of text,
+# and a poll that floods the transcript is a poll nobody runs twice. `--full` is the way past
+# it; the cap is what stops every poll paying for the one time somebody wanted the whole answer.
+UTTERANCE_CHARS = 700
+
 
 def _rows(client: EdisonClient, project: Any) -> list[dict[str, Any]]:
     """List every task under the run's project, which is the fan-out and the bill."""
@@ -216,12 +221,29 @@ def start(
 
 
 def status(
-    client: EdisonClient, *, project: str, persona: str | None, session: str, tail: int, live: bool
+    client: EdisonClient,
+    *,
+    project: str,
+    persona: str | None,
+    session: str,
+    tail: int,
+    live: bool,
+    full: bool,
 ) -> int:
     """Poll one run: the fan-out, what the platform kept of the data, and the last few utterances.
 
     `ATTACHED:` is the other half of `start`'s `DATA:`. One says what was sent, the other what
     the platform stored against the message, so a dropped attachment stops being invisible.
+
+    `full` IS A SWITCH AND NOT A `--chars N` OVERRIDE, and the choice is not arbitrary. The
+    text this cap falls on is the run's final answer — the thing the whole run was paid for,
+    ten thousand characters of it on the first real run, of which seven per cent was
+    reachable. Nobody knows N in advance: the reader would have to take the number off the
+    `[+9525 chars cut]` marker, add it to 700, and run the command again, and a guess that
+    came up short would cut the answer a second time with a marker that looked just as
+    finished. A switch cannot be got wrong. `--tail 1 --full` names exactly one utterance and
+    prints it whole, which is the request this exists for; the default stays capped, so the
+    poll that runs every few minutes still cannot flood a transcript.
     """
     run_project = resolve.both(client, project_value=project, persona_value=persona, live=live)[
         0
@@ -239,7 +261,7 @@ def status(
     said = _utterances(messages)
     say(f"N_UTTERANCES: {len(said)}")
     for kind, text in said[-tail:]:
-        say(f"[{kind}] {clipped(text, 700)}")
+        say(f"[{kind}] {text if full else clipped(text, UTTERANCE_CHARS)}")
     return 0
 
 

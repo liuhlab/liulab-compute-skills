@@ -104,20 +104,21 @@ None of this spends anything, and it is usually what the user wants:
 
 ```bash
 edison-cli kosmos sessions [-n <n>]      # session, project, time - back from a lost id
-edison-cli kosmos status --project ID|NAME --session <id> [--tail <n>]   # ATTACHED: what the platform kept of --data
+edison-cli kosmos status --project ID|NAME --session <id> [--tail <n>] [--full]   # ATTACHED: what the platform kept of --data
 edison-cli kosmos tasks --project ID|NAME --session <id>
 edison-cli task fetch <task-id> --out <dir>                  # one task's own answer, if it has one
+edison-cli data get --storage data_entry:<uuid> --out <dir>  # one deliverable (datasets.md)
 ```
 
-`status` prints the fan-out and the last `--tail` utterances, six by default. It and `tasks`
-take `--persona` for a project name and `--no-cache` to re-list; `start` and `stop` take no
-`--no-cache` — they resolve live. Both mark a line they cut with `… [+N chars cut]`; an
-unmarked line is complete.
+`status` prints the fan-out and the last `--tail` utterances, six by default, whole with
+`--full`. It and `tasks` take `--persona` for a project name and `--no-cache` to re-list;
+`start` and `stop` take no `--no-cache` — they resolve live. Both mark a line they cut with
+`… [+N chars cut]`; an unmarked line is complete.
 
 `[verified]` **A fan-out subtask normally carries no answer of its own.** `HAS_ANSWER: no`
 under `STATUS: success` was all five fetched: `paperqa3-api` and `heron` children leave their
-output in the transcript and in `data_entry:` deliverables. Read `kosmos status` and fetch the
-entries it names.
+output in the transcript and in `data_entry:` deliverables the transcript never names.
+`data search` finds them (`datasets.md`).
 
 `[verified]` **A new project arrives with a session already in it.** A `project ensure`
 produced one about seven seconds later — one canned `Hello! I'm …` greeting and no tasks. It

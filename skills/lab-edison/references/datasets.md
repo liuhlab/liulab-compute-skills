@@ -1,6 +1,6 @@
 # Datasets: upload, attach, fetch what the run made
 
-> **Provenance** — Source: `edison-client` 0.16.1 and the vendor's Kosmos best-practices guide · Checked: 2026-09-05 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1, a finished run and the vendor's Kosmos best-practices guide · Checked: 2026-09-06 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`. Read it whenever a run takes data with the question: `ANALYSIS` needs a
@@ -29,6 +29,11 @@ unless `-n` says otherwise. The path `upload` takes is a positional argument, no
 a phrase that appears nowhere but its description. The description column of an `ENTRY:` line
 is cut at 60 characters and a cut one ends in `… [+N chars cut]`, so on a marked line the term
 you matched on may be in the part that went.
+
+`[verified]` Fourteen probes, one account, 2026-09-05. **A miss proves nothing**: ranking stops
+before the corpus does, so a matching entry can be absent from `-n 40`. Report it as unproven.
+It is not account-scoped, and the `data_entry:` slug a transcript prints is not an index key —
+use spaced words instead.
 
 **The shape is chosen for you.** A directory goes up as a collection and a file as a file.
 Neither `--collection` nor `--no-collection` is required, and the pair exists only to override
@@ -92,19 +97,21 @@ only receipt — read it, and if an entry is missing from it the run did not get
 user turn's `info.data_storage_ids` and spelled the way `DATA:` spelled it, so the two lists
 compare by eye: `DATA:` is what was sent, `ATTACHED:` is what the platform bound to the message.
 An entry on one and not the other is worth reporting. `ATTACHED:` confirms that record and
-nothing further — **not** that any task opened the file. Only the transcript says that.
+nothing further — **not** that any task opened the file. Only the deliverables say that.
 
-`[verified]` **A run has been started with one**, on 2026-09-05: the send was accepted, the
-`DATA:` line printed in the leading block, and the run dispatched. `[unverified]` **What the run
-then does with the entry.** Whether any task opens it is still unread — `ATTACHED:` answers only
-whether the platform kept the record.
+`[verified]` **A run was started with one and the fan-out read it**, 2026-09-05 to 2026-09-06:
+its deliverables cite attached files by line range, one never inlined in the objective. **The transcript shows none of that.** `[read]` The citations name a `user_uploads/`
+prefix beside the run's `derived_artifacts/`: its convention, not a path.
 
 ## Fetch what the run produced
 
 ```bash
-edison-cli task fetch <task-id> --out <dir>            # answer, notebook, records
-edison-cli task fetch <task-id> --out <dir> --storage <id>   # one entry
+edison-cli task fetch <task-id> --out <dir>                       # answer, notebook, records
+edison-cli data get --storage data_entry:<uuid> --out <dir>       # one entry, no task id
 ```
+
+**`data get` downloads one entry** — a Kosmos run's deliverables are entries `data search`
+finds.
 
 With `--out` the answer is written as `<task-id>.answer.md` rather than printed, and every line
 names the file it wrote (`tasks.md`).

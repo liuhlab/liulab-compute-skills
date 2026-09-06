@@ -6,6 +6,10 @@ from pathlib import Path
 
 from tests.edison_cli.conftest import ACCOUNT, PERSONA_ID, PROJECT_ID, TASK_ID, Harness
 
+# The id every entry on the fake platform wears — `_Entry.id` in the stub, and what an upload
+# prints back. A download is addressed by it, with or without the `data_entry:` prefix.
+ENTRY_ID = "66666666-6666-4666-8666-666666666666"
+
 
 def test_project_create_prints_the_id_first_and_confirms_ownership(edison: Harness) -> None:
     """A project no persona owns is invisible in the browser, so the answer is not optional."""
@@ -197,6 +201,54 @@ def test_data_search_prints_entries_without_an_account(edison: Harness) -> None:
     assert run.returncode == 0, run.stderr
     assert "ENTRY: data_entry:" in run.stdout
     assert ACCOUNT not in run.stdout
+
+
+def test_data_get_downloads_one_entry_and_asks_for_nothing_else(edison: Harness) -> None:
+    """A Kosmos run publishes its deliverables as entries, and nothing in `data` fetched one."""
+    edison.env["EDISON_STUB_ENTRY"] = "1"
+    out = edison.workspace / "deliverables"
+    run = edison.run(
+        "data",
+        "get",
+        "--storage",
+        f"data_entry:{ENTRY_ID}",
+        "-o",
+        str(out),
+        "-f",
+        str(edison.key_file),
+    )
+    assert run.returncode == 0, run.stderr
+    fetched = run.called("fetch_data_from_storage")
+    assert fetched[0]["data_storage_id"] == ENTRY_ID, "the data_entry: prefix was not stripped"
+    written = out / f"{ENTRY_ID}.txt"
+    assert written.is_file(), "the entry was not written, so --out kept nothing"
+    assert written.read_text(encoding="utf-8") == "the deliverable, whole"
+    assert f"FETCHED: {written}" in run.stdout
+    assert run.called("get_task") == [], "a download asked the platform about a task"
+
+
+def test_task_fetch_storage_is_the_same_download_and_still_works(edison: Harness) -> None:
+    """The one-shot flow documents `--storage`, so it keeps working — and is the same function.
+
+    Its `TASK_ID` positional is never read on this path. That is the accident `data get`
+    replaces, not a second implementation to keep in step.
+    """
+    edison.env["EDISON_STUB_ENTRY"] = "1"
+    out = edison.workspace / "by-the-old-route"
+    run = edison.run(
+        "task",
+        "fetch",
+        "an-id-this-path-never-reads",
+        "--storage",
+        ENTRY_ID,
+        "-o",
+        str(out),
+        "-f",
+        str(edison.key_file),
+    )
+    assert run.returncode == 0, run.stderr
+    assert (out / f"{ENTRY_ID}.txt").read_text(encoding="utf-8") == "the deliverable, whole"
+    assert run.called("get_task") == [], "the storage path read the task id after all"
 
 
 def test_task_list_prints_rows_without_an_account(edison: Harness) -> None:

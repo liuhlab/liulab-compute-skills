@@ -22,7 +22,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from edison_cli import resolve
+from edison_cli import datasets, resolve
 from edison_cli.runtime import (
     Refusal,
     identifier,
@@ -164,59 +164,20 @@ def cancel(client: EdisonClient, *, task_id: str) -> int:
     return 0
 
 
-def _keep(path: Path, out: str | None) -> None:
-    """Copy a fetched path out of the library's temporary directory when `--out` was given."""
-    import shutil
-
-    if not out:
-        say(f"FETCHED: {path} (temporary — pass --out <dir> to keep it)")
-        return
-    destination = Path(out) / path.name
-    if path.is_dir():
-        shutil.copytree(path, destination, dirs_exist_ok=True)
-    else:
-        shutil.copy2(path, destination)
-    say(f"FETCHED: {destination}")
-
-
-def _fetch_storage(client: EdisonClient, storage: str, out: str | None) -> int:
-    """Fetch one stored entry rather than the task's own answer."""
-    # The bare id, so a data_entry: prefix comes off first.
-    got = client.fetch_data_from_storage(storage.removeprefix("data_entry:"))
-    if got is None:
-        say("STORAGE: the entry holds nothing")
-        return 0
-    if isinstance(got, list):
-        for one in got:
-            _keep(one, out)
-        return 0
-    if isinstance(got, Path):
-        _keep(got, out)
-        return 0
-    content = getattr(got, "content", None)
-    if content is None:
-        say(f"STORAGE: {got}")
-    elif out:
-        destination = Path(out) / f"{storage.removeprefix('data_entry:')}.txt"
-        destination.write_text(str(content), encoding="utf-8")
-        say(f"FETCHED: {destination}")
-    else:
-        say("CONTENT:")
-        say(str(content))
-    return 0
-
-
 def fetch(client: EdisonClient, *, task_id: str, out: str | None, storage: str | None) -> int:
     """Print what the run produced, and with `--out` write all of it to disk.
 
     `--out` used to promise more than it kept: it wrote the notebook and copied storage
     downloads, and left the answer — the thing anyone actually wanted — in the transcript
     only. It writes the answer now, and every line below names the file it wrote.
+
+    `--storage` never reads `task_id`, so the honest spelling of a download is `data get`.
+    This path stays for the one-shot flow that documents it, and calls the same function.
     """
+    if storage:
+        return datasets.get(client, storage=storage, out=out)
     if out:
         Path(out).mkdir(parents=True, exist_ok=True)
-    if storage:
-        return _fetch_storage(client, storage, out)
 
     task = client.get_task(task_id)
     # A task can reach success carrying no answer, so this is the honest check. Whether it is
