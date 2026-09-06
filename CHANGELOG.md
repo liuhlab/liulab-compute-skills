@@ -5,6 +5,18 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.10 — 2026-09-05
+
+### Changed
+
+- `lab-edison`: the Kosmos page records that billing is per task execution, confirmed
+  against an account's own credit ledger, which carries one row per task at an amount
+  that differs by job. The task count is the bill, so `kosmos tasks` reads as a cost.
+- `lab-edison`: the page now states that the client exposes no credits or balance call.
+  A number cannot be read, shown or checked before spending, so the advice to send the
+  user to their own credits and activity page is the only route there is, rather than
+  caution. Recorded so the next reader does not go looking for an API that is absent.
+
 ## 2026.9.9 — 2026-09-05
 
 The code that spends your Edison credits moved out of a shell script and into a

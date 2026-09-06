@@ -156,10 +156,13 @@ Same source, same date:
 
 ## Cost
 
-No figures here: the vendor's pricing page did not resolve on 2026-09-05 and the numbers in
-circulation are unconfirmed. The shape
-is not a multiplier: **a run is billed as the sum of the ordinary tasks it fans out to**, and
-that sum grows round after round, with a second level of children the run never had to ask
-for. The one run made here was still dispatching when it was deliberately stopped. The
-persona's `budget_config` is the only ceiling visible anywhere in the API, and whether it
-stops a runaway run is untested. Send the user to their platform balance for the real number.
+No figures here: the vendor's pricing page did not resolve. `[verified]`
+**Billing is per task execution** — the credit ledger holds one row per task, at an amount
+that differs by job, so the task count is the bill and `kosmos tasks` reads as a cost. That
+sum grows round after round, with a second level of children nobody asked for.
+The one run made here was still dispatching when it was deliberately stopped. The persona's
+`budget_config` is the only ceiling visible anywhere in the API, and whether it stops a
+runaway run is untested.
+
+`[verified]` The client exposes no credits or balance call, so no number can be checked
+before spending. Send the user to their credits page.
