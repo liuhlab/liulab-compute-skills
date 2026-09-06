@@ -85,8 +85,9 @@ stdout. With `--out` the answer is written as `<task-id>.answer.md` and the line
 copied out of the library's temporary directory and named by a `FETCHED:` line. Then one `FILE:`
 line per provenance record, with whatever identified the account stripped out. The record is
 printed whole; the storage id is its `data_storage_id` field `[verified]` (also
-`data_storage.id`). Read the id out of it and pass it back as `--storage`. `datasets.md` has the
-calls underneath.
+`data_storage.id`). Read the id out of it and pass it back — to `--storage` here, or to
+`edison-cli data get`, which downloads one entry and demands no task id. `datasets.md` has that
+command and the calls underneath.
 
 `get_task` picks the response class from the job name.
 

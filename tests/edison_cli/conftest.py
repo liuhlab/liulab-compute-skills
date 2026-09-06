@@ -155,6 +155,12 @@ class _Entry:
     id = "66666666-6666-4666-8666-666666666666"
 
 
+class _Fetched:
+    """A text entry as `fetch_data_from_storage` hands it back: content on an attribute."""
+
+    content = "the deliverable, whole"
+
+
 class _Stored:
     data_storage = _Entry()
 
@@ -206,7 +212,8 @@ class EdisonClient:
 
     def fetch_data_from_storage(self, data_storage_id=None):
         record("fetch_data_from_storage", data_storage_id=data_storage_id)
-        return None
+        # An empty entry by default, and something to download when a test asks for one.
+        return _Fetched() if os.environ.get("EDISON_STUB_ENTRY") else None
 
     # ---- projects
     def create_project(self, name, description=None, persona_id=None, **kwargs):

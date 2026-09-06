@@ -5,6 +5,35 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.16 — 2026-09-06
+
+You can read a finished Kosmos run now: the whole answer, and the files it made.
+
+### Added
+
+- **A finished run's output is reachable.** Two things stood in the way. `kosmos status` cut
+  every message at 700 characters and no flag raised it, so an answer of ten thousand
+  characters showed you seven per cent of itself — `--full` prints them whole, and
+  `--tail 1 --full` is the final answer on its own. And nothing downloaded the files a run
+  produced: `edison-cli data get --storage data_entry:<uuid> --out <dir>` does that now.
+  Together they are also the only way to see that data you attached was read. A run cites its
+  files in the report it writes, never in the transcript.
+
+### Fixed
+
+- **The data search no longer says your own account is all it looked at.** A search that found
+  nothing said "nothing on this account matches", and that was wrong twice over. The search
+  reaches entries other people uploaded, and it ranks what it finds and stops early, so nothing
+  coming back is not proof that nothing is there. The message says that now, and the skill page
+  says the rest — including never to paste the long `data_entry:` name from a transcript into a
+  search, because it never matches.
+
+### Changed
+
+- **The update instructions say to restart.** The two commands leave the new skills unloaded
+  until Claude Code starts again, which reads as an update that did not work. Both pages that
+  give those commands say so now.
+
 ## 2026.9.15 — 2026-09-06
 
 You can now check that the data you attached to a Kosmos run reached the platform.

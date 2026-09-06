@@ -1,4 +1,4 @@
-"""Datasets: put data on the platform and find it again.
+"""Datasets: put data on the platform, find it again, and bring it back down.
 
 A task never takes a local path. It takes a data-entry URI — `data_entry:<uuid>` — so an
 upload comes first and `task submit --data <uri>` comes second.
@@ -13,6 +13,10 @@ directory goes up as a collection and a file goes up as itself. `--collection` a
 
 `store_file_content` also returns the entry rather than the URI, so the URI used to be
 something every caller built for itself. It is built here now, once, and printed first.
+
+`get` is the way back down, and it lives here rather than in `tasks` because an entry is not a
+task: a Kosmos run's deliverables are entries no task holds the answer to. `task fetch
+--storage` reaches the same function, so the two commands cannot drift apart.
 """
 
 from __future__ import annotations
@@ -89,10 +93,16 @@ def upload(
 
 
 def search(client: EdisonClient, *, text: str, limit: int) -> int:
-    """Search the account's data entries by text. Free, and the way to avoid a second upload.
+    """Search data entries by text. Free, and the cheapest way to avoid a second upload.
 
     Two entries of the same dataset under the same name cannot be told apart afterwards, so
     this is worth running before every upload.
+
+    NEITHER HALF OF THE OBVIOUS READING HOLDS, and both used to be asserted here. It is not
+    account-scoped: entries this account never created come back, so a hit may be somebody
+    else's dataset. And a miss settles nothing — the results are ranked, and the ranking stops
+    before the corpus is exhausted, so an entry whose description holds the term verbatim can
+    still be absent from forty rows. `references/datasets.md` carries the probes behind both.
     """
     rows = client.search_data_storage(text_query=text, limit=limit)
     for row in rows:
@@ -107,5 +117,58 @@ def search(client: EdisonClient, *, text: str, limit: int) -> int:
         ]
         say("ENTRY: " + "\t".join(cells))
     if not rows:
-        say(f"(nothing on this account matches '{text}')")
+        # Not "nothing on this account matches", which claimed a scope the search does not
+        # have and a certainty it cannot give. Someone who is told their dataset is not up
+        # there uploads a second copy — the one outcome this command exists to prevent.
+        say(f"(nothing came back for '{text}' — which is not proof the entry is not there)")
+    return 0
+
+
+def _keep(path: Path, out: str | None) -> None:
+    """Copy a fetched path out of the library's temporary directory when `--out` was given."""
+    import shutil
+
+    if not out:
+        say(f"FETCHED: {path} (temporary — pass --out <dir> to keep it)")
+        return
+    destination = Path(out) / path.name
+    if path.is_dir():
+        shutil.copytree(path, destination, dirs_exist_ok=True)
+    else:
+        shutil.copy2(path, destination)
+    say(f"FETCHED: {destination}")
+
+
+def get(client: EdisonClient, *, storage: str, out: str | None) -> int:
+    """Download one data entry by its URI. The only route to what a Kosmos run produced.
+
+    Free, and the other half of `search`: a run publishes its deliverables as entries, and
+    until this existed nothing in the `data` group could bring one down. The accident that
+    stood in for it — `task fetch <ignored> --storage <uri>`, whose required task id is never
+    read — is still there for the one-shot flow that documents it, and calls this.
+    """
+    if out:
+        Path(out).mkdir(parents=True, exist_ok=True)
+    # The bare id, so a data_entry: prefix comes off first.
+    got = client.fetch_data_from_storage(storage.removeprefix(PREFIX))
+    if got is None:
+        say("STORAGE: the entry holds nothing")
+        return 0
+    if isinstance(got, list):
+        for one in got:
+            _keep(one, out)
+        return 0
+    if isinstance(got, Path):
+        _keep(got, out)
+        return 0
+    content = getattr(got, "content", None)
+    if content is None:
+        say(f"STORAGE: {got}")
+    elif out:
+        destination = Path(out) / f"{storage.removeprefix(PREFIX)}.txt"
+        destination.write_text(str(content), encoding="utf-8")
+        say(f"FETCHED: {destination}")
+    else:
+        say("CONTENT:")
+        say(str(content))
     return 0

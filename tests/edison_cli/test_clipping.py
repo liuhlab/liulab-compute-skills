@@ -10,6 +10,11 @@ part that went.
 
 These tests pin the marker at all three call sites, and pin that it stays inside its column.
 
+One of the three has a way past it. The utterance cap falls on the run's own final answer —
+ten thousand characters of it on the first finished run, seven per cent of it reachable — so
+`kosmos status --full` prints an utterance whole. The default is unchanged: a switch is what
+`--tail 1 --full` needs, and every uncapped poll would still flood the transcript.
+
 A fourth cut is measured in lines rather than characters and falls on text of the user's own:
 the objective `kosmos start` echoes before it sends it. That one is not about flooding a
 transcript but about what a flooded one costs — a harness that finds the output too big to
@@ -18,6 +23,7 @@ show renders a preview taken from the top, and the `STOP:` line is at the bottom
 
 from __future__ import annotations
 
+from edison_cli.kosmos import UTTERANCE_CHARS
 from edison_cli.runtime import clipped, clipped_lines
 from tests.edison_cli.conftest import PROJECT_ID, SESSION_ID, Harness
 
@@ -74,6 +80,35 @@ def test_kosmos_status_marks_the_utterance_it_cut(edison: Harness) -> None:
     assert run.returncode == 0, run.stderr
     said = next(line for line in run.stdout.splitlines() if line.startswith("[SAY] "))
     assert MARK in said, f"the utterance was cut with nothing on the line to say so: {said}"
+
+
+def test_kosmos_status_full_prints_the_utterance_whole(edison: Harness) -> None:
+    """The cap needed a way past it: a run's answer is the text it falls on.
+
+    A finished run answered in about ten thousand characters, of which seven per cent was
+    reachable and no flag raised the cap. `--tail 1 --full` is the whole answer, and the
+    default above stays capped.
+    """
+    edison.env["EDISON_STUB_LONG"] = "1"
+    run = edison.run(
+        "kosmos",
+        "status",
+        "--project",
+        PROJECT_ID,
+        "--session",
+        SESSION_ID,
+        "--tail",
+        "1",
+        "--full",
+        "-f",
+        str(edison.key_file),
+    )
+    assert run.returncode == 0, run.stderr
+    said = next(line for line in run.stdout.splitlines() if line.startswith("[SAY] "))
+    assert MARK not in said, f"--full still cut the utterance: {said}"
+    assert len(said) > UTTERANCE_CHARS, "the fixture is too short to prove anything"
+    # The stub says one sentence forty times. All forty, or something went missing quietly.
+    assert said.count("the run went on about this at length") == 40
 
 
 def test_kosmos_tasks_marks_the_query_it_cut(edison: Harness) -> None:
