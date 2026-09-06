@@ -98,7 +98,7 @@ documented behaviour, not an error, and the command reports it as such.
 None of this spends anything, and it is usually what the user wants:
 
 ```bash
-edison-cli kosmos sessions [-n <n>]                          # session id, project id, time
+edison-cli kosmos sessions [-n <n>]      # session, project, time - back from a lost id
 edison-cli kosmos status --project ID|NAME --session <id> [--tail <n>]
 edison-cli kosmos tasks --project ID|NAME --session <id>
 edison-cli task fetch <task-id> --out <dir>                  # one task's own answer, if it has one
