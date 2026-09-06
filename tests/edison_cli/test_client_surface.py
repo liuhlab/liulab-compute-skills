@@ -82,12 +82,37 @@ def test_every_job_this_package_will_send_is_a_real_member() -> None:
         assert job in JobNames.__members__
 
 
-def test_the_retired_job_is_not_on_the_allow_list() -> None:
-    """PHOENIX exists in the enum and 404s on a new submission, which is the trap."""
+@pytest.mark.parametrize("member", sorted(tasks.NOT_SENT))
+def test_a_member_that_404s_is_a_real_member_and_still_off_the_allow_list(member: str) -> None:
+    """PHOENIX and DUMMY are in the enum and both 404 on a new submission, which is the trap.
+
+    Both halves matter. If the member vanished from the enum the entry would be describing a
+    name nobody can type; if it reappeared on the allow-list a submission would buy a 404.
+    """
     from edison_client.models.app import JobNames
 
-    assert "PHOENIX" in JobNames.__members__
-    assert "PHOENIX" not in tasks.JOBS
+    assert member in JobNames.__members__
+    assert member not in tasks.JOBS
+
+
+@pytest.mark.parametrize("member", sorted(tasks.NOT_SENT))
+def test_the_refusal_says_the_member_is_real_rather_than_unknown(member: str) -> None:
+    """Calling it unknown is untrue of a member in the enum, and sends the reader hunting."""
+    from edison_cli.runtime import Refusal
+
+    with pytest.raises(Refusal) as raised:
+        tasks.check_job(member)
+    assert "real JobNames member" in str(raised.value)
+    assert "unknown job" not in str(raised.value)
+
+
+def test_a_name_that_is_in_no_enum_at_all_is_still_refused_as_unknown() -> None:
+    """The allow-list's first job is the invented string, and that refusal must not change."""
+    from edison_cli.runtime import Refusal
+
+    with pytest.raises(Refusal) as raised:
+        tasks.check_job("SPARROW")
+    assert "never invent a name" in str(raised.value)
 
 
 def test_two_unrelated_exception_trees_are_both_called_rest_client_error() -> None:
@@ -132,3 +157,20 @@ def test_a_missing_id_is_reported_as_a_missing_id() -> None:
 
     assert "404" in sentence(RaisedError())
     assert "no record of that id" in sentence(RaisedError())
+
+
+def test_a_404_on_a_call_that_carried_no_id_says_so_instead() -> None:
+    """A submission hands the platform no id, so "find it again with `task list`" is nonsense."""
+    from edison_cli.runtime import sentence
+
+    class Response:
+        status_code = 404
+        text = ""
+
+    class RaisedError(Exception):
+        response = Response()
+
+    said = sentence(RaisedError(), not_found=tasks.SUBMIT_404)
+    assert "404" in said
+    assert "nothing was created" in said
+    assert "task list" not in said

@@ -85,14 +85,20 @@ def client(key_file: str | None) -> EdisonClient:
     return EdisonClient()
 
 
-def sentence(exc: BaseException) -> str:
+# What a 404 means for a call that carried an id, which is most of them. It is a default and
+# not a law: a command where no id is involved passes its own, because a sentence that sends
+# the reader after a lost id they never had is worse than no sentence at all.
+LOST_ID = "the platform has no record of that id — `task list` finds ids again"
+
+
+def sentence(exc: BaseException, *, not_found: str = LOST_ID) -> str:
     """Say what went wrong in one line, without a traceback and without an id nobody has."""
     response = getattr(exc, "response", None)
     status = getattr(response, "status_code", None)
     if isinstance(status, int):
         body = " ".join((getattr(response, "text", "") or "").split())
         if status == 404:
-            return "the platform has no record of that id (404) — `task list` finds ids again"
+            return f"{not_found} (404)"
         if status in {401, 403}:
             return f"the platform refused the key ({status}) — re-run `edison-cli preflight`"
         if body:

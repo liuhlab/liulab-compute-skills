@@ -5,6 +5,42 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.11 — 2026-09-06
+
+Six things a live run of the Edison command found, and the timing figure it corrected.
+
+### Fixed
+
+- **The cheap test job does not exist.** The page said `DUMMY` was there to exercise the
+  plumbing without doing any science. Submitting it answered 404 and made nothing. It is
+  off the list of jobs the command will send, beside the retired chemistry job that fails
+  the same way, and the page now says what happened and on what day. Asking for either by
+  name is refused before anything is sent, and the refusal says the name is real rather
+  than calling it unknown.
+- **A submission that fails no longer sends you looking for an id.** When the platform
+  answered 404 to a new task, the command told you to find your id again with `task list`
+  — but no id had been handed out, because nothing was created. It now says so, and points
+  at the job name and the ids you passed in.
+- **The key-file fix-it text is runnable again.** Pointing the check at a file directly
+  under `/` printed a `mkdir` command with nothing after it. It prints the folder now.
+- **Deleting a project forgets its name.** The name-to-id file beside your key kept the
+  deleted project, so a later command could still turn that name into an id the platform
+  had thrown away — the exact mix-up the delete guards against, one command later.
+
+### Changed
+
+- **Two things the platform does that nothing wrote down.** Starting Kosmos also prints a
+  `CHAT_STATUS:` line, and making a project creates a chat session on its own, seconds
+  later, holding one canned greeting and no work. It costs nothing, but it shows up in
+  `kosmos sessions`, and somebody looking for a run they lost could mistake it for one.
+  Both are on the Kosmos page.
+- **What has never been checked for real is written down as such.** The task id is meant
+  to be the first thing a submission prints. That is proven against the test double and
+  has never been seen against the platform, because the one free job turned out not to
+  exist. The page says so rather than implying otherwise.
+- **A timing was three times off.** The rebuild after a plugin update was called "a few
+  seconds"; it measured about ten. The first-ever build is still about 22 seconds.
+
 ## 2026.9.10 — 2026-09-05
 
 ### Changed

@@ -54,11 +54,48 @@ def test_submit_refuses_a_job_name_off_the_routing_table(edison: Harness) -> Non
     """The client sends any string it is handed, so the allow-list is the only real check."""
     query = edison.write("query.txt", "what is known about the thing\n")
     run = edison.run(
-        "task", "submit", "--job", "PHOENIX", "-q", query, "-f", str(edison.absent_key)
+        "task", "submit", "--job", "SPARROW", "-q", query, "-f", str(edison.absent_key)
     )
     assert run.returncode == 2
     assert "never invent a name" in run.stderr
     assert run.called("construct") == []
+
+
+@pytest.mark.parametrize("member", ["PHOENIX", "DUMMY"])
+def test_submit_refuses_a_real_member_that_404s_and_says_which(
+    edison: Harness, member: str
+) -> None:
+    """Both are in `JobNames`, and a submission of either buys a 404 and no task.
+
+    The refusal is before the network, so the round trip that proves it is never paid for a
+    second time — and it names the member as real, because a reader told the name is unknown
+    goes looking for a typo instead of reading the page.
+    """
+    query = edison.write("query.txt", "what is known about the thing\n")
+    run = edison.run("task", "submit", "--job", member, "-q", query, "-f", str(edison.absent_key))
+    assert run.returncode == 2
+    assert "real JobNames member" in run.stderr
+    assert run.called("construct") == []
+    assert run.called("create_task") == []
+
+
+def test_a_404_on_the_submission_itself_does_not_send_the_reader_after_an_id(
+    edison: Harness,
+) -> None:
+    """No id exists yet on this path, so the lost-id sentence is advice about nothing.
+
+    The stub answers the submission with a 404, which is what the platform did to `DUMMY`.
+    """
+    edison.env["EDISON_STUB_404"] = "create_task"
+    query = edison.write("query.txt", "what is known about the thing\n")
+    run = edison.run(
+        "task", "submit", "--job", "LITERATURE", "-q", query, "-f", str(edison.key_file)
+    )
+    assert run.returncode == 1, run.stderr
+    assert "404" in run.stderr
+    assert "nothing was created" in run.stderr
+    assert "task list" not in run.stderr
+    assert run.called("create_task") != []
 
 
 def test_kosmos_start_refuses_an_absent_objective_file(edison: Harness) -> None:

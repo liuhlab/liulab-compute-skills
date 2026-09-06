@@ -78,8 +78,8 @@ extra tool any of these skills asks for, and nothing else here needs it.
    Nothing else has to be installed. The first Edison command builds the
    environment it runs in. That took about 22 seconds on the machine where
    it was measured. A plugin update lands in a fresh folder, so the build
-   runs once more per release. It is quicker the second time, because the
-   downloads are already on disk.
+   runs once more per release. It is quicker the second time — about ten
+   seconds — because the downloads are already on disk.
 
 ## Other agentic tools (Cursor, Codex, Gemini CLI, …)
 

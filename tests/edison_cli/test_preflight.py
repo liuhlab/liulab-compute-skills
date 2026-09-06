@@ -38,6 +38,23 @@ def test_the_key_file_constant_follows_the_override() -> None:
     assert reported["VAR"] == preflight.VAR
 
 
+@pytest.mark.parametrize(
+    ("key_file", "parent"),
+    [("/nowhere-at-all.env", "/"), ("/a/b/nowhere-at-all.env", "/a/b")],
+)
+def test_the_remedy_always_gives_mkdir_a_directory_to_make(key_file: str, parent: str) -> None:
+    """A root-level `-f` printed `mkdir -p` with no operand, which is not a command.
+
+    The remedy is printed to be pasted, so a line that cannot run is the whole failure — the
+    refusal and the exit code were right all along.
+    """
+    report = preflight.check(key_file)
+    assert not report.ok
+    # Compared whole, so a `mkdir -p ` whose operand is an empty string is a red test rather
+    # than a substring that still matches.
+    assert [line for line in report.lines if line.startswith("mkdir")] == [f"mkdir -p {parent}"]
+
+
 def test_the_remedy_hands_out_a_mode_the_check_accepts() -> None:
     """A remedy the preflight's own permission test rejects would loop a user forever."""
     import fnmatch

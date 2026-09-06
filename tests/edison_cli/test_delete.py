@@ -7,7 +7,7 @@ platform was and was not asked to do, not by an exit code alone.
 
 from __future__ import annotations
 
-from tests.edison_cli.conftest import PROJECT_ID, Harness
+from tests.edison_cli.conftest import PERSONA_ID, PROJECT_ID, Harness
 
 
 def test_without_yes_it_deletes_nothing_and_still_leaves_the_summary(edison: Harness) -> None:
@@ -65,6 +65,45 @@ def test_the_confirmed_delete_can_take_the_history_too(edison: Harness) -> None:
     )
     assert run.returncode == 0, run.stderr
     assert run.called("delete_project")[0]["delete_trajectories"] is True
+
+
+def test_a_successful_delete_forgets_the_name_the_cache_still_pointed_at(edison: Harness) -> None:
+    """Resolving live protects `delete` and nothing after it.
+
+    The cached name outlived the project, so the seven commands that DO read the cache could
+    still resolve it — the stale-name hazard arriving one command later. The listing is done
+    first so the entry genuinely exists, and the delete goes by id, which reaches the platform
+    without listing anything and so cannot refresh the cache as a side effect.
+    """
+    listed = edison.run("project", "list", "--persona", PERSONA_ID, "-f", str(edison.key_file))
+    assert listed.returncode == 0, listed.stderr
+    assert PROJECT_ID in edison.cache.read_text(encoding="utf-8")
+
+    gone = edison.run(
+        "project",
+        "delete",
+        "--project",
+        PROJECT_ID,
+        "--keep-tasks",
+        "--yes",
+        "-f",
+        str(edison.key_file),
+    )
+    assert gone.returncode == 0, gone.stderr
+    assert "DELETED: yes" in gone.stdout
+    assert PROJECT_ID not in edison.cache.read_text(encoding="utf-8")
+    # The persona's scope survives: only the entry pointing at what was destroyed goes.
+    assert PERSONA_ID in edison.cache.read_text(encoding="utf-8")
+
+
+def test_a_refused_delete_forgets_nothing(edison: Harness) -> None:
+    """Nothing was destroyed, so the remembered name is still true and still useful."""
+    edison.run("project", "list", "--persona", PERSONA_ID, "-f", str(edison.key_file))
+    run = edison.run(
+        "project", "delete", "--project", PROJECT_ID, "--keep-tasks", "-f", str(edison.key_file)
+    )
+    assert run.returncode == 2
+    assert PROJECT_ID in edison.cache.read_text(encoding="utf-8")
 
 
 def test_a_project_name_with_no_persona_deletes_nothing(edison: Harness) -> None:

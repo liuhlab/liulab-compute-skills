@@ -12,8 +12,8 @@ The properties here are the ones `docs/adr/0010` fixed and this package inherits
 `JOBS` is the whole API surface this command will send, and its narrowness is the point: the
 client sends any string it is handed, so an allow-list is what turns "never guess a job-name
 string" into something that cannot be guessed past. `references/jobs.md` owns which question
-routes to which member and that table is not repeated here. PHOENIX is absent on purpose —
-new submissions to it 404.
+routes to which member and that table is not repeated here. `NOT_SENT` is the other half: two
+enum members that are absent on purpose, each with the reason a caller meets instead of them.
 """
 
 from __future__ import annotations
@@ -35,12 +35,38 @@ from edison_cli.runtime import (
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from edison_client import EdisonClient
 
-JOBS = ("LITERATURE", "LITERATURE_HIGH", "PRECEDENT", "MOLECULES", "ANALYSIS", "DUMMY")
+JOBS = ("LITERATURE", "LITERATURE_HIGH", "PRECEDENT", "MOLECULES", "ANALYSIS")
+
+# Real `JobNames` members this command will not send, and why. Both answered 404 to a new
+# submission, so sending one buys a round trip and no task. They are named rather than merely
+# missing, because "unknown job" is untrue of a member that is right there in the enum, and a
+# reader told the wrong thing goes looking for a spelling mistake instead of reading the page.
+NOT_SENT = {
+    "PHOENIX": (
+        "the package's own comment retires it — new submissions 404. Chemistry goes to MOLECULES"
+    ),
+    "DUMMY": (
+        "a new submission 404'd on 2026-09-06 and created nothing. Nothing routes to it: it does "
+        "no science, so there is no question it is the answer to"
+    ),
+}
+
+# What a 404 means on the submit path, where no id has been handed out yet. `runtime.LOST_ID`
+# would send the reader after a lost-id problem they do not have.
+SUBMIT_404 = (
+    "the platform would not take that submission and nothing was created — check the job name "
+    "against references/jobs.md, and any id passed to --project or --continue"
+)
 
 
 def check_job(name: str) -> str:
     """Fold a job name to its member spelling, refusing anything off the routing table."""
     job = name.upper()
+    if job in NOT_SENT:
+        raise Refusal(
+            f"'{job}' is a real JobNames member that this command will not send: {NOT_SENT[job]}. "
+            f"references/jobs.md. One of: {' '.join(JOBS)}"
+        )
     if job not in JOBS:
         raise Refusal(
             f"unknown job '{job}'. Route from references/jobs.md; never invent a name. "
