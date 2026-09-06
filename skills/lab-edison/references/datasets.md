@@ -4,46 +4,54 @@
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`. Read it whenever a run takes data with the question: `ANALYSIS` needs a
-URI, so the upload comes first, then `submit --data`, then `fetch`. Re-read the package the same
-way when this page is next touched. The `uv` invocation and the routing table are in `jobs.md`;
-submitting, polling, recovering and cancelling are in `tasks.md`. Neither is repeated here.
+URI, so the upload comes first, then `task submit --data`, then `task fetch`. Re-read the package
+the same way when this page is next touched. The environment underneath and the routing table are
+in `jobs.md`; submitting, polling, recovering and cancelling are in `tasks.md`. Neither is
+repeated here.
 
 ## Upload
 
 A task never takes a local path. It takes a **data-entry URI** — `data_entry:<uuid>` — which an
 upload hands back, so the upload comes first.
 
-```python
-uri = client.upload_file("/path/to/counts.csv")  # -> "data_entry:<uuid>"
+```bash
+edison-cli data search --text "<name>"        # is it up already?
+edison-cli data upload /path/to/counts.csv    # DATA_URI: data_entry:<uuid>, then SHAPE: file
 ```
 
-Check `search_data_storage(text_query="<name>")` first (`tasks.md`): re-uploading a dataset
-that is already there costs time and leaves two entries nobody can tell apart.
+Search first: re-uploading a dataset that is already there costs time and leaves two entries
+nobody can tell apart. `search` prints one `ENTRY:` line per match, URI first, ten at a time
+unless `-n` says otherwise. The path `upload` takes is a positional argument, not a flag.
+`DATA_URI:` is the first line of output and carries the URI `task submit --data` consumes;
+`SHAPE:` on the second line says which of the two upload shapes it took.
 
-**A directory has two shapes, and only one of them is a collection.** `upload_file` on a
-directory takes the hierarchical route: one entry per file and per subdirectory, each hanging
-off a parent entry, `is_collection` false on all of them, and the URI you get back is the
-parent's. A directory should go up as the other shape instead — one zip, one entry, one URI:
+**The shape is chosen for you.** A directory goes up as a collection and a file as a file.
+Neither `--collection` nor `--no-collection` is required, and the pair exists only to override
+that default:
 
-```python
-resp = client.store_file_content(
-    name="<dataset name>",
-    file_path="/path/to/dataset-dir",
-    description="<what it holds, and what the columns mean>",
-    as_collection=True,  # zips the tree into a single collection entry
-    ignore_patterns=["*.bam"],  # optional; the directory's own .gitignore is read anyway
-)
-uri = f"data_entry:{resp.data_storage.id}"
+```bash
+edison-cli data upload /path/to/dataset-dir \
+  --name "<dataset name>" \
+  --description "<what it holds, and what the columns mean>" \
+  --ignore '*.bam'
 ```
 
-`store_file_content` returns the entry, not the URI, so you build the URI yourself — that is the
-whole difference between the two return values. A collection also comes back whole:
-`fetch_data_from_storage` extracts the zip, so what you fetch later is a directory again.
+A collection is `store_file_content(as_collection=True)`: one zip, one entry, one URI, and it
+comes back whole — `fetch_data_from_storage` extracts the zip, so what you fetch later is a
+directory again. `--no-collection` on a directory forces the other route instead, `upload_file`
+on the tree: one entry per file and per subdirectory, `is_collection` false on all of them, and
+the URI you get back is only the parent's. The command says on stderr that it is doing that.
+
+`--ignore PATTERN` repeats, and is **refused unless the upload is a collection** — the
+hierarchical route has nothing to apply it to. It is optional even there, because the
+directory's own `.gitignore` is read anyway. `upload_file` returns the URI and
+`store_file_content` returns the entry, so the command builds the URI from `data_storage.id`
+either way and both shapes print the same first line.
 
 ## Attach it to the task
 
 ```bash
-bash scripts/edison-task.sh submit --job ANALYSIS --query-file <file> --data data_entry:<uuid>
+edison-cli task submit --job ANALYSIS --query-file <file> --data data_entry:<uuid>
 ```
 
 `--data` becomes `create_task(task, files=[uri])`. It takes URIs, never paths, and repeating it
@@ -54,9 +62,12 @@ both at once raises `ValueError`.
 ## Fetch what the run produced
 
 ```bash
-bash scripts/edison-task.sh fetch <task-id> --out <dir>            # answer, notebook, records
-bash scripts/edison-task.sh fetch <task-id> --out <dir> --storage <id>   # one entry
+edison-cli task fetch <task-id> --out <dir>            # answer, notebook, records
+edison-cli task fetch <task-id> --out <dir> --storage <id>   # one entry
 ```
+
+With `--out` the answer is written as `<task-id>.answer.md` rather than printed, and every line
+names the file it wrote (`tasks.md`).
 
 The answer and the notebook come off the response (`tasks.md`). Files the run *made* are listed
 by provenance, then fetched one at a time — `client.list_files(task_id)["data"]`, then
@@ -78,7 +89,7 @@ reporting it.
 **The default is the user's own machine.** A run started on a cluster needs a live credential on a
 shared node, and the only machine that has to hold one is theirs. Arc is the one cluster where
 running from it is possible at all, and only once the user has installed their own key file there
-— explain that, never do it for them. There, `uv` lives under the user's home, so any remote
+— explain that, never do it for them. There, `pixi` lives under the user's home, so any remote
 command needs a login shell. `skills/lab-hpc/references/arc-hpc.md` covers that and the transfer
 hosts, and neither fact is repeated here.
 

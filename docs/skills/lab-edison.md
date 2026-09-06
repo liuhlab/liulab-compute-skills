@@ -3,7 +3,8 @@
 Edison is a research platform, run by Edison Scientific. It answers questions from
 the published literature with citations, runs code on a dataset you upload, and in
 Kosmos has a research agent that works a whole goal over many rounds. This skill
-drives it from your machine through the `edison-client` package. No cluster is involved. It is the one skill here that talks only to a
+drives it from your machine through `edison-cli`, a command that ships with the
+plugin. No cluster is involved. It is the one skill here that talks only to a
 cloud service.
 
 ## You ask for it by name
@@ -100,6 +101,22 @@ Everything it does around a run is free. It drafts the goal with you, checks you
 data is in a shape Kosmos can use, and shows you a run you already started, task
 by task, without opening a browser.
 
+## Names, not long ids
+
+The platform gives every persona and project a long random id. You do not have
+to keep track of them. Say the name, and the skill finds the id for you. If
+nothing matches that name, it stops and says so. If more than one thing matches,
+it stops and lists them all with their ids. It never guesses.
+
+Names it has looked up are kept in a small file next to your key. That file
+holds names and ids and nothing else. Anything that spends money, or removes
+something, skips it and asks the platform again. So a name that has since moved
+to a different project cannot point the skill at the wrong one.
+
+Deleting a project is the one step here you cannot undo. The skill prints the
+project, its name and how many runs it holds, and asks whether the run history
+goes with it. Nothing is removed until you say yes.
+
 ## One question, one job
 
 For a single question the skill picks one of the platform's one-shot jobs and
@@ -125,12 +142,17 @@ Edison on arc, but only after you put the key there yourself, in your own sessio
 The skill never copies your key anywhere: not to a cluster, not into a job script,
 not onto a command line.
 
-## The first run is slow
+## What it needs, and why the first run waits
 
-The client is never installed into anything you maintain. It runs from a throwaway
-environment, so it cannot break your pixi setup, and an active pixi shell does not
-disturb it.
+You need [pixi](https://pixi.sh) on your machine. It is the only extra tool this
+skill asks for, and no other skill here asks for it.
 
-The cost is the first run on a new machine. Dozens of packages download before your
-question is even sent, and it can look hung for a minute or two. It is not. Every
-later run reads from the cache and starts at once.
+Nothing else has to be installed. The first Edison command builds the environment
+it runs in, and dozens of packages download before your question is even sent.
+That took about 22 seconds on the machine where it was measured. It can look hung.
+It is not.
+
+That environment lives inside the plugin's own folder, not in any project of
+yours. An update puts the new version of the plugin in a fresh folder, so the
+build runs once more after each update. It is quicker then, a few seconds, because
+the downloads are already on your disk.

@@ -2,20 +2,48 @@
 
 Skills are prose that steers an agent, so they are tested at three layers of
 increasing cost. Run layer 1 on every change, layer 2 when setting up a machine,
-and layer 3 only when a skill's behaviour has changed.
+and layer 3 only when a skill's behaviour has changed. One skill also ships real
+code, and that has unit tests of its own, described first.
 
-`pixi run check` runs everything cheap and safe: the static linters plus layer 1,
-all started at once, every failure reported in one run. `.github/workflows/ci.yml`
-runs the same tasks on every pull request. **Only layer 1 runs in CI** — the other
-two are local-only, for the reasons below.
+`pixi run check` runs everything cheap and safe: the static linters, the unit
+tests and layer 1, all started at once, every failure reported in one run.
+`.github/workflows/ci.yml` runs the same tasks on every pull request. **Only the
+unit tests and layer 1 run in CI** — the other two are local-only, for the reasons
+below.
+
+## Unit tests — the Edison spend path: `tests/edison_cli/`
+
+Free, seconds. `pixi run test`, and a step of `check-static`. Tests the **code**:
+`src/edison_cli`, which is the only Python in this repo that can spend a lab
+member's money.
+
+They have their own directory because the rest of `tests/` is bash and costs
+something. Every one of them answers from a fake `edison_client` the test writes
+into a temporary directory and puts first on `PYTHONPATH`, and the fixture proves
+the shadowing worked before any test runs. **Nothing here can reach the
+platform**, which is the point: a test of the spending path has to be safe on the
+day that path is broken.
+
+What they pin, beyond the obvious: `kosmos stop` queues the halt *before* it
+cancels anything, because reversing those two makes the run dispatch replacements
+faster than the sweep can cancel them; the preflight module runs with neither the
+client nor typer installed; the key reaches the client through the environment,
+did arrive, and appears in no argument, no output and no file under `src/`; and
+`project delete` removes nothing without `--yes` and a stated disposition for the
+run history.
 
 ## Layer 1 — static lint: `tests/lint.sh`
 
 Free, seconds. Tests the **files**: manifests are valid JSON, every skill has
 parseable `name`/`description` front matter, names follow the `lab-*` policy, each
 description fits the per-skill listing limit, and a tagged version still names the
-tree it was tagged on. It also self-tests the two preflight scripts, the eval
-guard, and the eval assertions (below).
+tree it was tagged on. It also self-tests the two preflights, the eval guard, and
+the eval assertions (below).
+
+The Edison preflight is a Python module, `src/edison_cli/preflight.py`, and this
+suite runs it as a file with a bare interpreter. That is deliberate: the no-secrets
+sweep reads the key-file constants from it, so it has to answer on a tree where
+nothing is installed, which is why it imports only the standard library.
 
 The heart of it is the **no-secrets sweep**: no IP literals, no key material, no
 Edison key other than the shipped placeholder, and none of the usernames or dotted
@@ -32,10 +60,14 @@ with the lab ssh config before you push.
 
 Free, seconds. **Local only** — it reads a real `~/.ssh/config` that a runner does
 not have. Tests the **machine**, not the repo, by running the same checks the
-skills run as their own step 0. Two of them: the cluster aliases, which decide the
-exit code, and the Edison key, which is reported but never decides, because a
-platform key is opt-in per user. With `--live` it also opens a connection to each
-login node; an ircbc timeout usually means the VPN is down.
+skills run as their own step 0. Three of them: the cluster aliases, which decide
+the exit code, and then two Edison checks that are reported and never decide,
+because the platform is opt-in per user. The first is the key. The second is the
+environment `edison-cli` runs in — whether pixi is installed and whether the
+environment is built — because the Edison spend path is a Python package now and a
+key on its own is no longer enough. It reports; it never builds one. With `--live`
+it also opens a connection to each login node; an ircbc timeout usually means the
+VPN is down.
 
 ## Layer 3 — agent evals: `tests/eval.sh`
 

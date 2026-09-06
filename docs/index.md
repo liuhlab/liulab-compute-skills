@@ -53,7 +53,8 @@ Then set the machine up once.
    [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/CLAUDE-stub.md)
    to your `~/.claude/CLAUDE.md`, so the core rules apply even in sessions where
    no skill loads.
-4. **Edison key, only for lab-edison.** Copy
+4. **Edison key and pixi, only for lab-edison.** That skill needs
+   [pixi](https://pixi.sh) on your PATH; no other skill here does. Then copy
    [`templates/edison.env`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/edison.env)
    to `~/.claude/compute/edison.env`, paste your own key over the placeholder,
    and `chmod 600` it. It sits beside `personal.md`, never inside it. Never

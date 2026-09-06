@@ -42,6 +42,10 @@ For a goal too big for one question, ask about Kosmos. The skill drafts the goal
 with you and checks your data for free, and starts a run only when you ask for
 that run.
 
+This is the one skill that wants a tool of its own: [pixi](https://pixi.sh) on
+your PATH. Your first Edison command then builds what it runs in, which takes
+about twenty seconds. See its [page](skills/lab-edison.md).
+
 ## What the agent will ask you
 
 Which cluster, unless your request already makes it obvious. What the job needs:

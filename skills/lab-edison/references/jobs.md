@@ -1,6 +1,6 @@
 # Jobs, and how to run one
 
-> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1 and this repo's own `pyproject.toml` · Checked: 2026-09-05 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`, and the first page to read in a session: nothing is submitted until a
@@ -46,10 +46,11 @@ a 404.
 
 ## Running the client
 
-`scripts/edison-task.sh` runs it. Write the query the user confirmed to a file, then:
+`edison-cli` runs it. `SKILL.md` carries the full invocation; every `edison-cli` line in
+`references/` is short for it. Write the query the user confirmed to a file, then:
 
 ```bash
-bash scripts/edison-task.sh submit --job LITERATURE --query-file /path/to/query.txt
+edison-cli task submit --job LITERATURE --query-file /path/to/query.txt
 ```
 
 It runs the preflight, sources the key, prints `TASK_ID: <id>` as its first line and returns.
@@ -57,23 +58,30 @@ Then poll — `tasks.md` has `status` and the rest, and why this is two steps an
 blocking call. The `--job` value is a `JobNames` member from the table above; the command
 sends nothing else, so a name you invented is refused rather than submitted.
 
-Underneath, the client is PyPI only, so it runs ephemerally under `uv` and installs nothing
-the user maintains: `uv run --no-project --python 3.12 --with edison-client python -`. Both
-flags are load-bearing:
+`edison-cli <group> <command> --help` prints the flags of any one command, and `--help` is the
+only spelling — there is no `-h`. Where a flag has a short form the long one is written here:
+`-j/--job`, `-q/--query-file`, `-d/--data`, `-c/--continue`, `-p/--project`, `-n/--limit`,
+`-o/--out`, `-s/--storage`, `-f/--key-file`.
 
-- **`--no-project`.** This repo has a `pyproject.toml` of its own. Without the flag `uv` tries to
-  sync *this* project instead of an ephemeral one, so the failure lands exactly where a
-  maintainer is standing.
-- **`--python 3.12`.** Not cosmetic. `[verified]` Unpinned runs resolved a different interpreter
-  and re-downloaded the whole dependency set a second time.
+## The environment underneath
 
-An activated pixi shell does not disturb it — `VIRTUAL_ENV` and `CONDA_PREFIX` do not leak into
-the run, so nothing needs deactivating first. `pixi exec` is not an alternative: conda-forge does
-not carry this package.
+`edison-client` is a dependency of this repo's **default** pixi environment, and `edison-cli` is
+a console script installed beside it. So `pixi run --manifest-path` names the plugin's own
+manifest and pixi builds that environment on demand. Nothing else pins an interpreter or a
+version: `pixi.lock` does both, structurally, for every platform the lab uses.
 
-**The first run on a machine is slow.** The dependency set is dozens of packages, and `uv`
-resolves and downloads all of them before a line of the script executes. Warn the user, or it
-looks hung. Later runs come from the cache.
+- **pixi is a prerequisite of this skill**, the way the key file is. `SKILL.md` step 0 says what
+  to do when it is missing. Do not substitute `uv`, `pip` or `pixi exec`.
+- **The first Edison command on a machine is slow.** The dependency set is dozens of packages and
+  pixi resolves and downloads all of them before a line of the program runs. Say so, or it looks
+  hung.
+- **A plugin update discards the environment.** `claude plugin update` writes a fresh versioned
+  directory rather than refreshing the one in place, so the build repeats once per release. It is
+  much faster than the first time, because the downloads are cached, but it is not instant —
+  worth a sentence to the user rather than a silent pause.
+- **The environment lives in the plugin's own directory**, beside the manifest. It is not the
+  user's project and not an environment they maintain, and an activated pixi shell of their own
+  changes nothing, because `--manifest-path` names the manifest outright.
 
 `EdisonClient()` takes no arguments here, and constructing it is already a network call: it
 authenticates and fetches your organisations eagerly, so a bad key fails at construction rather
@@ -83,12 +91,15 @@ hard rules say what that forbids.
 ## Continuing a task
 
 A follow-up rides on the previous run instead of re-establishing its context —
-`submit --continue <prior task id>`, which the command turns into
+`task submit --continue <prior task id>`, which the command turns into
 `runtime_config=RuntimeConfig(continued_job_id=...)` on the `TaskRequest`.
 
-The id is the `task_id` of the earlier run and is validated as a UUID, so keep it verbatim. The
-field is `continued_job_id`; the vendor's README calls it `continued_task_id`, which `TaskRequest`
-rejects outright because it forbids unknown fields. Believe the package.
+The id is the `task_id` of the earlier run, so keep it verbatim. **It is stricter than a string:**
+`RuntimeConfig.continued_job_id` is typed `UUID | None`, so anything that is not a UUID is refused
+with exit 2 and nothing is submitted. `--continue` never takes a name — only `--project` and
+`--persona` do (`tasks.md`), and `task list` is how a forgotten id is found. The field is
+`continued_job_id`; the vendor's README calls it `continued_task_id`, which `TaskRequest` rejects
+outright because it forbids unknown fields. Believe the package.
 
 ## Cost
 

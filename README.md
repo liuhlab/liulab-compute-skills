@@ -27,14 +27,13 @@ Current skills:
   shells, or Jupyter inside the containers.
 - **`lab-edison`** — the Edison research platform, which Edison Scientific
   runs: cited literature answers, precedent, molecules, and analysis of a
-  dataset you upload, run through `edison-client` in a throwaway
-  environment. No cluster involved. You invoke it yourself
+  dataset you upload. It goes through `edison-cli`, a command that ships
+  with the plugin. No cluster involved. You invoke it yourself
   (`disable-model-invocation`), it refuses until your key file
-  `~/.claude/compute/edison.env` is in place
-  (`scripts/check-edison-config.sh`), it shows the job and the query
-  before it spends, and it never transmits the key. Kosmos is a chat
-  session that fans out into many tasks, and the skill will not start one
-  unless you ask for that run.
+  `~/.claude/compute/edison.env` is in place (`edison-cli preflight`), it
+  shows the job and the query before it spends, and it never transmits the
+  key. Kosmos is a chat session that fans out into many tasks, and the skill
+  will not start one unless you ask for that run.
 
 ## Security policy (hard rule)
 
@@ -55,6 +54,9 @@ claude plugin marketplace add liuhlab/liulab-compute-skills
 claude plugin install lab-compute@liulab
 ```
 
+`lab-edison` also wants [pixi](https://pixi.sh) on your PATH. It is the only
+extra tool any of these skills asks for, and nothing else here needs it.
+
 ## Per-user config (once per machine)
 
 1. Make sure your `~/.ssh/config` defines the lab's conventional aliases
@@ -68,11 +70,16 @@ claude plugin install lab-compute@liulab
 3. Append [templates/CLAUDE-stub.md](templates/CLAUDE-stub.md) to your
    `~/.claude/CLAUDE.md` so the two safety rules apply even in sessions where
    the skill doesn't auto-trigger.
-4. Only if you use `lab-edison`: copy
-   [templates/edison.env](templates/edison.env) to
+4. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
+   not have it, then copy [templates/edison.env](templates/edison.env) to
    `~/.claude/compute/edison.env`, replace the placeholder with your own
    Edison key, and `chmod 600` it. It goes *beside* `personal.md`, never
    inside it — skills read `personal.md` into context. Never commit it.
+   Nothing else has to be installed. The first Edison command builds the
+   environment it runs in. That took about 22 seconds on the machine where
+   it was measured. A plugin update lands in a fresh folder, so the build
+   runs once more per release. It is quicker the second time, because the
+   downloads are already on disk.
 
 ## Other agentic tools (Cursor, Codex, Gemini CLI, …)
 

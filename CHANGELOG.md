@@ -5,6 +5,74 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.9 — 2026-09-05
+
+The code that spends your Edison credits moved out of a shell script and into a
+Python package, `src/edison_cli/`. Every check this repo runs now reads it. Kosmos
+gets real commands for the first time.
+
+- **The spending code is checked like the rest of the repo.** It used to be Python
+  written inside a shell script, where the linter and the type checker could not see
+  it. It is a package now, so both read it, and it has its own unit tests.
+- **One command, `edison-cli`, in place of two shell scripts.** `task submit`,
+  `task status`, `task list`, `task fetch` and `task cancel` do what the old script
+  did, with the same flags. `preflight` is the key-file check that used to be a
+  script of its own.
+- **Kosmos can be driven from here now.** `kosmos start`, `status`, `tasks`,
+  `sessions` and `stop`, with `persona list` and `project ensure` to get the two ids
+  a run needs. Starting a run prints the exact line that stops it, before anything
+  else can happen. Stopping queues the halt first and cancels the leftover tasks
+  second, which is the order that works.
+- **You can use names instead of long ids.** Anywhere a project or a persona is
+  asked for, type its name. The command looks the id up, and stops rather than
+  guessing when the name matches nothing or matches more than one thing. Names it
+  has looked up are kept in a small file beside your key, holding names and ids
+  and nothing else. Anything that spends or deletes skips that file and asks the
+  platform again.
+- **Projects can be tidied up.** `project delete` prints the project, its name and
+  how many runs it holds before anything goes, asks whether the run history goes
+  with it, and removes nothing until you say yes.
+- **Uploading data is a command too.** `data upload` and `data search`. The one
+  place that handles your own files is no longer code typed out by hand. A folder
+  goes up as one bundle and a single file as itself, with no flag to remember.
+- **You now need pixi.** It takes over from `uv` as the tool this skill wants on
+  your PATH. No other skill here needs it, and there is still nothing to install by
+  hand: the first Edison command builds the environment it runs in. That took about
+  22 seconds on the machine it was measured on. A plugin update lands in a fresh
+  folder, so the build runs again once per release, faster the second time.
+- **A promise the docs used to make is gone.** The page said the client could not
+  touch your pixi setup, because it ran from a throwaway environment. That is no
+  longer how it works. The new environment lives inside the plugin's own folder,
+  which is still not a project of yours.
+- **Why the whole change was worth it** is written down in
+  `docs/adr/0011-the-spend-path-became-a-package.md`, including the two things the
+  design had to give up along the way.
+
+## 2026.9.8 — 2026-09-05
+
+Docs only, in `lab-edison`. The Kosmos page described a call nobody had ever run.
+Someone ran it, and it failed. This release corrects the page from that live run.
+
+- **The documented way to start a Kosmos run did not work.** It created a project
+  with no persona attached. The chat step then answered a 500, naming no field.
+  The page now passes `persona_id`, and it records the 500 as what you get
+  without one. It also says where a persona id comes from, because no method in
+  the client lists personas.
+- **A Kosmos run has no stop button, and the page now says so.** Nothing cancels
+  a run as a whole. Cancelling its tasks one by one does not work either: the run
+  sends out replacements a minute later. What works is two steps, in order. Queue
+  a message telling the run to stop, then cancel whatever is still going. The
+  page carries both, in that order.
+- **Three more facts the run settled.** A third task name sits behind a run, and
+  the tasks it starts go on to start tasks of their own. A reply from Kosmos is
+  not in the message's `content` field, which is always empty; it rides in the
+  tool call beside it. A stack trace out of `cancel` means the task id is wrong,
+  not that the cancel failed.
+- **The page no longer says it is untested.** The sentence claiming nothing on it
+  had been run is gone. The chat call is marked verified, with the persona fix.
+- **`tasks.md` names the field that holds a storage id**: `data_storage_id`. The
+  page used to say the field was unknown and print the whole record instead.
+
 ## 2026.9.7 — 2026-09-05
 
 Docs only. The four skill pages, the home page and the usage page were rewritten
