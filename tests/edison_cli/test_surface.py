@@ -111,6 +111,7 @@ def test_submit_refuses_a_continue_id_the_client_could_not_use(edison: Harness) 
     assert run.returncode == 2
     assert "is not a task id" in run.stderr
     assert run.called("create_task") == []
+    assert run.called("construct") == [], "the id was read after a client was built"
 
 
 def test_fetch_with_out_writes_the_answer_it_used_only_to_print(edison: Harness) -> None:

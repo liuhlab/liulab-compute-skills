@@ -7,8 +7,9 @@ The platform has two upload calls and they are not interchangeable. `upload_file
 directory takes the hierarchical route: one entry per file and per subdirectory, none of them
 a collection, and the URI you get back is the parent's. `store_file_content(as_collection=
 True)` zips the tree into a single entry that comes back whole, which is what a dataset
-wants. Choosing between them by hand is a trap, so this command chooses: a directory always
-goes up as a collection.
+wants. Choosing between them by hand is a trap, so this command chooses by default: a
+directory goes up as a collection and a file goes up as itself. `--collection` and
+`--no-collection` are how someone who wants the other shape says so.
 
 `store_file_content` also returns the entry rather than the URI, so the URI used to be
 something every caller built for itself. It is built here now, once, and printed first.

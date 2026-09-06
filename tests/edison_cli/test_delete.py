@@ -67,8 +67,12 @@ def test_the_confirmed_delete_can_take_the_history_too(edison: Harness) -> None:
     assert run.called("delete_project")[0]["delete_trajectories"] is True
 
 
-def test_a_project_is_addressed_by_id_and_never_by_name(edison: Harness) -> None:
-    """`get_project_by_name` answers with a UUID or a list of them, and a delete cannot guess."""
+def test_a_project_name_with_no_persona_deletes_nothing(edison: Harness) -> None:
+    """A name is addressable — given a persona. Without one there is nothing to resolve it in.
+
+    `get_project_by_name` answers with a UUID or a list of them, and a delete cannot guess,
+    so the refusal is the whole behaviour: exit 2, and the client never asked to delete.
+    """
     run = edison.run(
         "project",
         "delete",

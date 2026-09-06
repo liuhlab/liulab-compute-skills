@@ -96,7 +96,13 @@ def test_data_upload_refuses_a_path_that_is_not_there(edison: Harness) -> None:
 
 
 def test_an_id_that_is_not_an_id_is_refused_before_the_client_is_built(edison: Harness) -> None:
-    """The client wants UUIDs. Failing on the argument beats failing halfway through a call."""
+    """The client wants UUIDs, and constructing one is already a network call.
+
+    So the refusal has to come before the construction, not merely before the spend: the key
+    file here exists, which is what makes the assertion say something. It used to say only
+    that nothing was queued or cancelled, which the command satisfied while still paying for
+    the round trip that authenticates and lists the account's organisations.
+    """
     run = edison.run(
         "kosmos",
         "stop",
@@ -109,6 +115,7 @@ def test_an_id_that_is_not_an_id_is_refused_before_the_client_is_built(edison: H
     )
     assert run.returncode == 2
     assert "is not a project id" in run.stderr
+    assert run.called("construct") == [], "the argument was read after a client was built"
     assert run.called("queue_chat_message") == []
     assert run.called("cancel_task") == []
 

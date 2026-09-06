@@ -6,7 +6,9 @@ Two orderings in `_spend` are load-bearing and neither is visible in the parser.
   a refusal for a missing query file says so on any machine — including one where the key IS
   configured, which is every machine a maintainer runs the gate on. It is also what lets the
   gate prove the ordering: the refusal fixtures pass a key file that does not exist, and a
-  refusal that named the key file instead would mean the argument check never ran.
+  refusal that named the key file instead would mean the argument check never ran. `_ids` is
+  what puts every id-shaped argument among those checks rather than in a command body, where
+  reading it would already have cost the round trip that builds the client.
 * THE PREFLIGHT RUNS BEFORE THE CLIENT EXISTS. `runtime.client` is the only constructor in
   the package, so there is no subcommand that can reach the platform around it.
 
@@ -25,7 +27,7 @@ from typing import Annotated, Any
 
 import typer
 
-from edison_cli import datasets, kosmos, personas, preflight, projects, runtime, tasks
+from edison_cli import datasets, kosmos, personas, preflight, projects, resolve, runtime, tasks
 from edison_cli.runtime import Refusal, note, say, sentence
 
 HELP = """\
@@ -120,6 +122,36 @@ def _spend(
         return work(runtime.client(key_file))
 
     _guard(run)
+
+
+def _ids(
+    *,
+    project: str | None = None,
+    persona: str | None = None,
+    session: str | None = None,
+    task: str | None = None,
+) -> None:
+    """Refuse an argument that is not the id it has to be, before anything is built.
+
+    This belongs in the precheck and nowhere later. `runtime.client` authenticates and
+    fetches the account's organisations while it is being constructed, so an id read for the
+    first time inside a command body has already cost a network round trip on its way to
+    exit 2.
+
+    ONLY THE SHAPE OF A VALUE MOVES HERE, and the next reader should not try to move the
+    rest: turning a NAME into an id is a lookup, and a lookup needs the client this runs in
+    front of. So `--project` and `--persona` names still resolve in the command body where
+    they always did, and what comes forward is the one thing about a name that needs no
+    platform — `resolve.check_shapes`, on a project name with no persona to be unique inside.
+
+    Every refusal keeps the message and the exit code it had when it ran later, so nothing
+    that reads this command's output can tell the difference except by what it did not spend.
+    """
+    resolve.check_shapes(project, persona)
+    if session is not None:
+        runtime.identifier(session, "session")
+    if task is not None:
+        runtime.identifier(task, "task")
 
 
 # ---------------------------------------------------------------- preflight
@@ -253,6 +285,7 @@ def project_delete(
                 "project delete needs --delete-tasks or --keep-tasks. The client's own default "
                 "deletes the project's paid run history, so this command will not guess."
             )
+        _ids(project=project, persona=persona)
 
     _spend(
         key_file,
@@ -277,6 +310,7 @@ def project_add_task(
         lambda client: projects.add_task(
             client, project=project, persona=persona, task=task, live=no_cache
         ),
+        lambda: _ids(project=project, persona=persona),
     )
 
 
@@ -302,6 +336,7 @@ def kosmos_start(
 
     def precheck() -> None:
         runtime.text_from_file(objective_file, "objective file", "nothing was started")
+        _ids(project=project, persona=persona)
 
     _spend(
         key_file,
@@ -327,6 +362,7 @@ def kosmos_status(
         lambda client: kosmos.status(
             client, project=project, persona=persona, session=session, tail=tail, live=no_cache
         ),
+        lambda: _ids(project=project, persona=persona, session=session),
     )
 
 
@@ -344,6 +380,7 @@ def kosmos_tasks(
         lambda client: kosmos.tasks(
             client, project=project, persona=persona, session=session, live=no_cache
         ),
+        lambda: _ids(project=project, persona=persona, session=session),
     )
 
 
@@ -369,6 +406,7 @@ def kosmos_stop(
     _spend(
         key_file,
         lambda client: kosmos.stop(client, project=project, persona=persona, session=session),
+        lambda: _ids(project=project, persona=persona, session=session),
     )
 
 
@@ -413,6 +451,7 @@ def task_submit(
     def precheck() -> None:
         tasks.check_job(job)
         runtime.text_from_file(query_file, "query file", "nothing was submitted")
+        _ids(project=project, persona=persona, task=cont)
 
     _spend(
         key_file,
@@ -449,6 +488,7 @@ def task_list(
         lambda client: tasks.list_tasks(
             client, limit=limit, project=project, persona=persona, live=no_cache
         ),
+        lambda: _ids(project=project, persona=persona),
     )
 
 

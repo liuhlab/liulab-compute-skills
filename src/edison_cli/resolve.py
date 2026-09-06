@@ -152,6 +152,31 @@ def as_id(value: str) -> UUID | None:
         return None
 
 
+def _needs_a_persona(value: str) -> Refusal:
+    """Build the refusal for a project name with no persona to look it up inside."""
+    return Refusal(
+        f"'{value}' is not a project id, and a project name is unique only inside a "
+        "persona. Pass --persona as well, or give the project's id."
+    )
+
+
+def check_shapes(project_value: str | None, persona_value: str | None) -> None:
+    """Say whether `--project` could resolve at all, from the arguments and nothing else.
+
+    This is the half of resolution that needs no client, so it is the half a caller can run
+    before one exists — building the client authenticates and lists the account's
+    organisations, and an argument refused after that has already paid for a round trip.
+
+    Only the SHAPE moves this early. A value that parses as a UUID is an id and needs no
+    lookup; a value that does not is a name, and looking a name up is what the client is
+    for, so `persona` and `project` below stay where they are. What is knowable here is the
+    pair that has no lookup at all: a project name with no persona has no listing to be
+    found in, whatever the platform would have said.
+    """
+    if project_value is not None and as_id(project_value) is None and not persona_value:
+        raise _needs_a_persona(project_value)
+
+
 def _pick(matches: list[dict[str, Any]], kind: str, wanted: str, listing: str) -> Resolved:
     """Choose the one match, or refuse — never choose between several."""
     if not matches:
@@ -190,10 +215,7 @@ def project(
     if found is not None:
         return Resolved(found)
     if owner is None:
-        raise Refusal(
-            f"'{value}' is not a project id, and a project name is unique only inside a "
-            "persona. Pass --persona as well, or give the project's id."
-        )
+        raise _needs_a_persona(value)
     if not live:
         cached = _recall("projects", str(owner), value)
         if cached is not None:
