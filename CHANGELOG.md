@@ -5,6 +5,28 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.13 — 2026-09-05
+
+A Kosmos run can be given data now. Until today it could not be.
+
+### Fixed
+
+- **Starting a Kosmos run sends the objective and your data.** It used to send the objective
+  and nothing else, and there was no flag that could have sent more. `kosmos start` now takes
+  `--data`, spelled and repeated exactly like the one on `task submit`: hand it the URI an
+  upload printed, once for each entry. A folder you uploaded as one bundle goes in the same
+  way a single file does.
+- **You can see what went with the run.** The start prints one `DATA:` line per entry, beside
+  the project and session ids and before anything is charged. If an entry is missing from that
+  list, the run did not get it.
+
+### Changed
+
+- **The data page now covers both ways in.** Its steps for attaching data were written for
+  one-shot tasks, and nothing said so, so the natural reading was that a Kosmos run took data
+  the same way. It does not. That section now says which surface it is, and a new one beside
+  it covers a run. The Kosmos page points at both.
+
 ## 2026.9.12 — 2026-09-05
 
 What a free read of a Kosmos run tells you, and two dead ends it used to send you down.

@@ -332,13 +332,22 @@ def kosmos_start(
         str,
         typer.Option("--objective-file", metavar="FILE", help="the objective the user confirmed"),
     ],
+    # `task submit --data`, down to the short form and the help text, because the bug this
+    # fixes was a reader expecting the two surfaces to behave alike. Like that one it takes a
+    # bare list and is deliberately absent from `_ids`: the platform normalises a `data_entry:`
+    # prefix and rejects a bad id itself, and both upload shapes wear the same URI, so a check
+    # here could only reject spellings the platform accepts.
+    data: Annotated[
+        list[str] | None,
+        typer.Option("-d", "--data", metavar="URI", help="a data_entry: URI; repeat for several"),
+    ] = None,
     key_file: KeyFile = None,
 ) -> None:
     """Start one run from an objective file.
 
     The objective comes from a file, never a string. The project must be owned by the persona
     or the platform answers 500. The stop command is printed with the ids, before anything
-    can block.
+    can block, and so is a DATA line for every entry --data attached.
     """
 
     def precheck() -> None:
@@ -348,7 +357,11 @@ def kosmos_start(
     _spend(
         key_file,
         lambda client: kosmos.start(
-            client, project=project, persona=persona, objective_file=objective_file
+            client,
+            project=project,
+            persona=persona,
+            objective_file=objective_file,
+            data=list(data or []),
         ),
         precheck,
     )
