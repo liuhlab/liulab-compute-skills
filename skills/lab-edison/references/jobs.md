@@ -55,8 +55,20 @@ one free submission anybody could have made turned out not to exist.
 
 ## Running the client
 
-`edison-cli` runs it. `SKILL.md` carries the full invocation; every `edison-cli` line in
-`references/` is short for it. Write the query the user confirmed to a file, then:
+`edison-cli` runs it, and the bare name is the whole command. `[verified]` 2026-09-05: this
+plugin ships `bin/edison-cli`, and Claude Code puts `<plugin-root>/bin` on PATH whether or not
+that directory exists, without a restart. So every `edison-cli` line in `references/` is what you
+type, and `Bash(edison-cli:*)` is a permission rule that survives a release.
+
+Where it is not on PATH — the other agent tools install a plugin by symlink and get no such
+entry — the same command is
+`pixi run --manifest-path <plugin root>/pyproject.toml edison-cli <args>`. Read that line off
+`edison-cli preflight`, which prints whichever spelling the machine takes, rather than writing
+the path out: the plugin cache holds one directory per version, so a spelling with a version in
+it stops matching at the next update. `${CLAUDE_PLUGIN_ROOT}` is `[verified]` unset in the shell
+an agent's tool calls run in, so nothing here is built on it.
+
+Write the query the user confirmed to a file, then:
 
 ```bash
 edison-cli task submit --job LITERATURE --query-file /path/to/query.txt
@@ -91,6 +103,10 @@ version: `pixi.lock` does both, structurally, for every platform the lab uses.
 - **The environment lives in the plugin's own directory**, beside the manifest. It is not the
   user's project and not an environment they maintain, and an activated pixi shell of their own
   changes nothing, because `--manifest-path` names the manifest outright.
+- **`bin/edison-cli` is that same `pixi run`**, with the manifest resolved from the wrapper's own
+  location. It runs `python -m edison_cli`, never the console script: inside the environment that
+  script wears this same name and the wrapper is earlier on PATH, so calling it by name would
+  make the wrapper exec itself.
 
 `EdisonClient()` takes no arguments here, and constructing it is already a network call: it
 authenticates and fetches your organisations eagerly, so a bad key fails at construction rather

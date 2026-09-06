@@ -8,6 +8,7 @@ race it is paying for.
 
 from __future__ import annotations
 
+from edison_cli.kosmos import ECHO_LINES
 from tests.edison_cli.conftest import ACCOUNT, PERSONA_ID, PROJECT_ID, SESSION_ID, Harness
 
 # A real entry, and a collection rather than a single file — ten files zipped behind one URI.
@@ -78,6 +79,54 @@ def test_start_prints_the_ids_and_a_runnable_stop_command(edison: Harness) -> No
     assert f"--session {SESSION_ID}" in stop_line
     assert "kosmos stop" in stop_line
     assert f"SESSION_ID: {SESSION_ID}" in run.stdout
+
+
+def _started_with(edison: Harness, objective: str) -> object:
+    """Start a run whose objective is exactly this text."""
+    return edison.run(
+        "kosmos",
+        "start",
+        "--project",
+        PROJECT_ID,
+        "--persona",
+        PERSONA_ID,
+        "--objective-file",
+        edison.write("objective.txt", objective),
+        "-f",
+        str(edison.key_file),
+    )
+
+
+def test_start_caps_the_objective_echo_and_says_how_many_lines_it_cut(edison: Harness) -> None:
+    """A long objective used to bury the receipt, and a harness then truncated it away.
+
+    The first live run echoed 675 lines between `DATA:` and `SESSION_ID`. That put the whole
+    output past the harness's inline limit, so the caller was shown a preview taken from the
+    top and never saw `STOP:` — the only halt path a run that is actively spending has.
+    """
+    run = _started_with(edison, "".join(f"line {n} of the objective\n" for n in range(400)))
+    assert run.returncode == 0, run.stderr
+    echoed = [line for line in run.stderr.splitlines() if line.startswith("  | ")]
+    assert len(echoed) == ECHO_LINES + 1, f"the echo was not capped: {len(echoed)} lines"
+    assert echoed[-1] == f"  | … [+{400 - ECHO_LINES} lines cut]"
+    # The point of the cap: everything after the echo is still there to be read.
+    assert "STOP: " in run.stdout
+    assert f"SESSION_ID: {SESSION_ID}" in run.stdout
+
+
+def test_start_echoes_a_short_objective_whole_and_marks_nothing(edison: Harness) -> None:
+    """A marker on an echo nothing was taken off would be a wrong answer of its own."""
+    run = _started_with(edison, "compare the two cohorts\nand say which is which\n")
+    assert run.returncode == 0, run.stderr
+    echoed = [line for line in run.stderr.splitlines() if line.startswith("  | ")]
+    assert echoed == ["  | compare the two cohorts", "  | and say which is which"]
+
+
+def test_start_sends_the_whole_objective_however_much_of_it_was_echoed(edison: Harness) -> None:
+    """The cap is on the narration alone. Sending a clipped objective would be a real bug."""
+    objective = "".join(f"line {n} of the objective\n" for n in range(400))
+    run = _started_with(edison, objective)
+    assert run.called("send_chat_message")[0]["chars"] == len(objective)
 
 
 def test_start_reads_the_job_name_off_the_persona_rather_than_guessing(edison: Harness) -> None:

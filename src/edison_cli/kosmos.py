@@ -28,6 +28,7 @@ from edison_cli.runtime import (
     Refusal,
     as_dict,
     clipped,
+    clipped_lines,
     identifier,
     invocation,
     note,
@@ -46,6 +47,11 @@ HALT = (
     "tasks, and do not start any new tool calls. This is a deliberate cancellation: the "
     "remaining work is no longer wanted. Acknowledge and halt."
 )
+
+# How much of the objective `start` echoes before it sends it. Enough to recognise which file
+# went, and small enough that the whole command's output stays inside what an agent harness
+# will render — which is what keeps the `STOP:` line at the bottom of it visible.
+ECHO_LINES = 20
 
 
 def _rows(client: EdisonClient, project: Any) -> list[dict[str, Any]]:
@@ -151,8 +157,13 @@ def start(
     for uri in data:
         say(f"DATA: {uri}")
 
+    # Narration, and capped at a glance's worth. The objective is a file the user wrote and
+    # confirmed, so echoing all of it says nothing new and costs the receipt below: past the
+    # harness's inline limit the whole output is replaced by a preview taken from the top, and
+    # `STOP:` is at the bottom. Showing the objective before the command runs is the agent's
+    # job, not this echo's — `SKILL.md`, "show before you spend".
     note(f"edison-cli: starting Kosmos with the objective in {objective_file}:")
-    for line in objective.splitlines():
+    for line in clipped_lines(objective, ECHO_LINES):
         note(f"  | {line}")
 
     response = as_dict(

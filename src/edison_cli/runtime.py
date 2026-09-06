@@ -76,6 +76,26 @@ def clipped(text: str, limit: int) -> str:
     return f"{text[:limit]}… [+{missing} chars cut]"
 
 
+def clipped_lines(text: str, limit: int) -> list[str]:
+    """Cut a block of text to `limit` lines, ending it with a marker saying how many went.
+
+    `clipped` measured in lines, for the same reason and with the same marker: a block that
+    stops with nothing to say so is read as the whole of it.
+
+    The cut is worth more here than the narration is. The block this exists for is the
+    objective a Kosmos run is about to be charged for, and it is as long as the file the user
+    wrote — 675 lines on the first live run, between the `DATA:` receipt and the `STOP:` line.
+    An agent harness that finds the whole output too big to show writes it to a file and
+    renders a preview taken from the TOP, so an uncapped echo pushes the only halt path a
+    spending run has out of the caller's sight. Cutting it is what keeps `STOP:` visible.
+    """
+    lines = text.splitlines()
+    missing = len(lines) - limit
+    if missing <= 0:
+        return lines
+    return [*lines[:limit], f"… [+{missing} lines cut]"]
+
+
 def note(line: str) -> None:
     """Print one line of narration on stderr, so stdout stays the receipt."""
     print(line, file=sys.stderr, flush=True)
@@ -151,18 +171,14 @@ def text_from_file(path: str, what: str, undone: str) -> str:
 
 
 def invocation() -> str:
-    """Spell this command the way the skill types it, so a printed command is runnable.
+    """Spell this command the way the caller's shell can run it, so a printed command pastes.
 
-    The skill reaches the package through pixi with an explicit manifest, because it runs
-    from the installed plugin while the working directory is the user's own project. The
-    path is spelled with a tilde, which the shell expands, rather than with a home directory
-    that carries a username.
+    `preflight.command` decides, and this stays as the name the rest of the package uses: the
+    caller is usually a `STOP:` line for a run that is spending, and the two properties that
+    matter for it — bare where the wrapper is on PATH, an explicit manifest where it is not —
+    are facts about the machine, which is the preflight's half.
     """
-    root = Path(__file__).resolve().parents[2]
-    manifest = root / "pyproject.toml"
-    if not manifest.is_file():
-        return "edison-cli"
-    return f"pixi run --manifest-path {preflight.display(manifest)} edison-cli"
+    return preflight.command()
 
 
 def as_dict(row: Any) -> dict[str, Any]:

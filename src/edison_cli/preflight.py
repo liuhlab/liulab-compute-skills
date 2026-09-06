@@ -13,6 +13,10 @@ is why the file exists.
 drives this against fixtures, and on a maintainer's machine, where the real key IS exported,
 every fixture would otherwise report configured and prove nothing.
 
+It also owns HOW THIS COMMAND IS SPELLED on the machine it is running on — `command` below —
+because that is another thing about the machine rather than about a subcommand, and because
+`runtime` already imports this module and cannot be imported back.
+
 This module is the ONE owner of the constants describing the key file: the variable name the
 client reads, the shipped placeholder, the file's location, and which permission modes are
 acceptable. `--constants` prints them and exits 0 without reading any key file, one
@@ -52,6 +56,13 @@ MODE_GLOB = "*00"
 MODE_LABEL = "owner-only"
 CHMOD_MODE = "600"
 
+# The plugin around this file, and the two paths that decide how the command is spelled. Both
+# are resolved from this file's own location, never from the working directory: an agent
+# harness resets that between tool calls, and the plugin is installed somewhere else again.
+ROOT = Path(__file__).resolve().parents[2]
+WRAPPER = ROOT / "bin" / "edison-cli"
+MANIFEST = ROOT / "pyproject.toml"
+
 # The name is built into the pattern rather than written into it, so this line is not itself
 # an assignment for the no-secrets sweep to flag. Last assignment wins, as when sourced.
 _ASSIGNMENT = re.compile(rf"^[ \t]*(?:export[ \t]+)?{re.escape(VAR)}[ \t]*=[ \t]*(.*)$")
@@ -66,6 +77,40 @@ def display(path: Path) -> str:
     home = str(Path.home())
     text = str(path)
     return f"~{text[len(home) :]}" if text.startswith(home + os.sep) else text
+
+
+def on_path() -> bool:
+    """Say whether the caller's own shell would find `edison-cli` as a bare command.
+
+    Claude Code puts `<plugin-root>/bin` on PATH, so the wrapper shipped there is usually
+    reachable by name. The other agent tools this repo supports install a plugin by symlink
+    and get no such entry, which is why this is asked rather than assumed.
+
+    PATH is read and `shutil.which` is not: inside `pixi run` the environment's own console
+    script is also called `edison-cli` and sits earlier on PATH, so `which` answers yes on
+    every machine and would tell the caller to type a command their shell cannot find.
+    """
+    if not WRAPPER.is_file():
+        return False
+    return str(WRAPPER.parent) in os.environ.get("PATH", "").split(os.pathsep)
+
+
+def command() -> str:
+    """Spell this command the way the caller's own shell can run it.
+
+    A printed command is meant to be pasted — `kosmos start` prints the stop line for a run
+    that is spending — so it has to be the spelling that works where the reader is, not the
+    one that worked in here.
+
+    The explicit form names the plugin's OWN manifest, because the working directory is the
+    user's project and an activated pixi environment of theirs must not change which
+    environment runs. Its path is spelled with a tilde, which the shell expands, rather than
+    with a home directory that carries a username. It also carries the plugin's version, so it
+    stops matching a permission rule at the next release; that is why the wrapper exists.
+    """
+    if on_path() or not MANIFEST.is_file():
+        return "edison-cli"
+    return f"pixi run --manifest-path {display(MANIFEST)} edison-cli"
 
 
 def constants(key_file: str | None = None) -> list[str]:
@@ -175,6 +220,7 @@ def check(key_file: str | None = None) -> Report:
         exported = os.environ.get(VAR, "")
         if exported:
             lines.append(f"key: SET ({len(exported)} chars)")
+            lines.append(f"command: {command()} <args>")
             lines.append(f"edison: CONFIGURED (source: {VAR} exported into this process)")
             return Report(lines, True, exported)
 
@@ -218,6 +264,10 @@ def check(key_file: str | None = None) -> Report:
     if reasons:
         lines += _remedy(shown, "; ".join(reasons))
         return Report(lines, False)
+    # How to type every later command, on the machine this one is running on. It goes with the
+    # verdict rather than in SKILL.md, for the same reason the remedy does: a spelling the page
+    # states and the machine does not take is a spelling that sends the agent guessing.
+    lines.append(f"command: {command()} <args>")
     lines.append(f"edison: CONFIGURED (source: key file {shown})")
     return Report(lines, True, value)
 
