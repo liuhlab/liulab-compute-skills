@@ -3,37 +3,33 @@
 > **Provenance** — Source: `edison-client` 0.16.1, the live run of 2026-09-05, a smoke test on 2026-09-06, and the vendor's Kosmos and client guides · Checked: 2026-09-06 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
-Companion to `SKILL.md`. Read it whenever a user says Kosmos. Most of what this page is for
-happens before a run starts, because a run is the expensive part.
+Companion to `SKILL.md`. Read it whenever a user says Kosmos.
 
 ## What Kosmos is
 
 Not a job you submit. A **chat session on a project**, which fans the objective out into
 many ordinary tasks over several rounds until it decides it is done.
 
-The shape, as the platform presents it: a **persona** is created from a published agent —
-the browser's picker offers `@FutureHouse/data-analysis-aries` — and given a name the user
-chooses, so "Kosmos" or "Virtual Organism" in a sidebar is *their* label, not a platform
-job name. Inside a persona come **projects**, inside a project a **conversation**, and the
-conversation spawns the tasks.
+The shape: a **persona** is created from a published agent — the browser's picker offers
+`@FutureHouse/data-analysis-aries` — and given a name the user chooses, so "Kosmos" or
+"Virtual Organism" in a sidebar is *their* label, not a platform job name. Inside a persona
+come **projects**, inside a project a **conversation**, and the conversation spawns the tasks.
 
 `[verified]` The fan-out carries three job names, none of them in `JobNames`:
 `job-futurehouse-paperqa3-api`, `job-futurehouse-data-analysis-heron` and
-`job-futurehouse-data-analysis-heron-data`. The last was the most numerous, and it appears a
-minute after a `heron` task — so the fan-out is **two levels deep**, `heron` tasks dispatching
-children of their own. Every task carries the project's id. The run picks its own round width;
-nothing in the API caps it.
+`job-futurehouse-data-analysis-heron-data`. The last appears a minute after a `heron` task —
+so the fan-out is **two levels deep**, `heron` tasks dispatching children of their own. Every
+task carries the project's id. The run picks its own round width; nothing in the API caps it.
 
 ## The job name, and why it is not in `JobNames`
 
 `[verified]` A persona carries `metadata.persona_job_name` — for this one,
 **`job-futurehouse-data-analysis-aries`**, matching the agent behind the browser's picker.
-It is the authoritative source and free to read *before* anything is spent.
+It is authoritative, and free to read *before* anything is spent.
 `get_session` on a running session returns the same name.
 
 It is absent from `JobNames` because `JobNames` enumerates the **one-shot task** jobs that
-`create_task` takes. Kosmos is on the **chat** surface instead. Two API surfaces, and the
-enum describes one of them.
+`create_task` takes. Kosmos is on the **chat** surface instead.
 
 `[read]` The vendor's client page says Kosmos is not available via the API.
 That is a claim about job names: there is no `JobNames.KOSMOS`, and `create_task`
@@ -93,39 +89,46 @@ edison-cli kosmos stop --project ID|NAME --session <id> [--persona ID|NAME]
 ```
 
 One command, two steps in a fixed order: queue the halt **first**, then cancel every task still
-`queued` or `in progress`. The other way round the orchestrator refills them
-while you work, which is why the order is pinned by a test. `cancel_task` returning `False`
-means the task went terminal between the listing and the call — documented behaviour, not an
-error, and the command reports it as such.
+`queued` or `in progress`. The other way round the orchestrator refills them while you work.
+`cancel_task` returning `False` means the task went terminal between the listing and the call —
+documented behaviour, not an error, and the command reports it as such.
 
 ## Reading a run that already exists — free
 
-None of this spends anything, and it is usually what the user actually wants:
+None of this spends anything, and it is usually what the user wants:
 
 ```bash
 edison-cli kosmos sessions [-n <n>]                          # session id, project id, time
 edison-cli kosmos status --project ID|NAME --session <id> [--tail <n>]
 edison-cli kosmos tasks --project ID|NAME --session <id>
-edison-cli task fetch <task-id> --out <dir>                  # what one task produced
+edison-cli task fetch <task-id> --out <dir>                  # one task's own answer, if it has one
 ```
 
 `status` prints the fan-out and the last `--tail` utterances, six by default. It and `tasks`
 take `--persona` for a project name and `--no-cache` to re-list; `start` and `stop` take no
-`--no-cache` — they resolve live.
+`--no-cache` — they resolve live. Both mark a line they cut with `… [+N chars cut]`; an
+unmarked line is complete.
 
-`[verified]` **A new project arrives with a session already in it.** On 2026-09-06 a
-`project ensure` produced one about seven seconds later — one canned `Hello! I'm …` greeting,
-no tasks, and no `kosmos start` anywhere near it. It costs nothing, but `kosmos sessions` then
-lists one per project, and a reader hunting a lost run can take it for the run. Zero tasks and a
-lone greeting is that session, not a run that died.
+`[verified]` **A fan-out subtask normally carries no answer of its own.** `HAS_ANSWER: no`
+under `STATUS: success` was all five fetched: `paperqa3-api` and `heron` children leave their
+output in the transcript and in `data_entry:` deliverables. Read `kosmos status` and fetch the
+entries it names.
+
+`[verified]` **A new project arrives with a session already in it.** A `project ensure`
+produced one about seven seconds later — one canned `Hello! I'm …` greeting and no tasks. It
+costs nothing, but `kosmos sessions` then lists one per project, and a reader hunting a lost
+run can take a greeting with no tasks under it for the run that died.
 
 `[verified]` From the session id alone the project id, the whole fan-out and the transcript all
 come back — `get_session` returns the project id as `type_id`, which is why `kosmos sessions`
 prints the project beside every session. A session id on its own is a dead end: `status`,
-`tasks` and `stop` all need both. It is the way back to a session id nobody wrote down.
-Underneath: `get_conversations`, `get_session` (a **list** of one),
-`get_tasks(project_id=…)`, `get_conversation`, `list_files(...)["data"]`. Several hand back a
-container rather than the thing itself; the commands unwrap them.
+`tasks` and `stop` all need both. Underneath: `get_conversations`, `get_session` (a **list** of
+one), `get_tasks(project_id=…)`, `get_conversation`, `list_files(...)["data"]`. Several hand
+back a container rather than the thing itself; the commands unwrap them.
+
+`[verified]` **`(project not recoverable)` in a `kosmos sessions` row** means the project
+could not be read at all: it was deleted, no persona owns it, or `get_session` failed. One
+string, three causes. It says nothing about the other rows, which are still usable.
 
 `[verified]` **Assistant `content` is empty on every turn.** What the browser shows lives in
 `tool_calls[].function.arguments`: a `send_message` call carries the reply as `display_text`,
@@ -162,9 +165,9 @@ Same source, same date:
 
 No figures here: the vendor's pricing page did not resolve. `[verified]`
 **Billing is per task execution** — the credit ledger holds one row per task, at an amount
-that differs by job, so the task count is the bill and `kosmos tasks` reads as a cost. That
-sum grows round after round. The persona's `budget_config` is the only ceiling visible
-anywhere in the API, and whether it stops a runaway run is untested.
+that differs by job, so the task count is the bill and `kosmos tasks` reads as a cost. The
+persona's `budget_config` is the only ceiling visible anywhere in the API, and whether it
+stops a runaway run is untested.
 
 `[verified]` The client exposes no credits or balance call, so no number can be checked
 before spending. Send the user to their credits page.

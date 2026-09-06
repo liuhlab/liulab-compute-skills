@@ -5,6 +5,34 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.12 — 2026-09-05
+
+What a free read of a Kosmos run tells you, and two dead ends it used to send you down.
+
+### Fixed
+
+- **A line that was cut now says it was cut.** Reading a run printed each thing it said up to
+  a fixed length and then stopped, mid-sentence, with nothing to mark the break. The same
+  happened to the query on every task row and to the description on every search result. All
+  three now end in a marker giving the number of characters missing, so a line without one is
+  whole. The lengths are unchanged: they are what stops a single command from filling a whole
+  transcript.
+
+### Changed
+
+- **Fetching one subtask of a run is a dead end.** A subtask almost never carries an answer of
+  its own. The work shows up in the run's own transcript and in the data entries it leaves
+  behind. The Kosmos page used to offer that fetch as the way to see what a task produced,
+  which cost five wasted round trips before the pattern was clear. It now points at the run's
+  status and those entries instead.
+- **"(project not recoverable)" has a written meaning now.** The session listing prints it
+  beside a session whose project could not be read. Three things cause it: the project was
+  deleted, no persona owns it, or the lookup failed. It says nothing about the other rows,
+  which are still good.
+- **Searching your data matches on descriptions.** One search found an entry by wording that
+  appears nowhere but its description. The data page now says so, and warns that the
+  description it prints beside each match is a short one.
+
 ## 2026.9.11 — 2026-09-06
 
 Six things a live run of the Edison command found, and the timing figure it corrected.

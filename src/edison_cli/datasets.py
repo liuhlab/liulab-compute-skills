@@ -20,7 +20,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from edison_cli.runtime import Refusal, note, say, without_account
+from edison_cli.runtime import Refusal, clipped, note, say, without_account
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from edison_client import EdisonClient
@@ -90,7 +90,9 @@ def search(client: EdisonClient, *, text: str, limit: int) -> int:
             f"{PREFIX}{public.get('id', '')}",
             str(public.get("name", "")),
             str(public.get("created_at", "")),
-            str(public.get("description", ""))[:60].replace("\n", " "),
+            # The description is searched, not just shown, so a reader has to be able to see
+            # that the phrase they matched on may be in the part that was cut.
+            clipped(str(public.get("description", "")).replace("\n", " "), 60),
         ]
         say("ENTRY: " + "\t".join(cells))
     if not rows:

@@ -25,6 +25,11 @@ unless `-n` says otherwise. The path `upload` takes is a positional argument, no
 `DATA_URI:` is the first line of output and carries the URI `task submit --data` consumes;
 `SHAPE:` on the second line says which of the two upload shapes it took.
 
+`[verified]` **`search` matches on descriptions, not only on names.** A query found an entry on
+a phrase that appears nowhere but its description. The description column of an `ENTRY:` line
+is cut at 60 characters and a cut one ends in `… [+N chars cut]`, so on a marked line the term
+you matched on may be in the part that went.
+
 **The shape is chosen for you.** A directory goes up as a collection and a file as a file.
 Neither `--collection` nor `--no-collection` is required, and the pair exists only to override
 that default:
