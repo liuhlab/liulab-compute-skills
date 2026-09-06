@@ -137,7 +137,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   (`disable-model-invocation: true`, a Claude Code key other agent tools
   ignore), so it never triggers on its own and never spends a credit
   unprompted. Its spend path is the `src/edison_cli/` package run through
-  pixi, not a script; step 0 is `edison-cli preflight`, which refuses on a
+  pixi, not a script, typed as the bare `edison-cli` because Claude Code puts
+  `bin/` on PATH; step 0 is `edison-cli preflight`, which refuses on a
   machine with no key (`docs/adr/0011-the-spend-path-became-a-package.md`).
   The key lives in a machine-local file beside `personal.md`, never inside
   it, and is never transmitted, printed or asked for. Why it is one skill in

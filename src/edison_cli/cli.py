@@ -346,8 +346,10 @@ def kosmos_start(
     """Start one run from an objective file.
 
     The objective comes from a file, never a string. The project must be owned by the persona
-    or the platform answers 500. The stop command is printed with the ids, before anything
-    can block, and so is a DATA line for every entry --data attached.
+    or the platform answers 500. The project id, the job name, the ownership check and a DATA
+    line for every entry --data attached are all printed BEFORE the send, so a missing DATA
+    line means stop and nothing has been charged. The session id and the stop command come
+    after it: the session does not exist until the send returns.
     """
 
     def precheck() -> None:
@@ -595,5 +597,11 @@ def data_search(
 
 
 def main() -> None:
-    """Run the command line. This is the entry point `[project.scripts]` names."""
-    app()
+    """Run the command line. This is the entry point `[project.scripts]` names.
+
+    `prog_name` is pinned because there are three ways in — the console script, `bin/edison-cli`
+    on PATH, and `python -m edison_cli`, which is what that wrapper execs — and click would
+    otherwise print the third one's spelling into every usage line and every `--help`. The name
+    a reader is told to type must not depend on which door the process came through.
+    """
+    app(prog_name="edison-cli")

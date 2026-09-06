@@ -1,0 +1,32 @@
+#!/bin/sh
+# `edison-cli` as a bare command, wherever this plugin is installed.
+#
+# Claude Code puts `<plugin-root>/bin` on PATH unconditionally — whether or not the directory
+# exists, and without restarting the session. `[verified]` 2026-09-05. So shipping this file is
+# what turns every command in `skills/lab-edison/` into the short form its pages already write,
+# and the permission rule `Bash(edison-cli:*)` into one that survives a release: the plugin cache
+# holds one directory per version, so the explicit `pixi run --manifest-path <cache>/…` spelling
+# carries a version number and stops matching the next time the plugin updates.
+#
+# `${CLAUDE_PLUGIN_ROOT}` is NOT available here — `[verified]` unset in the environment an agent's
+# tool calls run in — so the root is resolved from this script's own location. Nothing depends on
+# the working directory, which an agent harness resets between calls.
+#
+# `python -m edison_cli` and NEVER `pixi run … edison-cli`: the console script inside the pixi
+# environment wears this same name, this wrapper is earlier on PATH, and calling it by name would
+# make this file exec itself until the machine gives up. The module entry point cannot recurse.
+#
+# The other agent tools this repo supports install a plugin by symlink and get no such PATH entry.
+# There the fallback is the explicit form, which `SKILL.md` step 0 keeps and the preflight prints.
+set -eu
+
+if ! command -v pixi >/dev/null 2>&1; then
+    printf 'edison-cli: pixi is not installed, and this command runs inside a pixi environment.\n' >&2
+    printf 'Install it from https://pixi.sh, then run edison-cli preflight again.\n' >&2
+    exit 127
+fi
+
+# `CDPATH=''` because a user's own CDPATH would otherwise make `cd` land somewhere else and print
+# where it went. `--` because a plugin cache path is not this script's to vouch for.
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+exec pixi run --manifest-path "$root/pyproject.toml" python -m edison_cli "$@"

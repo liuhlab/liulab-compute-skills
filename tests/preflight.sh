@@ -33,6 +33,16 @@ python3 "$root/src/edison_cli/preflight.py" ||
 # spends twenty seconds and 600 MB is a report nobody runs twice.
 echo
 echo "== edison-cli environment (optional) =="
+# The wrapper is what makes `edison-cli` a bare command: Claude Code puts the installed plugin's
+# `bin/` on PATH, so a missing or non-executable file here is a command nobody can type. Checked
+# in the tree rather than on PATH — this repo is not the installed plugin, and its own `bin/` is
+# not on this shell's PATH.
+if [ -x "$root/bin/edison-cli" ]; then
+  echo "wrapper: PRESENT and executable (bin/edison-cli)"
+else
+  echo "wrapper: MISSING or not executable (bin/edison-cli) — the command is not on PATH without it"
+fi
+
 if ! command -v pixi >/dev/null 2>&1; then
   echo "pixi: MISSING — edison-cli runs inside a pixi environment, so pixi comes first"
   echo "(every other skill here is bash and is unaffected.)"
@@ -54,7 +64,8 @@ for env in info.get("environments_info", []):
     echo "edison-cli: BUILT and on the environment's path"
   else
     echo "edison-cli: NOT BUILT YET — the first Edison command builds it (about 20 s, once)"
-    echo "  pixi run --manifest-path <plugin-root>/pyproject.toml edison-cli preflight"
+    echo "  edison-cli preflight"
+    echo "  (off PATH: pixi run --manifest-path <plugin-root>/pyproject.toml edison-cli preflight)"
   fi
 fi
 

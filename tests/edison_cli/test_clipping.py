@@ -9,14 +9,20 @@ descriptions, so a reader can be looking at a clipped one and not know their ter
 part that went.
 
 These tests pin the marker at all three call sites, and pin that it stays inside its column.
+
+A fourth cut is measured in lines rather than characters and falls on text of the user's own:
+the objective `kosmos start` echoes before it sends it. That one is not about flooding a
+transcript but about what a flooded one costs — a harness that finds the output too big to
+show renders a preview taken from the top, and the `STOP:` line is at the bottom.
 """
 
 from __future__ import annotations
 
-from edison_cli.runtime import clipped
+from edison_cli.runtime import clipped, clipped_lines
 from tests.edison_cli.conftest import PROJECT_ID, SESSION_ID, Harness
 
 MARK = "chars cut]"
+LINE_MARK = "lines cut]"
 
 
 def test_text_that_fits_is_printed_exactly_as_the_platform_said_it() -> None:
@@ -35,6 +41,21 @@ def test_the_marker_stays_inside_its_column() -> None:
     marked = clipped("a description that runs on\tand on\nand on", 10)
     assert "\t" not in marked[10:]
     assert "\n" not in marked[10:]
+
+
+def test_a_block_that_fits_comes_back_line_for_line() -> None:
+    """The fourth cap is measured in lines, and a marker it did not earn is the same wrong answer."""
+    assert clipped_lines("one\ntwo\nthree", 3) == ["one", "two", "three"]
+    assert clipped_lines("", 3) == []
+
+
+def test_a_block_over_the_cap_ends_in_a_marker_counting_the_lines() -> None:
+    """How many lines went is what tells the reader whether they are missing anything."""
+    block = "".join(f"line {n}\n" for n in range(10))
+    cut = clipped_lines(block, 4)
+    assert cut[:4] == ["line 0", "line 1", "line 2", "line 3"]
+    assert cut[-1] == "… [+6 lines cut]"
+    assert LINE_MARK in cut[-1]
 
 
 def test_kosmos_status_marks_the_utterance_it_cut(edison: Harness) -> None:

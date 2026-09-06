@@ -1,6 +1,6 @@
 # Datasets: upload, attach, fetch what the run made
 
-> **Provenance** — Source: `edison-client` 0.16.1 · Checked: 2026-09-05 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1 and the vendor's Kosmos best-practices guide · Checked: 2026-09-05 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`. Read it whenever a run takes data with the question: `ANALYSIS` needs a
@@ -134,7 +134,16 @@ platform cannot be reached from ircbc at all; nothing verifies that.
 
 ## Preparing the data
 
-Better input beats a bigger job, and `kosmos.md`'s dataset section is the vendor's guidance for
-both: processed rather than raw, every column intuitively labelled or described in a sheet of
-its own, and a size the platform will take. Put what the columns mean in the `description`: it
-travels with the entry, so the next person to find it does not have to guess.
+Better input beats a bigger job, and the guidance is the same whether the data goes to a task or
+to a run. Vendor guidance, from
+<https://docs.edisonscientific.com/guides/best-practices-for-optimizing-kosmos-workflows>,
+fetched 2026-09-05:
+
+- Processed data of good quality, not raw files.
+- Every column name intuitively labelled. Where a name cannot carry its own meaning, add a
+  sheet describing what each one means.
+- It does best on complex, high-dimensional data.
+- Under 5GB in total, uncompressed.
+
+Put what the columns mean in the `description` as well: it travels with the entry, so the next
+person to find it does not have to guess.

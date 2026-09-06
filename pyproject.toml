@@ -35,8 +35,11 @@ dynamic = ["version"]
 # now — and the default environment takes click from PyPI, where the two agree.
 dependencies = ["edison-client>=0.16", "fhlmi>=1.0", "typer>=0.12"]
 
-# The one console script. `pixi run edison-cli ...` from the plugin root is how the skill
-# reaches it, and `--manifest-path` makes that work from any working directory.
+# The one console script, installed into the environment by the build. What the skill actually
+# types is `bin/edison-cli`, the wrapper Claude Code's PATH entry makes a bare command, and that
+# wrapper runs `python -m edison_cli` rather than this name: it is earlier on PATH than this
+# script and shares its name, so calling the name would exec the wrapper again. `--manifest-path`
+# is what makes either spelling work from any working directory.
 [project.scripts]
 edison-cli = "edison_cli.__main__:main"
 
@@ -154,9 +157,11 @@ vale = "vale --glob='!{.pixi,site,dist,build}/**' ."
 markdownlint = "markdownlint-cli2"
 # `git ls-files`, not a hand-written glob: the file set is then "every tracked script",
 # so a script added in a directory nobody thought of is checked rather than skipped.
+# `bin/*` is named beside the suffix because a command on PATH cannot wear one — `bin/edison-cli`
+# is shell, and without this line it would be the one script here that nothing checks.
 # Default severity — a finding this repo disagrees with is silenced at its line with a
 # `shellcheck disable` directive saying why, never by turning a whole class off here.
-shellcheck = "shellcheck $(git ls-files '*.sh')"
+shellcheck = "shellcheck $(git ls-files '*.sh' 'bin/*')"
 # The structural gate: the conventions a lab repo keeps after it leaves the template, read
 # off `[tool.liulab.agent-docs]` and `[tool.liulab.waived]` at the foot of this file. The
 # script is a verbatim copy of the template's — never edit it here; a rule this repo cannot

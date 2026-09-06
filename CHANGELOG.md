@@ -5,6 +5,41 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.14 — 2026-09-06
+
+The Edison command is short enough to type, and a long objective no longer hides the line
+that stops a run.
+
+### Fixed
+
+- **`edison-cli` is now a command you can just run.** It used to be `pixi run`, a flag, and
+  the full path to the installed plugin. That path holds the version, so the command changed
+  at every release. A permission rule written for it stopped matching the next day, and one
+  session in the field ended up asking its user to paste the command in by hand. The plugin
+  ships the command itself now, and Claude Code puts it on your path. `Bash(edison-cli:*)` is
+  a rule that keeps working. Everything the skill prints back to you is spelled the short way
+  too, including the line that stops a Kosmos run.
+- **The line that stops a Kosmos run no longer gets cut off.** Starting a run printed the
+  whole objective back to you first. The first real run sent 675 lines. That pushed the
+  output past what the chat will show at once, so you saw the top of it and lost the bottom
+  — where the stop command is. It now shows the first twenty lines and says how many it left
+  out. The objective that goes to the platform is untouched.
+
+### Changed
+
+- **The check at the start says how to type the command.** Its last line is the exact
+  spelling this machine takes, so the agent has it before the first call instead of guessing.
+  The other agent tools do not put the command on your path. There that line is the longer
+  form, and it still works.
+- **"Before anything can block" was a promise the start could not keep.** The page and the
+  command's own help said the whole start receipt was printed before the run could hang. Four
+  lines are: the project, the job, the ownership check, and one per dataset you attached. The
+  session id and the stop command cannot be, because the session does not exist until the
+  platform answers. The promise that held is the useful one: if a dataset you attached is
+  missing from that list, stop. Nothing has been charged.
+- **The advice on preparing a dataset moved to the data page.** It sat on the Kosmos page and
+  reads the same for any run that takes data.
+
 ## 2026.9.13 — 2026-09-05
 
 A Kosmos run can be given data now. Until today it could not be.

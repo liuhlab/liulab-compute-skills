@@ -22,14 +22,14 @@ run, `datasets.md` uploads data and fetches what a run made, `kosmos.md` is Kosm
 
 ## Step 0 — before any Edison command
 
-From this skill's own directory, every Edison command is
-`pixi run --manifest-path ../../pyproject.toml edison-cli <args>`, which `references/` writes
-`edison-cli <args>` for short. `pixi run` builds the environment on first use; `jobs.md` says
-what that costs.
+Every Edison command is `edison-cli <args>`, which this plugin's `bin/` puts on PATH under Claude
+Code. Off PATH it is
+`pixi run --manifest-path <plugin root>/pyproject.toml edison-cli <args>` instead. `jobs.md`
+covers both and the first run's cost.
 
 1. Run `edison-cli preflight` and relay what it prints: one verdict per condition, never the key,
-   and on failure the tested remedy. It owns the key file; never restate its path, mode,
-   placeholder or fix from here.
+   the `command:` line saying which spelling this machine takes, and on failure the tested
+   remedy. It owns the key file; never restate its path, mode, placeholder or fix from here.
 2. **`pixi: command not found`, or the environment will not build → refuse, and say what to run.**
    Install pixi from <https://pixi.sh>, then re-run step 0. Never fall back to `uv`, to `pip`, or
    to a hand-written client call.

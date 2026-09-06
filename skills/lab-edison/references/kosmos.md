@@ -51,12 +51,15 @@ edison-cli project ensure --name <name> --persona ID|NAME   # reuse-or-create; p
 edison-cli kosmos start --project ID|NAME --persona ID|NAME --objective-file <file>
 ```
 
-Both take a name instead of an id (`tasks.md`). `kosmos start` prints, in order and before
-anything can block: `PROJECT_ID`, the `JOB_NAME` it read off the persona,
-`PERSONA_OWNS_PROJECT: yes`, `SESSION_ID`, runnable `STOP:` and `STATUS:` lines, and last
-`CHAT_STATUS:` — `pending` at the start `[verified]` — plus `CHAT_CLAIM_NAME:`, `CHAT_POD_NAME:`
-and `CHAT_LOGS_URL:` for whichever the response carried. It **refuses before sending** if the
-persona does not own the project. There is no other stop path, so keep the `STOP:` line.
+Both take a name instead of an id (`tasks.md`). `[verified]` **Before the send**: `PROJECT_ID`,
+the `JOB_NAME` read off the persona, `PERSONA_OWNS_PROJECT: yes`, one `DATA:` line per attached
+entry. An attachment missing there means stop — nothing has been charged. It
+**refuses before sending** if the persona does not own the project. **After it**: `SESSION_ID`,
+runnable `STOP:` and `STATUS:` lines, last `CHAT_STATUS:` (`pending` at the start), plus
+`CHAT_CLAIM_NAME:`, `CHAT_POD_NAME:` and `CHAT_LOGS_URL:` for whichever the response carried.
+None of those can come first: the session id does not exist until the send returns, and the
+objective echoed in between is capped at twenty lines. There is no other stop path, so keep the
+`STOP:` line.
 
 Attaching data: `kosmos start --data` (`datasets.md`).
 
@@ -151,17 +154,8 @@ The objective is the part you can improve. Vendor guidance, from
 - **Not a fact lookup.** The answer should not be obvious after reading a few papers — a
   question like that belongs in `LITERATURE` and costs a fraction as much.
 
-Draft it, show it, and let the user edit it before it goes in.
-
-## Preparing the dataset
-
-Same source, same date:
-
-- Processed data of good quality, not raw files.
-- Every column name intuitively labelled. Where a name cannot carry its own meaning, add a
-  sheet describing what each one means.
-- It does best on complex, high-dimensional data.
-- Under 5GB in total, uncompressed.
+Draft it, show it, and let the user edit it before it goes in. Its dataset gets the same
+treatment from the same guide: `datasets.md`.
 
 ## Cost
 
