@@ -57,6 +57,25 @@ def say(line: str) -> None:
     print(line, flush=True)
 
 
+def clipped(text: str, limit: int) -> str:
+    """Cut one piece of platform text to `limit` characters, and say on the line that it was cut.
+
+    The caps are real: a run says thousands of characters at a time and one command must not
+    flood a transcript with them. Cutting in silence is the bug. Everything printed here ends
+    up in an agent's transcript, where a sentence that stops mid-word reads as the whole
+    answer and nothing distinguishes a clipped line from a finished one — so the cut becomes
+    a wrong answer further downstream. The marker says how much is missing, which is the
+    reader's cue to go to the transcript or the entry itself for the rest.
+
+    It carries no tab and no newline: two of the three callers print tab-separated rows that
+    are read by eye and split by column.
+    """
+    missing = len(text) - limit
+    if missing <= 0:
+        return text
+    return f"{text[:limit]}… [+{missing} chars cut]"
+
+
 def note(line: str) -> None:
     """Print one line of narration on stderr, so stdout stays the receipt."""
     print(line, file=sys.stderr, flush=True)

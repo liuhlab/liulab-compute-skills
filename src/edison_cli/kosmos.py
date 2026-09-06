@@ -27,6 +27,7 @@ from edison_cli import personas, projects, resolve
 from edison_cli.runtime import (
     Refusal,
     as_dict,
+    clipped,
     identifier,
     invocation,
     note,
@@ -164,7 +165,7 @@ def status(
     said = _utterances(client, run_session)
     say(f"N_UTTERANCES: {len(said)}")
     for kind, text in said[-tail:]:
-        say(f"[{kind}] {text[:700]}")
+        say(f"[{kind}] {clipped(text, 700)}")
     return 0
 
 
@@ -185,7 +186,7 @@ def tasks(
     rows = _rows(client, run_project)
     for row in sorted(rows, key=lambda item: str(item.get("created_at"))):
         cells = [str(row.get(key, "")) for key in ("created_at", "crow", "status", "id")]
-        cells.append(str(row.get("task", ""))[:80].replace("\n", " "))
+        cells.append(clipped(str(row.get("task", "")).replace("\n", " "), 80))
         say("TASK: " + "\t".join(cells))
     _summarise(rows)
     return 0

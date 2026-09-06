@@ -67,6 +67,14 @@ JOB_NAME = "{job}"
 ACCOUNT = "{account}"
 OTHER_ID = "{other}"
 
+# Longer than either printing cap, for the tests that read what a cut line looks like.
+LONG = "the run went on about this at length " * 40
+
+
+def long_text(short):
+    """Answer with something over the caps when a test asks for it, and the usual text otherwise."""
+    return short + " " + LONG if os.environ.get("EDISON_STUB_LONG") else short
+
 
 def record(event, **fields):
     """Append one line describing a call. Order is the whole point of the file."""
@@ -184,7 +192,8 @@ class EdisonClient:
             {{"id": LIVE_TASK_IDS[1], "crow": JOB_NAME, "status": "queued",
               "created_at": "2026-09-05T21:43:00Z", "task": "two", "user_id": ACCOUNT}},
             {{"id": TASK_ID, "crow": JOB_NAME, "status": "success",
-              "created_at": "2026-09-05T21:43:00Z", "task": "three", "user_id": ACCOUNT}},
+              "created_at": "2026-09-05T21:43:00Z", "task": long_text("three"),
+              "user_id": ACCOUNT}},
         ]
 
     def cancel_task(self, task_id=None):
@@ -228,8 +237,9 @@ class EdisonClient:
 
     def get_conversation(self, session_id, limit=50, offset=0):
         record("get_conversation", session_id=session_id)
+        said = long_text("what the run said")
         call = {{"function": {{"name": "send_message",
-                             "arguments": json.dumps({{"display_text": "what the run said"}})}}}}
+                             "arguments": json.dumps({{"display_text": said}})}}}}
         return _Dumpable({{"messages": [{{"role": "assistant", "content": "", "tool_calls": [call]}}]}})
 
     def get_session(self, session_id):
@@ -253,7 +263,8 @@ class EdisonClient:
     def search_data_storage(self, text_query=None, limit=10, **kwargs):
         record("search_data_storage", text_query=text_query, limit=limit)
         return [{{"id": "66666666-6666-4666-8666-666666666666", "name": "counts.csv",
-                 "created_at": "2026-09-05", "description": "counts", "user_id": ACCOUNT}}]
+                 "created_at": "2026-09-05", "description": long_text("counts"),
+                 "user_id": ACCOUNT}}]
 '''
 
 _STUB_APP = '''
