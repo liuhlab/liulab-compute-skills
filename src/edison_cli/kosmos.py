@@ -105,10 +105,21 @@ def _utterances(client: EdisonClient, session: Any) -> list[tuple[str, str]]:
     return said
 
 
-def start(client: EdisonClient, *, project: str, persona: str, objective_file: str) -> int:
+def start(
+    client: EdisonClient,
+    *,
+    project: str,
+    persona: str,
+    objective_file: str,
+    data: list[str],
+) -> int:
     """Start one Kosmos run from an objective file, printing every way back to it first.
 
     Names resolve live here and never from the cache: this is the command that spends.
+
+    `data` is passed to the platform exactly as it was typed. The client normalises a
+    `data_entry:` prefix itself, and both upload shapes — a file and a collection — wear the
+    same URI, so a check here would only be able to reject spellings the platform accepts.
     """
     objective = text_from_file(objective_file, "objective file", "nothing was started")
     resolved, owner = resolve.both(client, project_value=project, persona_value=persona, live=True)
@@ -134,11 +145,21 @@ def start(client: EdisonClient, *, project: str, persona: str, objective_file: s
         )
     say("PERSONA_OWNS_PROJECT: yes")
 
+    # On stdout with the other ids, and BEFORE the send rather than after it. The response
+    # says nothing about what was attached, so this is the only place an attachment that did
+    # not happen is visible — and it is printed while nothing has been charged yet.
+    for uri in data:
+        say(f"DATA: {uri}")
+
     note(f"edison-cli: starting Kosmos with the objective in {objective_file}:")
     for line in objective.splitlines():
         note(f"  | {line}")
 
-    response = as_dict(client.send_chat_message(run_project, objective, job_name=job))
+    response = as_dict(
+        client.send_chat_message(
+            run_project, objective, job_name=job, data_storage_ids=list(data) or None
+        )
+    )
     session = response.get("session_id")
     # First, flushed, before anything else can block: a run nobody can find again is the
     # failure this ordering guards against, and it has already been paid for.

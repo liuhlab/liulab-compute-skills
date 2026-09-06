@@ -58,6 +58,8 @@ anything can block: `PROJECT_ID`, the `JOB_NAME` it read off the persona,
 and `CHAT_LOGS_URL:` for whichever the response carried. It **refuses before sending** if the
 persona does not own the project. There is no other stop path, so keep the `STOP:` line.
 
+Attaching data: `kosmos start --data` (`datasets.md`).
+
 **A persona is not optional, and the surface has no persona-less form.** `create_project`
 without one returns a project no persona owns; the API accepts that happily and the chat
 endpoint then answers **500**. A 500 is in the client's retryable set, so it comes back raw and

@@ -64,6 +64,33 @@ attaches several datasets. The client writes them into
 `runtime_config.environment_config["data_storage_uris"]`, so set that key **or** pass the URIs —
 both at once raises `ValueError`.
 
+**This section is the one-shot task surface only.** A Kosmos run is a chat session and not a
+task, so it takes its data by the route below rather than this one. `kosmos.md`.
+
+## Attach it to a Kosmos run
+
+```bash
+edison-cli kosmos start --project ID|NAME --persona ID|NAME \
+  --objective-file <file> --data data_entry:<uuid>
+```
+
+`[verified]` **`send_chat_message` takes `data_storage_ids`** — a list of bare ids or
+`data_entry:` URI stems, carried in the POST body as `info.data_storage_ids`. The client's own
+`_normalize_data_storage_id` strips the prefix, so the URI `data upload` printed goes in
+unchanged. `queue_chat_message` takes the same argument.
+
+`--data` here is `task submit --data`: the same `-d` short form, URIs and never paths, repeated
+once per entry. Nothing checks it on the way out — the platform normalises the spelling and
+rejects a bad id itself, and both upload shapes wear the same URI, so a collection attaches
+exactly like a file. That is the usual shape for a run: a folder of context, not one table.
+
+`kosmos start` prints one `DATA:` line per entry in its leading block, before the send and
+before anything is charged. Nothing in the response says what was attached, so that line is the
+only receipt — read it, and if an entry is missing from it the run did not get it.
+
+`[unverified]` **What the run then does with an attached entry.** No run has been started with
+one. The claims above are read off the client and stop at the request body.
+
 ## Fetch what the run produced
 
 ```bash

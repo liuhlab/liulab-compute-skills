@@ -10,6 +10,12 @@ from __future__ import annotations
 
 from tests.edison_cli.conftest import ACCOUNT, PERSONA_ID, PROJECT_ID, SESSION_ID, Harness
 
+# A real entry, and a collection rather than a single file — ten files zipped behind one URI.
+# That is the ordinary shape on this surface: a run is briefed with a folder of context, not one
+# table. Both shapes are spelled `data_entry:<uuid>`, so the test uses the one people attach.
+DATA_URI = "data_entry:24d88c92-48dc-4d97-a2f9-d5ef24cb60c2"
+SECOND_URI = "data_entry:66666666-6666-4666-8666-666666666666"
+
 
 def _stopped(edison: Harness) -> object:
     """Stop a run against the fake platform."""
@@ -92,6 +98,76 @@ def test_start_reads_the_job_name_off_the_persona_rather_than_guessing(edison: H
     assert "JOB_NAME: job-futurehouse-data-analysis-aries" in run.stdout
     assert "PERSONA_OWNS_PROJECT: yes" in run.stdout
     assert run.order_of("http_get") < run.order_of("send_chat_message")
+
+
+def test_start_attaches_every_repeated_data_uri(edison: Harness) -> None:
+    """A run with no data was the whole bug: the client takes the field and nothing filled it."""
+    objective = edison.write("objective.txt", "compare the two cohorts\n")
+    run = edison.run(
+        "kosmos",
+        "start",
+        "--project",
+        PROJECT_ID,
+        "--persona",
+        PERSONA_ID,
+        "--objective-file",
+        objective,
+        "-d",
+        DATA_URI,
+        "-d",
+        SECOND_URI,
+        "-f",
+        str(edison.key_file),
+    )
+    assert run.returncode == 0, run.stderr
+    sent = run.called("send_chat_message")[0]["kwargs"]
+    # Byte for byte, prefix included: normalising it is the platform's job, not this command's.
+    assert sent["data_storage_ids"] == [DATA_URI, SECOND_URI]
+
+
+def test_start_prints_a_data_line_for_every_attachment_before_it_spends(edison: Harness) -> None:
+    """An attachment that silently did not happen is the same bug again, so it leaves a receipt."""
+    objective = edison.write("objective.txt", "compare the two cohorts\n")
+    run = edison.run(
+        "kosmos",
+        "start",
+        "--project",
+        PROJECT_ID,
+        "--persona",
+        PERSONA_ID,
+        "--objective-file",
+        objective,
+        "-d",
+        DATA_URI,
+        "-f",
+        str(edison.key_file),
+    )
+    assert run.returncode == 0, run.stderr
+    lines = run.stdout.splitlines()
+    assert lines[0] == f"PROJECT_ID: {PROJECT_ID}"
+    # The session id comes out of the response, so a DATA line above it was printed before the
+    # send — while nothing had been charged and the attachment could still be corrected.
+    assert lines.index(f"DATA: {DATA_URI}") < lines.index(f"SESSION_ID: {SESSION_ID}")
+
+
+def test_start_without_data_sends_no_attachment_and_prints_no_data_line(edison: Harness) -> None:
+    """The other half: an empty list must not become an empty attachment or a bare receipt."""
+    objective = edison.write("objective.txt", "compare the two cohorts\n")
+    run = edison.run(
+        "kosmos",
+        "start",
+        "--project",
+        PROJECT_ID,
+        "--persona",
+        PERSONA_ID,
+        "--objective-file",
+        objective,
+        "-f",
+        str(edison.key_file),
+    )
+    assert run.returncode == 0, run.stderr
+    assert run.called("send_chat_message")[0]["kwargs"]["data_storage_ids"] is None
+    assert "DATA:" not in run.stdout
 
 
 def test_start_refuses_a_project_the_persona_does_not_own(edison: Harness) -> None:
