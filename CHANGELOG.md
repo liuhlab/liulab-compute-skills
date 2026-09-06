@@ -5,6 +5,20 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.9.15 — 2026-09-06
+
+You can now check that the data you attached to a Kosmos run reached the platform.
+
+### Added
+
+- **`kosmos status` says what the platform kept.** Starting a run prints one `DATA:` line per
+  dataset you attached, which says what was sent. Nothing said what arrived. Status now prints
+  one `ATTACHED:` line per entry the platform has on file for that run, in the same spelling,
+  so you can read the two lists side by side. An entry on the first list and not the second
+  means it went missing on the way in. A run you started with no data prints no such lines.
+  This tells you the platform kept the file. It does not tell you the run opened it — only the
+  transcript says that.
+
 ## 2026.9.14 — 2026-09-06
 
 The Edison command is short enough to type, and a long objective no longer hides the line

@@ -28,6 +28,18 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 PREFIX = "data_entry:"
 
 
+def uri(value: object) -> str:
+    """Spell one data-entry id the way every command prints it, prefix and all.
+
+    Three surfaces disagree about the prefix: `upload_file` returns it, `store_file_content`
+    returns a bare id, and the chat surface stores the bare stem of whatever was sent. One
+    spelling, made here, is what lets `kosmos start`'s `DATA:` and `kosmos status`'s
+    `ATTACHED:` be read against each other by eye.
+    """
+    text = str(value)
+    return text if text.startswith(PREFIX) else PREFIX + text
+
+
 def upload(
     client: EdisonClient,
     *,
@@ -57,7 +69,7 @@ def upload(
             as_collection=True,
             ignore_patterns=list(ignore) or None,
         )
-        say(f"DATA_URI: {PREFIX}{response.data_storage.id}")
+        say(f"DATA_URI: {uri(response.data_storage.id)}")
         say("SHAPE: collection (one zipped entry; it comes back as a directory)")
         return 0
 
@@ -69,10 +81,9 @@ def upload(
             "entry per file, none of them a collection, and the URI is the parent's."
         )
     note(f"edison-cli: uploading {where}")
-    uri = str(client.upload_file(where, name=name, description=description))
-    # The two calls disagree about whether the prefix is included. Normalising it here is
-    # what stops the caller guessing.
-    say(f"DATA_URI: {uri if uri.startswith(PREFIX) else PREFIX + uri}")
+    # The two calls disagree about whether the prefix is included. `uri` is what stops the
+    # caller guessing, and it is the same spelling `kosmos status` reads an attachment back in.
+    say(f"DATA_URI: {uri(client.upload_file(where, name=name, description=description))}")
     say("SHAPE: file")
     return 0
 

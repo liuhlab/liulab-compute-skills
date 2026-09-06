@@ -8,6 +8,11 @@ race it is paying for.
 
 from __future__ import annotations
 
+import json
+
+import pytest
+
+from edison_cli.datasets import PREFIX
 from edison_cli.kosmos import ECHO_LINES
 from tests.edison_cli.conftest import ACCOUNT, PERSONA_ID, PROJECT_ID, SESSION_ID, Harness
 
@@ -239,9 +244,9 @@ def test_start_refuses_a_project_the_persona_does_not_own(edison: Harness) -> No
     assert run.called("send_chat_message") == []
 
 
-def test_status_reads_what_the_run_said_out_of_the_tool_call_arguments(edison: Harness) -> None:
-    """Assistant `content` is empty on this platform. Read it alone and a healthy run looks dead."""
-    run = edison.run(
+def _status(edison: Harness) -> object:
+    """Poll the run against the fake platform."""
+    return edison.run(
         "kosmos",
         "status",
         "--project",
@@ -251,9 +256,94 @@ def test_status_reads_what_the_run_said_out_of_the_tool_call_arguments(edison: H
         "-f",
         str(edison.key_file),
     )
+
+
+def test_status_reads_what_the_run_said_out_of_the_tool_call_arguments(edison: Harness) -> None:
+    """Assistant `content` is empty on this platform. Read it alone and a healthy run looks dead."""
+    run = _status(edison)
     assert run.returncode == 0, run.stderr
     assert "what the run said" in run.stdout
     assert "N_UTTERANCES: 1" in run.stdout
+
+
+def test_status_prints_what_the_platform_stored_as_the_attachment(edison: Harness) -> None:
+    """`start` says what we sent. Only `info` says what the platform kept, and it is free."""
+    stems = [DATA_URI.removeprefix(PREFIX), SECOND_URI.removeprefix(PREFIX)]
+    edison.env["EDISON_STUB_INFO"] = json.dumps({"data_storage_ids": stems})
+    run = _status(edison)
+    assert run.returncode == 0, run.stderr
+    lines = run.stdout.splitlines()
+    assert [line for line in lines if line.startswith("ATTACHED: ")] == [
+        f"ATTACHED: {DATA_URI}",
+        f"ATTACHED: {SECOND_URI}",
+    ]
+    # Beside the fan-out and the utterance count, which is where a run's facts are read.
+    assert lines.index(f"ATTACHED: {DATA_URI}") > lines.index("N_TASKS: 3")
+    assert lines.index(f"ATTACHED: {SECOND_URI}") < lines.index("N_UTTERANCES: 1")
+
+
+def test_status_spells_an_attachment_exactly_as_start_spelled_it(edison: Harness) -> None:
+    """The spelling has to match, or the two receipts cannot be compared.
+
+    We send `data_entry:<uuid>` and the platform keeps the stem. Comparing the two is the only
+    reason to print both, so the difference is normalised away before either is printed.
+    """
+    objective = edison.write("objective.txt", "compare the two cohorts\n")
+    started = edison.run(
+        "kosmos",
+        "start",
+        "--project",
+        PROJECT_ID,
+        "--persona",
+        PERSONA_ID,
+        "--objective-file",
+        objective,
+        "-d",
+        DATA_URI,
+        "-f",
+        str(edison.key_file),
+    )
+    sent = next(line for line in started.stdout.splitlines() if line.startswith("DATA: "))
+    edison.env["EDISON_STUB_INFO"] = json.dumps(
+        {"data_storage_ids": [DATA_URI.removeprefix(PREFIX)]}
+    )
+    kept = next(line for line in _status(edison).stdout.splitlines() if line.startswith("ATTACHED"))
+    assert sent.removeprefix("DATA: ") == kept.removeprefix("ATTACHED: ")
+
+
+def test_status_of_a_run_with_no_data_prints_no_attached_line(edison: Harness) -> None:
+    """A placeholder line would read exactly like an attachment the platform threw away."""
+    run = _status(edison)
+    assert run.returncode == 0, run.stderr
+    assert "ATTACHED" not in run.stdout
+    assert "N_UTTERANCES: 1" in run.stdout
+
+
+@pytest.mark.parametrize(
+    "info",
+    [
+        "null",
+        '"a string where a dict was promised"',
+        '{"data_storage_ids": null}',
+        '{"data_storage_ids": "one-id-not-in-a-list"}',
+        '{"something_else": ["an id"]}',
+    ],
+    ids=["none", "not-a-dict", "null-ids", "ids-not-a-list", "no-ids-key"],
+)
+def test_status_survives_an_info_shaped_however_the_platform_shaped_it(
+    edison: Harness, info: str
+) -> None:
+    """One odd turn must not cost the reader the rest of `status`.
+
+    `info` is `dict | None` and its contents are the platform's, so the fan-out, the
+    utterances and the exit code all have to survive whatever arrives in it.
+    """
+    edison.env["EDISON_STUB_INFO"] = info
+    run = _status(edison)
+    assert run.returncode == 0, run.stderr
+    assert "ATTACHED" not in run.stdout
+    assert "N_TASKS: 3" in run.stdout
+    assert "what the run said" in run.stdout
 
 
 def test_sessions_prints_the_project_beside_the_session(edison: Harness) -> None:
