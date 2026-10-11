@@ -5,6 +5,34 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.1 — 2026-10-10
+
+The repo is now `liulab-skills` and the plugin is `lab`, because this is where every lab
+skill goes from here on, not only the compute ones. You call a skill as `/lab:lab-edison`.
+
+### Changed
+
+- **New names.** The repo moved from `liuhlab/liulab-compute-skills` to
+  `liuhlab/liulab-skills`, the plugin from `lab-compute` to `lab`, and the docs site to
+  <https://liuhlab.github.io/liulab-skills/>. The marketplace is still `liulab`.
+- **Your per-user files moved too**, from `~/.claude/compute/` to `~/.claude/lab/`. While the
+  old folder exists, the `lab-hpc` and `lab-edison` setup checks refuse and print the `mv`
+  to run. They never move it for you, because it holds your Edison key.
+
+### Upgrading
+
+A plain update does not cross a rename. Run this once on each machine:
+
+```bash
+claude plugin uninstall lab-compute@liulab
+claude plugin marketplace remove liulab
+claude plugin marketplace add liuhlab/liulab-skills
+claude plugin install lab@liulab
+mv ~/.claude/compute ~/.claude/lab
+```
+
+Entries below this one keep the old names, because those releases shipped under them.
+
 ## 2026.10.0 — 2026-10-10
 
 The setup pages no longer say how long the first Edison command takes.

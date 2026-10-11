@@ -1,8 +1,8 @@
-# Liu Lab Compute Skills
+# Liu Lab Skills
 
-[Agent Skills](https://agentskills.io) that teach AI coding agents how to use the
-Liu Lab's HPC clusters. Built for Claude Code, and they work in any tool that
-reads the open skills standard.
+[Agent Skills](https://agentskills.io) that teach AI coding agents how the Liu
+Lab works, starting with its HPC clusters. Built for Claude Code, and they work
+in any tool that reads the open skills standard.
 
 Ask an agent to "run this on the cluster" and it needs lab knowledge it cannot
 guess: which clusters exist, how a job gets submitted, what is safe to do. This
@@ -34,8 +34,8 @@ loop.
 ## Install in Claude Code
 
 ```bash
-claude plugin marketplace add liuhlab/liulab-compute-skills
-claude plugin install lab-compute@liulab
+claude plugin marketplace add liuhlab/liulab-skills
+claude plugin install lab@liulab
 ```
 
 Then set the machine up once.
@@ -46,17 +46,17 @@ Then set the machine up once.
    with your own username and key. Ask a lab member for a working example. This
    repo ships none.
 2. **Personal config.** Copy
-   [`templates/personal.md`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/personal.md)
-   to `~/.claude/compute/personal.md` and fill in your usernames, directories and
+   [`templates/personal.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/personal.md)
+   to `~/.claude/lab/personal.md` and fill in your usernames, directories and
    Jupyter defaults. Never commit it.
 3. **Safety stub, optional.** Append
-   [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/CLAUDE-stub.md)
+   [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/CLAUDE-stub.md)
    to your `~/.claude/CLAUDE.md`, so the core rules apply even in sessions where
    no skill loads.
 4. **Edison key and pixi, only for lab-edison.** That skill needs
    [pixi](https://pixi.sh) on your PATH; no other skill here does. Then copy
-   [`templates/edison.env`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/edison.env)
-   to `~/.claude/compute/edison.env`, paste your own key over the placeholder,
+   [`templates/edison.env`](https://github.com/liuhlab/liulab-skills/blob/main/templates/edison.env)
+   to `~/.claude/lab/edison.env`, paste your own key over the placeholder,
    and `chmod 600` it. It sits beside `personal.md`, never inside it. Never
    commit it.
 
@@ -94,8 +94,25 @@ elsewhere.
 
 ```bash
 claude plugin marketplace update liulab
-claude plugin update lab-compute@liulab
+claude plugin update lab@liulab
 ```
 
 For clone-based installs, `git pull`. Claude Code loads plugins when it starts,
 so restart your session before the updated skills are there.
+
+### Moving from `lab-compute`
+
+Until `2026.10.1` this repo was `liulab-compute-skills` and the plugin was
+`lab-compute`. A plain update does not cross a rename, so do it by hand once:
+
+```bash
+claude plugin uninstall lab-compute@liulab
+claude plugin marketplace remove liulab
+claude plugin marketplace add liuhlab/liulab-skills
+claude plugin install lab@liulab
+mv ~/.claude/compute ~/.claude/lab
+```
+
+The last line moves your own files to where the skills now look for them. Every
+skill refuses to run while `~/.claude/compute` is still there. If you installed
+from a clone, clone again and rerun the installer.

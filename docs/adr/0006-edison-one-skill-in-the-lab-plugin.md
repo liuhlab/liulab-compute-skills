@@ -5,7 +5,7 @@ search:
 
 # Edison is one skill, inside the plugin the lab already installs
 
-`lab-edison` is a single skill under `skills/`, in the existing `lab-compute` plugin. Not
+`lab-edison` is a single skill under `skills/`, in the existing `lab` plugin. Not
 several skills, not a plugin of its own, and no bundled MCP server. It is the first skill
 here that never touches a cluster.
 
@@ -39,7 +39,8 @@ client invocation costs nothing until someone asks for it.
 
 ## What it costs
 
-The plugin's description has to widen past "HPC clusters and remote-compute workflow" to
-admit a skill with no cluster in it, and `lab-compute` becomes a slightly loose name for
-what the plugin holds. Reversal is a new plugin name that every installed machine has to
-add by hand, which is why this is written down.
+The plugin's description had to widen past "HPC clusters and remote-compute workflow" to
+admit a skill with no cluster in it, and its name at the time, `lab-compute`, stopped
+fitting what it held. That was the first step toward renaming it `lab` (ADR 0001). Reversal
+is a new plugin name that every installed machine has to add by hand, which is why this is
+written down.

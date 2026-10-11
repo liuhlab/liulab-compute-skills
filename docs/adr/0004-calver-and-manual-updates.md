@@ -36,7 +36,7 @@ A machine can silently run an old copy, and nothing here can tell. Two consequen
 knowing:
 
 - **Evals hit the installed plugin, not the working tree.** Push and run
-  `claude plugin update lab-compute@liulab` before `tests/eval.sh`, or you are testing the
+  `claude plugin update lab@liulab` before `tests/eval.sh`, or you are testing the
   previous release. Plain `install` does not upgrade in place.
 - **A fix to a safety rule does not propagate on its own.** If a release changes one, say
   so where people will see it, rather than assuming the version number carries it.

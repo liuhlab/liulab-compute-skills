@@ -1799,7 +1799,7 @@ packages:
   size: 433687
   timestamp: 1786599629846
 - pypi: ./
-  name: liulab-compute-skills
+  name: liulab-skills
   requires_dist:
   - edison-client>=0.16
   - fhlmi>=1.0

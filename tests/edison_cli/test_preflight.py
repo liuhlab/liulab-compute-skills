@@ -129,3 +129,50 @@ def test_the_report_never_carries_the_key_into_its_repr(tmp_path: Path) -> None:
     assert report.ok
     assert "a-value-that-must-not-be-repeated" not in repr(report)
     assert "a-value-that-must-not-be-repeated" not in report.text()
+
+
+@pytest.fixture
+def renamed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]:
+    """Point both config directories into the test's own tree, the old one already made."""
+    old, new = tmp_path / "compute", tmp_path / "lab"
+    old.mkdir()
+    monkeypatch.setattr(preflight, "LEGACY_DIR", old)
+    monkeypatch.setattr(preflight, "CONFIG_DIR", new)
+    return old, new
+
+
+def test_the_old_config_directory_refuses_and_prints_the_move(
+    renamed: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A machine set up before the rename is refused, even with a key exported.
+
+    The directory also holds `personal.md` and the name cache, which an exported key does
+    nothing to move, so the environment is not allowed to answer first.
+    """
+    old, new = renamed
+    monkeypatch.setenv(preflight.VAR, "an-exported-key-does-not-move-the-directory")
+    report = preflight.check()
+    assert not report.ok
+    assert report.lines[-1] == f"mv {old} {new}"
+    assert "an-exported-key-does-not-move-the-directory" not in report.text()
+
+
+def test_no_move_is_printed_over_a_directory_that_already_exists(
+    renamed: tuple[Path, Path],
+) -> None:
+    """`mv old new` with `new` present nests one inside the other, so it is never handed out."""
+    _, new = renamed
+    new.mkdir()
+    report = preflight.check()
+    assert not report.ok
+    assert not [line for line in report.lines if line.startswith("mv ")]
+
+
+def test_an_override_never_looks_at_the_old_directory(
+    renamed: tuple[Path, Path], tmp_path: Path
+) -> None:
+    """`-f` is how the gate drives fixtures, and it must not depend on the machine's home."""
+    key_file = tmp_path / "key.env"
+    key_file.write_text(f"export {preflight.VAR}=a-fixture-value\n", encoding="utf-8")
+    key_file.chmod(0o600)
+    assert preflight.check(str(key_file)).ok

@@ -27,7 +27,7 @@ one that is not a UUID is refused with exit 2 and nothing is sent. The `TASK_ID`
 `project add-task --task` go to the platform as typed, so a wrong one comes back as a 404 read
 out as a sentence, and `task list` is how the right one is found.
 
-Resolved names are remembered in `~/.claude/compute/edison-cli-names.json` — names and ids only,
+Resolved names are remembered in `~/.claude/lab/edison-cli-names.json` — names and ids only,
 never the key, and a cache that cannot be read is simply not used. **`--no-cache`** looks names
 up on the platform again and refreshes what is held. It is on the seven that neither spend nor
 destroy: `project create`, `project list`, `project ensure`, `project add-task`,

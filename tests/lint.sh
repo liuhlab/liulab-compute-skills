@@ -18,8 +18,8 @@ done
 
 plug=$(python3 -c 'import json; print(json.load(open(".claude-plugin/plugin.json"))["name"])' 2>/dev/null)
 case "$plug" in
-  lab-*) ok "plugin name '$plug' follows lab-* policy" ;;
-  *)     err "plugin name '$plug' must be lab-* (not liulab-*)" ;;
+  lab) ok "plugin name '$plug', so skills are called /lab:<skill>" ;;
+  *)   err "plugin name '$plug' must be lab (skills are called /lab:<skill>)" ;;
 esac
 
 echo "== skills =="
@@ -215,13 +215,36 @@ else
 fi
 
 echo "== check-hpc-config.sh self-test =="
-out=$(bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)
+# Each case gets its own empty HOME: the script refuses outright while the
+# pre-rename ~/.claude/compute exists, and a maintainer's own machine may
+# still have one — which would turn the first case into a vacuous pass.
+hpc_home=$(mktemp -d)
+out=$(HOME="$hpc_home" bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)
 rc=$?
-if [ $rc -eq 1 ] && ! printf '%s' "$out" | grep -v 'NOT CONFIGURED' | grep -q CONFIGURED; then
+if [ $rc -eq 1 ] && [ "$(printf '%s\n' "$out" | grep -c 'NOT CONFIGURED')" -eq 2 ] \
+   && ! printf '%s' "$out" | grep -v 'NOT CONFIGURED' | grep -q CONFIGURED; then
   ok "empty ssh config → both clusters NOT CONFIGURED, exit 1"
 else
   err "check-hpc-config.sh with empty config: expected NOT CONFIGURED + exit 1, got exit $rc: $out"
 fi
+mkdir -p "$hpc_home/.claude/compute"
+out=$(HOME="$hpc_home" bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)
+rc=$?
+if [ $rc -eq 1 ] && printf '%s' "$out" | grep -q 'OLD LOCATION' \
+   && printf '%s' "$out" | grep -qxF '  fix: mv ~/.claude/compute ~/.claude/lab'; then
+  ok "pre-rename ~/.claude/compute → OLD LOCATION + the mv, exit 1"
+else
+  err "check-hpc-config.sh with ~/.claude/compute: expected OLD LOCATION + mv + exit 1, got exit $rc: $out"
+fi
+mkdir -p "$hpc_home/.claude/lab"
+out=$(HOME="$hpc_home" bash skills/lab-hpc/scripts/check-hpc-config.sh -F /dev/null)
+rc=$?
+if [ $rc -eq 1 ] && printf '%s' "$out" | grep -q 'both exist' && ! printf '%s' "$out" | grep -q 'mv '; then
+  ok "both config dirs → OLD LOCATION, no mv over an existing directory, exit 1"
+else
+  err "check-hpc-config.sh with both dirs: expected 'both exist' and no mv, got exit $rc: $out"
+fi
+rm -rf "$hpc_home"
 
 echo "== edison preflight self-test =="
 # Fixtures are built here and deleted on the way out; none is ever committed.

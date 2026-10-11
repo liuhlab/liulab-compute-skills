@@ -92,7 +92,7 @@ spinout, which the platform transitioned to — and reached from a lab machine t
 precedent searches, chemistry, and a data-analysis agent that runs code on a dataset the user
 uploads. It is a cloud API, and the one thing this repo teaches that has no cluster in it
 at all. `lab-edison` is the skill that drives it — user-invoked only, and in the same
-plugin as the rest. See `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`.
+plugin as the rest. See `docs/adr/0006-edison-one-skill-in-the-lab-plugin.md`.
 
 This entry is the **single authority** on who runs the platform. Every other page — the
 skill body, its trigger description, `README.md`, the published page — names Edison
@@ -105,7 +105,7 @@ platform, and exempts those strings.
 
 ### Edison key file
 
-`~/.claude/compute/edison.env` on the user's own machine, at owner-only permissions: one
+`~/.claude/lab/edison.env` on the user's own machine, at owner-only permissions: one
 exported assignment of the variable the client reads, and nothing else. The preflight owns
 those constants — the name, the placeholder, the location and which modes pass — and prints
 them on request, so nothing else in the tree may restate one. It sits beside the per-user
@@ -161,7 +161,7 @@ out to the internet, so staging downloads belong there.
 
 ### Name cache
 
-`~/.claude/compute/edison-cli-names.json` on the user's own machine, at owner-only
+`~/.claude/lab/edison-cli-names.json` on the user's own machine, at owner-only
 permissions: what `edison-cli` remembers of the persona and project names it has already
 resolved, so `--project` and `--persona` can take a name where the platform wants a UUID. It
 holds names and ids and nothing else — never the key, and never one byte of the key file — and
@@ -185,17 +185,20 @@ A named Slurm queue with its own hardware, limits and cost. `zhoulab_gpu_priorit
 
 ### Per-user config
 
-`~/.claude/compute/personal.md` on the user's own machine: their per-cluster usernames,
+`~/.claude/lab/personal.md` on the user's own machine: their per-cluster usernames,
 code directories, ports and reservation notes. A skill reads it at run time and it takes
 precedence over any default in this repo. `templates/personal.md` is the blank copy; a
 filled-in one never lands here. A credential never goes in it — reading it at run time
-means reading it into context, which is why the Edison key file sits beside it.
+means reading it into context, which is why the Edison key file sits beside it. Until the
+plugin was renamed it lived in `~/.claude/compute/`; while that directory exists, both
+preflights refuse and print the move rather than read either copy.
 
 ### Plugin marketplace
 
-This repo. `.claude-plugin/marketplace.json` declares `source: "./"`, so the repo root is
-the plugin: marketplace `liulab`, plugin `lab-compute`, every skill inside that one plugin.
-See `docs/adr/0001-repo-root-is-the-plugin.md`.
+This repo, `liulab-skills`: the home of every Liu Lab agent skill, whether or not it touches
+a cluster. `.claude-plugin/marketplace.json` declares `source: "./"`, so the repo root is
+the plugin: marketplace `liulab`, plugin `lab`, every skill inside that one plugin and
+invoked as `/lab:<skill>`. See `docs/adr/0001-repo-root-is-the-plugin.md`.
 
 ### Preflight
 

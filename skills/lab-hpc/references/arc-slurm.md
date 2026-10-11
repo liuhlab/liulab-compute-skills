@@ -56,4 +56,4 @@ sbatch --job-name=reserve --partition=zhoulab_gpu_priority --time=5-00:00:00 --c
 ```
 
 `sbatch` inherits the submitting shell's environment, so whatever the payload calls must be on PATH
-*there* — otherwise give an absolute path (see `~/.claude/compute/personal.md`).
+*there* — otherwise give an absolute path (see `~/.claude/lab/personal.md`).

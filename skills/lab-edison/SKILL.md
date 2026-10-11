@@ -36,7 +36,7 @@ covers both and the first run's cost.
 3. **Exit 1 → refuse the task.** Name the condition that failed, relay the remedy, offer to run
    its commands, and stop — the user pastes their own key into the file themselves. Do not run
    the client or improvise around it.
-4. Exit 0 → say which source it found; `~/.claude/compute/personal.md` overrides this skill.
+4. Exit 0 → say which source it found; `~/.claude/lab/personal.md` overrides this skill.
 
 ## Hard rules
 

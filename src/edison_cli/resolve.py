@@ -41,6 +41,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from edison_cli.preflight import CONFIG_DIR
 from edison_cli.runtime import Refusal
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -98,7 +99,7 @@ def cache_path() -> Path:
     override = os.environ.get(CACHE_ENV)
     if override:
         return Path(override)
-    return Path.home() / ".claude" / "compute" / "edison-cli-names.json"
+    return CONFIG_DIR / "edison-cli-names.json"
 
 
 def _read() -> dict[str, Any]:

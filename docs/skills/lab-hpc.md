@@ -49,7 +49,7 @@ rather than retrying in a loop.
 Code is written on your own machine and travels through GitHub: edit, `git push`,
 then `git pull` on the cluster, then run on a compute node. The agent knows the
 usual code directory on each cluster, and reads your own settings from
-`~/.claude/compute/personal.md`.
+`~/.claude/lab/personal.md`.
 
 ## When it triggers
 
