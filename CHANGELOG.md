@@ -5,6 +5,16 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.2 — 2026-10-10
+
+You now call a skill by its own name, `/lab-edison`, with no `lab:` in front.
+
+### Changed
+
+- **Short names.** The README, the docs and the tests now write a skill as `/lab-hpc` or
+  `/lab-edison`. Your agent still shows `lab:` in front of each skill, but you don't need to
+  type it. The short name works as long as nothing else on your machine has the same name.
+
 ## 2026.10.1 — 2026-10-10
 
 The repo is now `liulab-skills` and the plugin is `lab`, because this is where every lab

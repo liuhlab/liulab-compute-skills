@@ -198,7 +198,7 @@ preflights refuse and print the move rather than read either copy.
 This repo, `liulab-skills`: the home of every Liu Lab agent skill, whether or not it touches
 a cluster. `.claude-plugin/marketplace.json` declares `source: "./"`, so the repo root is
 the plugin: marketplace `liulab`, plugin `lab`, every skill inside that one plugin and
-invoked as `/lab:<skill>`. See `docs/adr/0001-repo-root-is-the-plugin.md`.
+invoked by its bare name, such as `/lab-edison`. See `docs/adr/0001-repo-root-is-the-plugin.md`.
 
 ### Preflight
 

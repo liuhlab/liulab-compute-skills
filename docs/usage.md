@@ -1,7 +1,7 @@
 # Basic usage
 
 Talk to your agent about cluster work and the right skill loads itself. In Claude
-Code you can also call one directly: `/lab:lab-hpc`, or `lab-jupyter`, or
+Code you can also call one directly: `/lab-hpc`, or `lab-jupyter`, or
 `lab-containers`.
 
 [lab-edison](skills/lab-edison.md) is the exception. It never loads on its own,
@@ -33,7 +33,7 @@ ircbc's compute nodes have no internet.
 container, in a Slurm job, with the environment active. The bare OS there is far
 too old for modern tools.
 
-**"/lab:lab-edison what is known about …"**
+**"/lab-edison what is known about …"**
 [lab-edison](skills/lab-edison.md) checks your key file, names the job it picked,
 prints your question in full, and only then sends it. You get an answer with
 citations, and the task id that paid for it. No cluster on this path.
