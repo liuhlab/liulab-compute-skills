@@ -164,7 +164,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   for plus the command giving a live value ("`/large_storage` fills up, check
   `df -h`", not "81% used"). A version is configuration when behavior depends
   on it (Slurm 18.08 is why ircbc needs `squeue -u $USER`), a measurement
-  otherwise.
+  otherwise. The README and the browsable docs pages follow this rule too.
 - Behavior changes to a skill are tested with `tests/eval.sh` (agent evals),
   not just lint — lint only proves the files are well-formed.
 - `templates/` holds per-user onboarding files users copy to their machines

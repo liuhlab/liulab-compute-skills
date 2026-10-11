@@ -5,6 +5,18 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.0 — 2026-10-10
+
+The setup pages no longer say how long the first Edison command takes.
+
+### Changed
+
+- **No build timings on the setup pages.** The README, the usage page and the `lab-edison`
+  page each said how long the first Edison command spends building its environment. Nothing
+  re-measured those figures, and the three copies had already drifted apart. Each page now
+  says what the figure was for: the first command builds before anything is sent, so it can
+  look hung and is not, and it builds once more after each update. (#47)
+
 ## 2026.9.16 — 2026-09-06
 
 You can read a finished Kosmos run now: the whole answer, and the files it made.

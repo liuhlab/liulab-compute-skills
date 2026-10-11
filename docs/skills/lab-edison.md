@@ -149,10 +149,9 @@ skill asks for, and no other skill here asks for it.
 
 Nothing else has to be installed. The first Edison command builds the environment
 it runs in, and dozens of packages download before your question is even sent.
-That took about 22 seconds on the machine where it was measured. It can look hung.
-It is not.
+It can look hung. It is not.
 
 That environment lives inside the plugin's own folder, not in any project of
 yours. An update puts the new version of the plugin in a fresh folder, so the
-build runs once more after each update. It is quicker then, about ten seconds
-where it was measured, because the downloads are already on your disk.
+build runs once more after each update. It is quicker then, because the downloads
+are already on your disk.
