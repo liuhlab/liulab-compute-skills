@@ -43,8 +43,9 @@ with you and checks your data for free, and starts a run only when you ask for
 that run.
 
 This is the one skill that wants a tool of its own: [pixi](https://pixi.sh) on
-your PATH. Your first Edison command then builds what it runs in, which takes
-about twenty seconds. See its [page](skills/lab-edison.md).
+your PATH. Your first Edison command then builds what it runs in before it sends
+anything, so it can look hung. It is not. The build runs once more after each
+plugin update. See its [page](skills/lab-edison.md).
 
 ## What the agent will ask you
 
