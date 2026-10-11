@@ -18,7 +18,8 @@ Per-cluster detail sits in `references/`: `arc-hpc.md` and `ircbc-hpc.md` for ho
 1. Run `bash scripts/check-hpc-config.sh` (`--live` also tests ssh). If the cluster the task needs
    is `NOT CONFIGURED`, **refuse**: name the missing aliases, point at the README's "Per-user
    config", never improvise with raw addresses or keys, and resolve hosts from `~/.ssh/config` only.
-2. Read `~/.claude/compute/personal.md` — usernames, code dirs, the standing job, sbatch
+   `config dir: OLD LOCATION` → **refuse** too, and relay the printed fix for the user to run.
+2. Read `~/.claude/lab/personal.md` — usernames, code dirs, the standing job, sbatch
    defaults. It **overrides** this skill. Say so if it is absent.
 3. Ask which cluster unless context already pins it down. Then develop locally, push to GitHub,
    and `git pull` on the remote — code reaches a cluster through git, not scp.

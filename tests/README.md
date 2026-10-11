@@ -87,7 +87,7 @@ anyone who could open a pull request could spend that budget. Cases run
 concurrently, so a suite takes about as long as its slowest case.
 
 Evals exercise the **installed** plugin, not this working tree: push and
-`claude plugin update lab-compute@liulab` first, or you are testing the previous
+`claude plugin update lab@liulab` first, or you are testing the previous
 version. If you are an agent doing this for someone, prefer `--only`, and ask
 before `--all` or anything live.
 

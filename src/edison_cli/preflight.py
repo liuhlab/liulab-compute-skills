@@ -5,7 +5,7 @@ any part of one — lengths and yes/no only, because whatever this writes lands 
 transcript. The remedy lives here, not in SKILL.md, so a verdict and its fix cannot drift
 apart and the agent relays tested text.
 
-An exported key wins; otherwise the key file, default `~/.claude/compute/edison.env`. An
+An exported key wins; otherwise the key file, default `~/.claude/lab/edison.env`. An
 interactive shell rc is invisible here — agent tool calls run non-interactive shells — which
 is why the file exists.
 
@@ -47,7 +47,12 @@ from pathlib import Path
 
 VAR = "EDISON_PLATFORM_API_KEY"
 PLACEHOLDER = "PASTE-YOUR-EDISON-KEY-HERE"
-KEYFILE = Path.home() / ".claude" / "compute" / "edison.env"
+# The machine-local directory every lab skill reads, and the one it was called before the plugin
+# was renamed from `lab-compute` to `lab`. While the old one exists the check refuses and prints
+# the move, rather than reading either: two copies of a key file disagree in silence.
+CONFIG_DIR = Path.home() / ".claude" / "lab"
+LEGACY_DIR = Path.home() / ".claude" / "compute"
+KEYFILE = CONFIG_DIR / "edison.env"
 # Owner-only is the rule; 600 is only the mode the remedy hands out. MODE_GLOB is what the
 # check below actually applies, MODE_LABEL is the word prose should use for it, and
 # CHMOD_MODE is what `chmod` is told. Saying "must be 600" anywhere is narrower than the
@@ -181,6 +186,29 @@ def _remedy(shown: str, reason: str) -> list[str]:
     ]
 
 
+def _moved() -> list[str]:
+    """Refuse while the config directory still sits at its pre-rename location.
+
+    The move is printed, never performed: the directory holds the key file, and a skill never
+    handles that file beyond sourcing it. When both directories exist a merge needs a person's
+    judgement, so that case gets a sentence rather than a command.
+    """
+    old, new = display(LEGACY_DIR), display(CONFIG_DIR)
+    lines = [
+        f"config dir: OLD LOCATION ({old} — the plugin is `lab` now and reads {new})",
+        "edison: NOT CONFIGURED (the config directory has not been moved)",
+        "",
+        "--- how to fix ---",
+    ]
+    if CONFIG_DIR.exists():
+        return [
+            *lines,
+            f"Both {old} and {new} exist. Move what you still need from the first into the",
+            f"second, then remove {old}.",
+        ]
+    return [*lines, f"mv {old} {new}"]
+
+
 def _assigned_value(text: str) -> str:
     """Read the key out of a key file's text the way sourcing it would.
 
@@ -211,6 +239,11 @@ def check(key_file: str | None = None) -> Report:
     path = Path(key_file) if override else KEYFILE
     shown = display(path)
     lines: list[str] = []
+
+    # 0. The pre-rename directory. Checked before the environment, because it also holds
+    # `personal.md` and the name cache, which an exported key does nothing to move.
+    if not override and LEGACY_DIR.exists():
+        return Report(_moved(), False)
 
     # 1. The environment. Tested for emptiness, never printed.
     if override:

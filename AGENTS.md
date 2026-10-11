@@ -6,7 +6,7 @@ never the symlink.
 
 The tool-specific literals below are Claude Code's own and must **not** be
 renamed for another agent: real filesystem paths (`.claude-plugin/`,
-`~/.claude/compute/personal.md`, `templates/CLAUDE-stub.md`) and CLI
+`~/.claude/lab/personal.md`, `templates/CLAUDE-stub.md`) and CLI
 commands (`claude plugin …`, `claude -p …`) stay exactly as written.
 
 ## What this repo is
@@ -15,7 +15,7 @@ commands (`claude plugin …`, `claude -p …`) stay exactly as written.
 `name` + `description` frontmatter; `lab-edison` adds Claude Code's
 `disable-model-invocation`) packaged as a Claude Code plugin
 marketplace. The **repo root is the plugin** (`.claude-plugin/marketplace.json`
-declares `source: "./"`): marketplace `liulab`, plugin `lab-compute`, skills
+declares `source: "./"`): marketplace `liulab`, plugin `lab`, skills
 under `skills/<name>/`. One plugin holds every lab skill
 (`docs/adr/0001-repo-root-is-the-plugin.md`). `docs/` + `mkdocs.yml` are a
 human-facing site built by zensical
@@ -31,7 +31,7 @@ The repo must never contain connection details: no IP literals (only
 `0.0.0.0`/`127.0.0.1` are exempt), no usernames, no hostnames/FQDNs, no key
 filenames/material, no passwords. Hosts are referenced **only by the lab's
 ssh alias names**; skills resolve everything per-user at run time from
-`~/.ssh/config` and machine-local `~/.claude/compute/personal.md`. SSH
+`~/.ssh/config` and machine-local `~/.claude/lab/personal.md`. SSH
 setup itself is out of scope for this repo. `tests/lint.sh` sweeps for
 violations (it reads the local machine's ssh-config usernames and dotted
 HostNames at test time to check for leaks — never hardcode either into the
@@ -40,7 +40,7 @@ by policy).
 
 ## Naming policy
 
-Internal names are `lab-*` (`lab-compute`, `lab-hpc`, `lab-jupyter`,
+Internal names are `lab`/`lab-*` (`lab-hpc`, `lab-jupyter`,
 `lab-containers`, `lab-edison`), never `liulab-*`. The lab identity lives only in the
 repo name, the GitHub org, and the marketplace name `liulab`.
 
@@ -104,7 +104,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 4. Push both: `git push origin main --tags`. Installed machines pick it up
    via `claude plugin marketplace update liulab` — manual on purpose
    (ADR 0004).
-5. To test locally before/after: `claude plugin update lab-compute@liulab`
+5. To test locally before/after: `claude plugin update lab@liulab`
    (plain `install` does not upgrade in place).
 
 ## Architecture / editing skills
@@ -143,7 +143,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   The key lives in a machine-local file beside `personal.md`, never inside
   it, and is never transmitted, printed or asked for. Why it is one skill in
   this plugin:
-  `docs/adr/0006-edison-one-skill-in-the-compute-plugin.md`; why the key
+  `docs/adr/0006-edison-one-skill-in-the-lab-plugin.md`; why the key
   file: `docs/adr/0007-edison-key-file-and-never-transmit.md`.
 - Facts in references are **checked and dated**, never written from memory.
   Cluster facts are re-verified with read-only commands from a compute node,

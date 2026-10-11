@@ -1,7 +1,7 @@
 # My lab compute specifics
 
 <!--
-Machine-local per-user config. Copy this file to ~/.claude/compute/personal.md
+Machine-local per-user config. Copy this file to ~/.claude/lab/personal.md
 and fill it in. NEVER commit it to any repo. Do NOT put IP addresses, keys, or
 passwords here either — connection details belong in ~/.ssh/config only.
 

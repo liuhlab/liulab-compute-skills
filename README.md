@@ -1,12 +1,12 @@
-# liulab-compute-skills
+# liulab-skills
 
-Liu Lab's [Agent Skills](https://agentskills.io) for the lab's
-HPC/remote-compute setup, packaged as a Claude Code **plugin marketplace**
-(marketplace `liulab`, plugin `lab-compute`). Other agentic tools (Cursor,
+Liu Lab's shared [Agent Skills](https://agentskills.io), packaged as a Claude
+Code **plugin marketplace** (marketplace `liulab`, plugin `lab`; call a skill as
+`/lab:<skill>`). Other agentic tools (Cursor,
 Codex, Gemini CLI, …) can consume the same skills — SKILL.md follows the
 open Agent Skills standard.
 
-**Docs:** <https://liuhlab.github.io/liulab-compute-skills/> — human-readable
+**Docs:** <https://liuhlab.github.io/liulab-skills/> — human-readable
 guide (what this is, install, usage, one page per skill).
 
 Current skills:
@@ -30,7 +30,7 @@ Current skills:
   dataset you upload. It goes through `edison-cli`, a command that ships
   with the plugin. No cluster involved. You invoke it yourself
   (`disable-model-invocation`), it refuses until your key file
-  `~/.claude/compute/edison.env` is in place (`edison-cli preflight`), it
+  `~/.claude/lab/edison.env` is in place (`edison-cli preflight`), it
   shows the job and the query before it spends, and it never transmits the
   key. Kosmos is a chat session that fans out into many tasks, and the skill
   will not start one unless you ask for that run.
@@ -50,8 +50,8 @@ this repo — get it from a lab admin through a secure channel.
 ## Setup — Claude Code (2 commands)
 
 ```bash
-claude plugin marketplace add liuhlab/liulab-compute-skills
-claude plugin install lab-compute@liulab
+claude plugin marketplace add liuhlab/liulab-skills
+claude plugin install lab@liulab
 ```
 
 `lab-edison` also wants [pixi](https://pixi.sh) on your PATH. It is the only
@@ -65,21 +65,21 @@ extra tool any of these skills asks for, and nothing else here needs it.
    your own usernames and keys. Ask a lab member for a working example —
    this repo intentionally does not ship one.
 2. Copy [templates/personal.md](templates/personal.md) to
-   `~/.claude/compute/personal.md` and fill in your usernames/directories.
+   `~/.claude/lab/personal.md` and fill in your usernames/directories.
    Never commit it anywhere.
 3. Append [templates/CLAUDE-stub.md](templates/CLAUDE-stub.md) to your
    `~/.claude/CLAUDE.md` so the two safety rules apply even in sessions where
    the skill doesn't auto-trigger.
 4. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
    not have it, then copy [templates/edison.env](templates/edison.env) to
-   `~/.claude/compute/edison.env`, replace the placeholder with your own
+   `~/.claude/lab/edison.env`, replace the placeholder with your own
    Edison key, and `chmod 600` it. It goes *beside* `personal.md`, never
    inside it — skills read `personal.md` into context. Never commit it.
    Nothing else has to be installed. The first Edison command builds the
    environment it runs in before anything is sent, so it can look hung. It
    is not. A plugin update lands in a fresh folder, so the build runs once
    more per release, quicker because the downloads are already on disk. The
-   [lab-edison page](https://liuhlab.github.io/liulab-compute-skills/skills/lab-edison/)
+   [lab-edison page](https://liuhlab.github.io/liulab-skills/skills/lab-edison/)
    has the rest.
 
 ## Other agentic tools (Cursor, Codex, Gemini CLI, …)
@@ -112,11 +112,28 @@ skills would load twice).
 
 ```bash
 claude plugin marketplace update liulab
-claude plugin update lab-compute@liulab
+claude plugin update lab@liulab
 ```
 
 (or `git pull` for clone-based installs). Claude Code loads plugins when it
 starts, so restart your session before the updated skills are there.
+
+### Moving from `lab-compute`
+
+Until `2026.10.1` this repo was `liulab-compute-skills` and the plugin was
+`lab-compute`. A plain update does not cross a rename, so do it by hand once:
+
+```bash
+claude plugin uninstall lab-compute@liulab
+claude plugin marketplace remove liulab
+claude plugin marketplace add liuhlab/liulab-skills
+claude plugin install lab@liulab
+mv ~/.claude/compute ~/.claude/lab
+```
+
+The last line moves your per-user files to where the skills now read them.
+Every skill refuses to run while `~/.claude/compute` is still there.
+Clone-based installs: re-clone, then run `skills/install.py` again.
 
 ## Testing
 
@@ -142,7 +159,7 @@ config, so they stay a pre-push control — run the gate locally before you push
    a skill must never load on its own, as `lab-edison` does.
 2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
-   `~/.ssh/config` / `~/.claude/compute/personal.md`.
+   `~/.ssh/config` / `~/.claude/lab/personal.md`.
 3. Run `pixi run check`; bump `version` (CalVer `YYYY.M.PATCH`) in
    `.claude-plugin/plugin.json` and add a `CHANGELOG.md` entry in the same
    commit; tag that commit `v<version>`; push with `git push origin main

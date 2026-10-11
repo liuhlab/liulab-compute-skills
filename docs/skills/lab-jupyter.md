@@ -32,7 +32,7 @@ and the cluster's older Slurm dialect, without being told.
 
 The agent asks the usual ones before it submits, listed under
 [basic usage](../usage.md#what-the-agent-will-ask-you). Fill in
-`~/.claude/compute/personal.md` and most of them go away: it holds your port
+`~/.claude/lab/personal.md` and most of them go away: it holds your port
 (9990 by default), the path to your Jupyter on arc, and the resources you usually
 ask for.
 

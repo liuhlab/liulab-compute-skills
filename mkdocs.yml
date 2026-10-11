@@ -1,11 +1,11 @@
 # The docs site. Built by zensical, which reads this file directly — there is no
 # `zensical.toml`, so the config stays portable back to mkdocs if the alpha goes wrong.
 # See `docs/adr/0005-docs-site-on-zensical.md`.
-site_name: Liu Lab Compute Skills
-site_description: Teach AI coding agents to use the Liu Lab HPC clusters safely
-site_url: https://liuhlab.github.io/liulab-compute-skills/
-repo_url: https://github.com/liuhlab/liulab-compute-skills
-repo_name: liuhlab/liulab-compute-skills
+site_name: Liu Lab Skills
+site_description: Teach AI coding agents how the Liu Lab works, starting with its HPC clusters
+site_url: https://liuhlab.github.io/liulab-skills/
+repo_url: https://github.com/liuhlab/liulab-skills
+repo_name: liuhlab/liulab-skills
 
 theme:
   name: material

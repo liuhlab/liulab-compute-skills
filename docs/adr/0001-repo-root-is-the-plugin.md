@@ -6,7 +6,7 @@ search:
 # The repo root is the plugin, and one plugin holds every skill
 
 `.claude-plugin/marketplace.json` declares `source: "./"`, so the repo root *is* the
-plugin: marketplace `liulab`, plugin `lab-compute`, and every skill under `skills/` inside
+plugin: marketplace `liulab`, plugin `lab`, and every skill under `skills/` inside
 that single plugin. A marketplace may declare several plugins from subdirectories, and this
 one deliberately does not.
 
@@ -18,7 +18,7 @@ safety rules. A machine carrying `lab-hpc` at one version and `lab-containers` a
 is a combination nothing here tests and nobody would think to check — the failure shows up
 as an agent running a command against a cluster, which is the worst place to find it.
 
-One plugin makes the update atomic. `claude plugin update lab-compute@liulab` moves all of
+One plugin makes the update atomic. `claude plugin update lab@liulab` moves all of
 the skills or none of them, so the version on a machine is one number and a cross-reference
 is always answered by the copy it was written against.
 
@@ -32,6 +32,15 @@ is always answered by the copy it was written against.
   not a threshold: the 1536-character limit caps one description, never their sum.
 - Splitting later means a new plugin name, which every installed machine has to install by
   hand. Reversal is not free, which is why this is recorded.
+
+## Why the plugin is called `lab`
+
+It was `lab-compute` while the repo was `liulab-compute-skills` and held only cluster
+skills. When the repo became the home for every lab skill, cluster or not, both were renamed
+in `2026.10.1`. `lab` beat `lab-skills` because the plugin name is the prefix people type:
+`/lab:lab-edison`. The per-user directory moved with it, from `~/.claude/compute/` to
+`~/.claude/lab/`, and both preflights refuse while the old one exists, so no machine reads
+two copies of a key file.
 
 ## Why the root, rather than a subdirectory
 

@@ -10,8 +10,8 @@
 # wheel target, no pytest config. All three are here now, for that one package.
 
 [project]
-name = "liulab-compute-skills"
-description = "Liu Lab Agent Skills for HPC, containers and remote compute, packaged as a Claude Code plugin."
+name = "liulab-skills"
+description = "Liu Lab Agent Skills, packaged as a Claude Code plugin."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -104,7 +104,7 @@ pyyaml = "*"
 # `No module named 'lmi.config'`. Measured, not guessed. Resolved by uv alongside the client,
 # it agrees with the client instead of fighting it.
 [tool.pixi.pypi-dependencies]
-liulab-compute-skills = { path = ".", editable = true }
+liulab-skills = { path = ".", editable = true }
 pytest = "*"
 
 # The docs builder, in a feature of its own so that exactly one CI job installs it and the
@@ -269,7 +269,7 @@ reportMissingTypeStubs = "none"
 # `placeholder-rename` refuses to be waived.
 [tool.liulab.waived]
 skill-name-prefix = """The rule stops a repo-local skill from shadowing the lab's shared \
-`lab-compute` plugin: both are discovered the same way, so a directory named `lab-*` in \
+`lab` plugin: both are discovered the same way, so a directory named `lab-*` in \
 someone's working repo silently wins over the plugin's copy of that skill for everyone \
 who opens it. This repo IS that plugin — every `skills/lab-*` directory here is the \
 original every other repo is being protected from shadowing — so the rule fires once per \

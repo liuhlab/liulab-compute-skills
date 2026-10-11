@@ -10,7 +10,9 @@
 #   -F file  use an alternate ssh config (for testing this script)
 #
 # Output: one line per cluster: "<cluster>: CONFIGURED" or
-#         "<cluster>: NOT CONFIGURED (missing: ...)" (+ live results).
+#         "<cluster>: NOT CONFIGURED (missing: ...)" (+ live results), or
+#         only "config dir: OLD LOCATION" and the move, if ~/.claude/compute
+#         still exists.
 # Exit:   0 if at least one cluster is fully configured, 1 otherwise.
 
 set -u
@@ -25,6 +27,19 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+# The per-user directory moved when the plugin was renamed from lab-compute
+# to lab. While the old one exists, refuse and print the move — never perform
+# it, since the directory also holds the Edison key file.
+if [ -e "$HOME/.claude/compute" ]; then
+  echo "config dir: OLD LOCATION (~/.claude/compute — the plugin is lab now and reads ~/.claude/lab)"
+  if [ -e "$HOME/.claude/lab" ]; then
+    echo "  both exist: move what you still need into ~/.claude/lab, then remove ~/.claude/compute"
+  else
+    echo "  fix: mv ~/.claude/compute ~/.claude/lab"
+  fi
+  exit 1
+fi
 
 sshg() { # ssh wrapper honoring the optional -F override (bash-3.2 safe)
   if [ -n "$SSHCFG" ]; then ssh -F "$SSHCFG" "$@"; else ssh "$@"; fi

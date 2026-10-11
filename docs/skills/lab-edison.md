@@ -13,7 +13,7 @@ The skill never loads on its own. The other three trigger from what you say; thi
 one waits.
 
 ```text
-/lab-compute:lab-edison what is known about ...
+/lab:lab-edison what is known about ...
 ```
 
 Anything else you would put to a researcher goes after that same command: "Has
@@ -32,19 +32,19 @@ without you.
 ## Your key, and where it goes
 
 You need an Edison API key. It lives in one file on your own machine,
-`~/.claude/compute/edison.env`:
+`~/.claude/lab/edison.env`:
 
 ```bash
-mkdir -p ~/.claude/compute
+mkdir -p ~/.claude/lab
 printf 'export EDISON_PLATFORM_API_KEY=PASTE-YOUR-EDISON-KEY-HERE\n' \
-  > ~/.claude/compute/edison.env
-chmod 600 ~/.claude/compute/edison.env
+  > ~/.claude/lab/edison.env
+chmod 600 ~/.claude/lab/edison.env
 ```
 
 Then open the file in your editor and paste your key over the placeholder. You do
 not have to remember any of this: when something is missing, the check the skill
 runs first prints those exact commands back to you.
-[`templates/edison.env`](https://github.com/liuhlab/liulab-compute-skills/blob/main/templates/edison.env)
+[`templates/edison.env`](https://github.com/liuhlab/liulab-skills/blob/main/templates/edison.env)
 is the same file with the reasoning in its comments. The variable name is the one
 the client reads and no other, and the `chmod` leaves the file readable by you
 alone.
