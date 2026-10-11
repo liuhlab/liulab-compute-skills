@@ -1,8 +1,8 @@
 # liulab-skills
 
 Liu Lab's shared [Agent Skills](https://agentskills.io), packaged as a Claude
-Code **plugin marketplace** (marketplace `liulab`, plugin `lab`; call a skill as
-`/lab:<skill>`). Other agentic tools (Cursor,
+Code **plugin marketplace** (marketplace `liulab`, plugin `lab`; call a skill by
+its own name, such as `/lab-hpc`). Other agentic tools (Cursor,
 Codex, Gemini CLI, …) can consume the same skills — SKILL.md follows the
 open Agent Skills standard.
 

@@ -18,8 +18,8 @@ done
 
 plug=$(python3 -c 'import json; print(json.load(open(".claude-plugin/plugin.json"))["name"])' 2>/dev/null)
 case "$plug" in
-  lab) ok "plugin name '$plug', so skills are called /lab:<skill>" ;;
-  *)   err "plugin name '$plug' must be lab (skills are called /lab:<skill>)" ;;
+  lab) ok "plugin name is '$plug'" ;;
+  *)   err "plugin name '$plug' must be lab" ;;
 esac
 
 echo "== skills =="

@@ -13,7 +13,7 @@ The skill never loads on its own. The other three trigger from what you say; thi
 one waits.
 
 ```text
-/lab:lab-edison what is known about ...
+/lab-edison what is known about ...
 ```
 
 Anything else you would put to a researcher goes after that same command: "Has
