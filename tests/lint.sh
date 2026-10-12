@@ -679,17 +679,18 @@ fi
 
 # ======================= Codex and Kimi Code =======================
 # Two rules for the agents beside Claude Code, from #91. Both go through one checker,
-# `agent_check <rule> <skills-dir> [triggers]`, which prints a `FAIL<TAB>` or `ok<TAB>` line per
+# `agent_check <rule> <skills-dir> [triggers] [forked]`, which prints a `FAIL<TAB>` or `ok<TAB>` line per
 # finding. Probes run each rule on fixture trees first, both ways, because a check that can no
 # longer fire looks exactly like one that passes. Standard library only, like the rest of this
 # file, so `bash tests/lint.sh` runs outside pixi.
 agent_check() {
-  python3 - "$1" "$2" "${3:-}" <<'EOF'
+  python3 - "$1" "$2" "${3:-}" "${4:-}" <<'EOF'
 import pathlib
 import re
 import sys
 
 rule, root, table = sys.argv[1], pathlib.Path(sys.argv[2]), sys.argv[3]
+forked = {n.strip() for n in sys.argv[4].split(",") if n.strip()}
 skills = {p.parent.name: p for p in sorted(root.glob("*/SKILL.md"))}
 
 
@@ -769,7 +770,7 @@ if rule == "frontload":
         print(f"FAIL\ttriggers are recorded for {name}, which is not a skill. Drop its row")
     for name, skill in skills.items():
         if name not in triggers:
-            if name.startswith("lab-") or name == "hq-mode":
+            if name.startswith("lab-") or name == "hq-mode" or name in forked:
                 print(f"FAIL\t{name} is lab-owned and has no triggers recorded. Add a row"
                       " naming the words a request uses when it wants this skill")
             continue
@@ -806,9 +807,9 @@ fx_openai() { # <case> <name> <file body>
   mkdir -p "$ag/$1/$2/agents"
   printf '%s\n' "$3" >"$ag/$1/$2/agents/openai.yaml"
 }
-agent_probe() { # <label> <trips|clears> <rule> <case> [triggers]
+agent_probe() { # <label> <trips|clears> <rule> <case> [triggers] [forked]
   local label="$1" want="$2" out got
-  out=$(agent_check "$3" "$ag/$4" "${5:-}" | grep '^FAIL')
+  out=$(agent_check "$3" "$ag/$4" "${5:-}" "${6:-}" | grep '^FAIL')
   if [ -n "$out" ]; then got=trips; else got=clears; fi
   if [ "$got" = "$want" ]; then ok "probe: $label $want the check"
   else err "probe: $label — wanted '$want', got '$got': $out"; fi
@@ -851,16 +852,19 @@ echo "== front-loaded descriptions =="
 # change nothing: Kimi's cut is silent, and a skill it cannot find just never loads. The rows
 # restate part of each description on purpose, so dropping a trigger takes a visible edit here.
 #
-# Lab-owned means every `lab-*` skill and `hq-mode`, which fail without a row, and each forked
-# skill, which adds its row when it lands. A tracked skill gets no row: its description is
-# upstream text, merged at each sync and never edited here. A trigger matches from a word
-# start, ignoring case.
+# Lab-owned means every `lab-*` skill, `hq-mode`, and each skill forked in
+# `upstream/attribution.json`; all three fail without a row. A tracked skill gets none: its
+# description is upstream text, merged at each sync and never edited here. A trigger matches
+# from a word start, ignoring case.
 LAB_TRIGGERS='
 lab-hpc: HPC, cluster, arc, chimera, ircbc, ssh, Slurm, sbatch, srun, squeue, compute, login, GPU, remote, files
 lab-jupyter: Jupyter, notebook, tunnel, port forward, reconnect, cluster, compute node, GPU, arc, ircbc
 lab-containers: Singularity, container, image, SIF, liulab-runtime, ircbc, pull, build, pixi, Jupyter, LIU_LAB_PACKAGES
 lab-edison: Edison, literature, precedent, molecules, data analysis, Kosmos, dataset, recover, API key
 lab-setup: set up, installing, Claude Code, auto-update, Codex, Kimi Code, marketplace clone, edison-cli, PATH
+ketchup: ketchup, catch, last message, action item, summary
+technical-writing: technical, docs, README, RFC, protocol, PR description, commit message
+unslop: unslop, AI tells, AI-isms, AI writing, sound less like AI, prose, draft, rewrite
 '
 fx_fill() { printf '%*s' "$1" '' | tr ' ' w; } # <n>: one filler word, n characters long
 fx_skill early lab-fixture "Slurm $(fx_fill 300)"
@@ -880,10 +884,14 @@ agent_probe "a 250-character description, trigger last" clears frontload exact "
 agent_probe "a trigger found only inside a word"        trips  frontload inside-word 'lab-fixture: arc'
 agent_probe "a lab-* skill with no row"                 trips  frontload unrecorded
 agent_probe "hq-mode with no row"                       trips  frontload mode
+fx_skill forked unslop "A forked fixture skill with no triggers recorded."
+agent_probe "a forked skill with no row"                trips  frontload forked '' unslop
 agent_probe "a tracked skill with no row"               clears frontload tracked
 agent_probe "a row for a skill that is not there"       trips  frontload stale-row "$fx_row
 lab-gone: Slurm"
-agent_report "$(agent_check frontload skills "$LAB_TRIGGERS")"
+LAB_FORKED=$(python3 -c 'import json, re; print(*(m[1] for m in (re.fullmatch(r"skills/([^/]+)", k) for k in json.load(open("upstream/attribution.json"))) if m), sep=",")') \
+  || err "upstream/attribution.json is unreadable, so no forked skill could be held to a row"
+agent_report "$(agent_check frontload skills "$LAB_TRIGGERS" "$LAB_FORKED")"
 
 rm -rf "$ag"
 trap - EXIT

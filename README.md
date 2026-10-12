@@ -53,6 +53,18 @@ Skills taken from other projects keep their own names. These 25 come from
 - **Learn and write:** `research`, `teach`, `writing-for-agents`, `wait-what`.
 - **Set up a repo:** `setup-matt-pocock-skills`.
 
+These three come from [pstack](https://github.com/cursor/plugins/tree/main/pstack),
+changed for lab work:
+
+- **`unslop`** takes the tells of AI writing out of a draft. It leaves science
+  words such as vector, locus and modality alone, and keeps citations,
+  statistics and units.
+- **`technical-writing`** sets the standard for docs, protocols, pull requests
+  and commit messages. Papers and grants keep their own style, and a protocol
+  gives every amount its unit.
+- **`ketchup`**: type `/ketchup` to hear what happened since your last
+  message, and what waits on you.
+
 Each project's MIT license is in `upstream/<project>/LICENSE`.
 
 ## Security policy (hard rule)
