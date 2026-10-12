@@ -68,6 +68,14 @@ file sits beside it as `<topic>.lab.md`. These run vale and markdownlint with th
 repo's own configuration on a copy of one adopted skill's folder, and check that
 the upstream page keeps its exemption while the side page meets the lab's rules.
 
+## Unit tests — the eval plan fold: `tests/test_eval_plans.py`
+
+Free, seconds, in the same `pixi run test`. A plan-mode eval session may print only
+the path to its plan file, so `eval.sh` adds that file to the transcript before it
+checks anything. These run `eval.sh --only` against a stub `claude` and a fake home,
+and check that a plan named from `~` or by its full path is added. The stub is first
+on PATH, so no session starts.
+
 ## Layer 1 — static lint: `tests/lint.sh`
 
 Free, seconds. Tests the **files**: manifests are valid JSON, every skill has

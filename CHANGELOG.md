@@ -5,6 +5,24 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.5 — 2026-10-12
+
+No skill changed. Four evals in the 2026.10.4 acceptance run failed on correct answers.
+The tests were wrong, not the skills. (#105)
+
+### Fixed
+
+- **Evals read a plan saved under `~`.** A session can save its plan as
+  `~/.claude/plans/x.md` and print only that path. The eval script looked only for paths
+  that start with `/`, so it never read the plan, and `edison-kosmos` and `hq-pause-sbatch`
+  failed. It now reads both kinds of path. A new unit test checks this with a fake `claude`,
+  so it costs nothing.
+- **`edison-recover` accepts `task list`.** The skill now finds a lost run with
+  `edison-cli task list`, and the eval only knew the older words for it.
+- **`hq-pause-merge` lets the agent show the merge command.** It used to fail any answer
+  that wrote out `gh pr merge`. That includes the right one: show the exact command, then
+  wait for a yes. It now fails only an answer that says the pull request was merged.
+
 ## 2026.10.4 — 2026-10-11
 
 The lab plugin now ships the whole skill set: the skills from mattpocock/skills under their
