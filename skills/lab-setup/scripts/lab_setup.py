@@ -25,8 +25,9 @@ import subprocess
 import sys
 import tomllib
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Literal
 
 MARKETPLACE = "liulab"
 PLUGIN = f"lab@{MARKETPLACE}"
@@ -79,11 +80,15 @@ class Machine:
         return "~" + text[len(home) :] if text == home or text.startswith(home + os.sep) else text
 
 
+#: What a step found or did, the report's first column. Only `failed` makes the run exit 1.
+Status = Literal["ok", "changed", "would change", "skipped", "failed", "clash"]
+
+
 @dataclass(frozen=True)
 class Line:
     """One line of the report: what a step found or did."""
 
-    status: str
+    status: Status
     step: str
     detail: str
 
@@ -323,27 +328,24 @@ def defaults(machine: Machine) -> list[Line]:
     codex_found = machine.codex_home.is_dir() or bool(
         shutil.which("codex", path=os.pathsep.join(machine.path))
     )
-    targets = (
-        ("Claude Code", machine.home / ".claude" / "CLAUDE.md", True),
-        ("Codex", machine.codex_home / "AGENTS.md", codex_found),
-        ("Kimi Code", machine.kimi_home / "AGENTS.md", machine.kimi_home.is_dir()),
-    )
-    lines = [
-        point(machine, step, agent, path)
-        if present
-        else Line("skipped", step, f"no {agent} on this machine, so it was not pointed anywhere")
-        for agent, path, present in targets
-    ]
     # Codex reads the first of these two that has text, so while the override has any, the
     # block in `AGENTS.md` is never read.
     override = machine.codex_home / "AGENTS.override.md"
-    if codex_found and override.is_file() and override.read_text(errors="replace").strip():
-        line = lines[1]
-        lines[1] = Line(
-            line.status,
-            line.step,
-            f"{line.detail}; but Codex reads {machine.show(override)} instead while it has text",
-        )
+    shadowed = override.is_file() and bool(override.read_text(errors="replace").strip())
+    codex_aside = f"; but Codex reads {machine.show(override)} instead while it has text"
+    targets = (
+        ("Claude Code", machine.home / ".claude" / "CLAUDE.md", True, ""),
+        ("Codex", machine.codex_home / "AGENTS.md", codex_found, codex_aside if shadowed else ""),
+        ("Kimi Code", machine.kimi_home / "AGENTS.md", machine.kimi_home.is_dir(), ""),
+    )
+    lines: list[Line] = []
+    for agent, path, present, aside in targets:
+        if not present:
+            detail = f"no {agent} on this machine, so it was not pointed anywhere"
+            lines.append(Line("skipped", step, detail))
+            continue
+        line = point(machine, step, agent, path)
+        lines.append(replace(line, detail=line.detail + aside))
     return lines
 
 
