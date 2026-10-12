@@ -2,9 +2,8 @@
 
 Liu Lab's shared [Agent Skills](https://agentskills.io), packaged as a Claude
 Code **plugin marketplace** (marketplace `liulab`, plugin `lab`; call a skill by
-its own name, such as `/lab-hpc`). Other agentic tools (Cursor,
-Codex, Gemini CLI, …) can consume the same skills — SKILL.md follows the
-open Agent Skills standard.
+its own name, such as `/lab-hpc`). Codex and Kimi Code read the same
+skills — SKILL.md follows the open Agent Skills standard.
 
 **Docs:** <https://liuhlab.github.io/liulab-skills/> — human-readable
 guide (what this is, install, usage, one page per skill).
@@ -41,13 +40,13 @@ Current skills:
   of yours that takes a name the plugin ships. It asks before each change and
   removes nothing; its script (`scripts/lab_setup.py`) is safe to rerun.
 - **`hq-mode`** — type `/hq-mode` with a task to have the agent work the lab's
-  way: it reads one page of working rules, then follows one of 17 playbooks
-  (an analysis, a cluster run, a figure, a paper or grant section, a talk,
-  landing tickets, and more). Its always-pause list, which outranks "land it"
+  way: it reads one page of working rules, then follows the playbook that
+  fits (an analysis, a cluster run, a figure, a paper or grant section, a
+  talk, landing tickets, and more). Its always-pause list, which outranks "land it"
   and "going to bed", keeps it from submitting Slurm work, spending Edison
   credits or merging an unreviewed pull request without your yes.
 
-Skills taken from other projects keep their own names. These 25 come from
+Skills taken from other projects keep their own names. These come from
 [mattpocock/skills](https://github.com/mattpocock/skills). Most are
 unchanged. A few carry a lab edit, which only adds what science work needs,
 and the changelog names each one:
@@ -167,7 +166,9 @@ mv ~/.claude/compute ~/.claude/lab
 
 The last line moves your per-user files to where the skills now read them.
 Every skill refuses to run while `~/.claude/compute` is still there.
-Clone-based installs: re-clone, then run `skills/install.py` again.
+If you installed by cloning this repo instead, use the two commands under
+Setup. `/lab-setup` then lists the links your old install left, for you to
+remove.
 
 ## Testing
 

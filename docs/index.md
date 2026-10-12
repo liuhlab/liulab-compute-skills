@@ -110,4 +110,5 @@ mv ~/.claude/compute ~/.claude/lab
 
 The last line moves your own files to where the skills now look for them. Every
 skill refuses to run while `~/.claude/compute` is still there. If you installed
-from a clone, clone again and rerun the installer.
+from a clone instead, use the two commands under Install. `/lab-setup` then lists
+the links your old install left, for you to remove.

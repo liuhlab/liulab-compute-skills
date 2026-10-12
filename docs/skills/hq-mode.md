@@ -15,7 +15,7 @@ find the answer itself, what it may do without asking, how it splits work betwee
 and how it writes its reply. A rule in your repo's own `AGENTS.md` wins over that page.
 
 Then it picks the playbook that fits your task and copies its steps into its to-do list, so
-you can see what it will do and how far it has got. There are 17:
+you can see what it will do and how far it has got. The playbooks:
 
 | Kind | Playbooks |
 | --- | --- |
@@ -26,10 +26,10 @@ you can see what it will do and how far it has got. There are 17:
 
 When none fits, it designs one for the task, writes the steps down, and works through them.
 
-It also follows 22 working principles. Each is a short page it reads when that principle
-applies, such as "check the real output, not a sign of it". Six were changed for science
-work. For example, before it trusts a cell count, it rules out data leaking between splits,
-batch effects, repeated samples and a filter that changed what the count is out of.
+It also follows a set of working principles. Each is a short page it reads when that
+principle applies, such as "check the real output, not a sign of it". A few were changed for
+science work. For example, before it trusts a cell count, it rules out data leaking between
+splits, batch effects, repeated samples and a filter that changed what the count is out of.
 
 It also knows which skill to reach for along the way: the lab cluster skills before any
 ssh, `unslop` before you read its prose, and the planning skills such as `/grill-with-docs`
