@@ -1,5 +1,9 @@
 # Basic usage
 
+First install the plugin with the two commands on the [home page](index.md#install),
+then type `/lab-setup` once in Claude Code. From then on the skills keep themselves up to
+date, in Claude Code, Codex and Kimi Code alike.
+
 Talk to your agent about cluster work and the right skill loads itself. In Claude
 Code you can also call one directly: `/lab-hpc`, or `lab-jupyter`, or
 `lab-containers`.

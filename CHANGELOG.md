@@ -22,9 +22,21 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   pin there: the commit last merged or read, and which lab file each upstream skill feeds.
   A skill the lab changes for good gets an attribution record instead.
   `upstream/README.md` gives both formats.
+- **`/lab-setup`.** Type it once in Claude Code after the two install commands. It turns on
+  updates for the `liulab` marketplace, installs the plugin in Codex, points Kimi Code at the
+  copy Claude Code keeps current, and links `edison-cli` into a folder on your PATH. It asks
+  before each change, removes nothing, and is safe to run again. It also lists any skill of
+  yours that takes a name the plugin ships, because that copy wins over the plugin's without
+  a word.
 
 ### Changed
 
+- **Updates arrive on their own.** After `/lab-setup`, a release reaches Claude Code, Codex
+  and Kimi Code with no command, and loads the next time each one starts. To update by
+  hand, run `claude plugin marketplace update liulab`, then `claude plugin update
+  lab@liulab`. Releasing is now just pushing. (#77)
+- **The install pages** give the two commands, then `/lab-setup`. They no longer tell you to
+  link skills into other agents with `skills/install.py`.
 - **Each lab skill's description now starts with its triggers.** Kimi Code shows only the
   first 247 characters of a description, so the words that should load a skill now come
   first. The tests list those words for every lab skill and fail when one falls past that

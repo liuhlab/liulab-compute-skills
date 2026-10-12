@@ -100,11 +100,10 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
    pointer and nothing reads it — no GitHub Release; the `CHANGELOG.md`
    entry is the release notes. A version heading with no tag leaves whoever
    installed that version no commit to check out.
-4. Push both: `git push origin main --tags`. Installed machines pick it up
-   via `claude plugin marketplace update liulab` — manual on purpose
-   (ADR 0004).
-5. To test locally before/after: `claude plugin update lab@liulab`
-   (plain `install` does not upgrade in place).
+4. Push both: `git push origin main --tags`. That is the release; machines
+   that ran `/lab-setup` take it at their next launch (ADR 0014). By hand:
+   `claude plugin marketplace update liulab`, then
+   `claude plugin update lab@liulab`.
 
 ## Architecture / editing skills
 
@@ -132,7 +131,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   toolchain and storage; `arc-slurm.md` / `ircbc-slurm.md` for partitions,
   choosing one, and submitting.
 - `skills/lab-edison/` is the one skill with no cluster in it — the Edison
-  cloud platform — and the one that is **user-invoked only**
+  cloud platform — and is **user-invoked only**, as `lab-setup` is
   (`disable-model-invocation: true`, plus the `agents/openai.yaml` Codex
   needs), so it never triggers on its own and never spends a credit
   unprompted. Its spend path is the `src/edison_cli/` package run through

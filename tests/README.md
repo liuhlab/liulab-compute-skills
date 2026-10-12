@@ -2,7 +2,7 @@
 
 Skills are prose that steers an agent, so they are tested at three layers of
 increasing cost. Run layer 1 on every change, layer 2 when setting up a machine,
-and layer 3 only when a skill's behaviour has changed. One skill also ships real
+and layer 3 only when a skill's behaviour has changed. Two skills also ship real
 code, and that has unit tests of its own, described first.
 
 `pixi run check` runs everything cheap and safe: the static linters, the unit
@@ -31,6 +31,17 @@ client nor typer installed; the key reaches the client through the environment,
 did arrive, and appears in no argument, no output and no file under `src/`; and
 `project delete` removes nothing without `--yes` and a stated disposition for the
 run history.
+
+## Unit tests — the setup script: `tests/lab_setup/`
+
+Free, seconds, in the same `pixi run test`. They drive `/lab-setup`'s script,
+`skills/lab-setup/scripts/lab_setup.py`, at its command line against a **fake
+home** in a temporary directory, with a stub `codex` that writes what the real
+one would. `HOME` points at the fake home too, so nothing can reach the real one.
+They pin what a member would see: the settings, Kimi config and PATH link it
+leaves, that it removes nothing and keeps entries it did not write, the clash
+report against planted skills, the refusal without a marketplace clone, and that
+a second run leaves every file byte-identical.
 
 ## Layer 1 — static lint: `tests/lint.sh`
 
