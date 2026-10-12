@@ -1,1 +1,17 @@
-{}
+{
+  "skills/ketchup": {
+    "from": [
+      {"upstream": "pstack", "item": "ketchup", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ]
+  },
+  "skills/technical-writing": {
+    "from": [
+      {"upstream": "pstack", "item": "technical-writing", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ]
+  },
+  "skills/unslop": {
+    "from": [
+      {"upstream": "pstack", "item": "unslop", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ]
+  }
+}
