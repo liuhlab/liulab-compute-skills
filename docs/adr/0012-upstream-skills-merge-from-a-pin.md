@@ -19,7 +19,7 @@ skill is lab-owned and leaves the pin; upstream changes to its original arrive a
 ported by hand. Every mattpocock skill starts tracked; the maintainer forks one when merging
 it costs more than it saves, by judgement and no threshold.
 
-The sync is a maintainer-only skill in `.claude/skills/`, not shipped, run by hand about
+The sync is a maintainer-only command in `.claude/commands/`, not shipped, run by hand about
 monthly. One run merges, reports conflicts, deletions, stale words and dropped edits,
 summarises what is new in both upstreams, and opens one pull request: one version under
 ADR 0008.

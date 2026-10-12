@@ -17,6 +17,9 @@ A concept defined nowhere is a signal: usually language this repo does not use,
 occasionally a real gap.
 
 If your output contradicts a decision record, say so rather than quietly overriding it.
+A record whose detail went stale, such as a path that moved or a claim about another agent that
+proved wrong, is amended in place, and the commit message says so. A reversed decision gets a
+new record whose "What this reverses" section names the old one, which stays as written.
 
 ## What goes where
 
