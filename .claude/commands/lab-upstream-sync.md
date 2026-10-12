@@ -2,7 +2,8 @@
 description: >-
   Maintainer only, run by hand in this repo about monthly. Merge upstream changes into every
   tracked skill from its pin, walk through what the merge reports and what is new in both
-  upstreams, and open one pull request carrying one version bump, changelog entry and tag.
+  upstreams, and open one pull request carrying one version bump and changelog entry, tagged on
+  main once it merges.
 disable-model-invocation: true
 ---
 
@@ -66,14 +67,16 @@ report with the maintainer and decide nothing alone.
    `pixi run python scripts/upstream_sync.py recheck` with the same `--clone` flags, and settle
    what it lists as in step 4. Run `pixi run check` until it is green, and
    `git grep -n '^<<<<<<< lab'` until it finds nothing.
-7. Release as `AGENTS.md` says: bump `version` in `.claude-plugin/plugin.json` and add a
-   `CHANGELOG.md` entry in the same commit, naming new and removed skills, ported lab edits and
-   the commits both pins moved to. Tag that commit `v<version>`.
+7. Bump `version` in `.claude-plugin/plugin.json` and add a `CHANGELOG.md` entry in the same
+   commit, naming new and removed skills, ported lab edits and the commits both pins moved to.
+   Tag it only in step 9.
 8. Show the title and body, the report plus anything decided in step 4. On a yes, push the
-   branch and the tag, then `gh pr create`. One sync is one pull request and one version.
-9. If the report lists **Eval cases to rerun**, upstream touched a skill whose lab edit has a
-   case. A case runs the installed plugin, so wait until the pull request has merged, then run
-   `claude plugin marketplace update liulab` and `claude plugin update lab@liulab`. Ask about
-   each case, and on a yes run `bash tests/eval.sh --only <case>`. On a failure, read the
-   transcript it names before calling the edit lost, then file an issue.
-10. Delete the temporary clones.
+   branch, then `gh pr create`. One sync is one pull request and one version.
+9. Once it merges, on an up-to-date `main` and the maintainer's yes, tag the merged commit
+   `v<version>` and `git push origin main --tags`, as `AGENTS.md` says.
+10. If the report lists **Eval cases to rerun**, upstream touched a skill whose lab edit has a
+    case. A case runs the installed plugin, so after step 9 run
+    `claude plugin marketplace update liulab` and `claude plugin update lab@liulab`. Ask about
+    each case, and on a yes run `bash tests/eval.sh --only <case>`. On a failure, read the
+    transcript it names before calling the edit lost, then file an issue.
+11. Delete the temporary clones.
