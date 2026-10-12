@@ -5,6 +5,170 @@
     ],
     "changes": "ask-matt's flow, folded into the router's trigger table in the lab's words beside the lab-* skills, unslop and technical-writing; wizard and the in-progress skills left out."
   },
+  "skills/hq-mode/references/benchmark-checklist.md": {
+    "from": [
+      {"upstream": "pstack", "item": "benchmark-checklist", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "Both sides pinned to one node type or allocation, with node, GPU and job ID recorded; a long job's spread from a subsample plus one full-scale run per side; Opening a PR repointed to pr and Hillclimb to the improve-a-metric playbook; the Perf issue line dropped."
+  },
+  "skills/hq-mode/references/principles.md": {
+    "from": [
+      {"upstream": "pstack", "item": "poteto-mode", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"},
+      {"upstream": "pstack", "item": "principle-type-system-discipline", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "poteto-mode's principles index in the lab's words, with the lab edits named; type-system-discipline folded into boundary-discipline and model-the-domain, test-behavior-not-implementation into tdd and the verification page."
+  },
+  "skills/hq-mode/references/principles/attack-the-premise.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-attack-the-premise", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/boundary-discipline.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-boundary-discipline", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages. Lab edit: A numeric invariant a step can silently change (row counts, NA and inf counts, ranges) is a result check, asserted at that step, not re-validation."
+  },
+  "skills/hq-mode/references/principles/build-the-lever.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-build-the-lever", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/encode-lessons-in-structure.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-encode-lessons-in-structure", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/exhaust-the-design-space.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-exhaust-the-design-space", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages. Lab edit: Applies to analysis choices too: fix the criterion before seeing results, and report every alternative tried."
+  },
+  "skills/hq-mode/references/principles/experience-first.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-experience-first", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/explain-the-number.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-explain-the-number", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages. Lab edit: A result-number branch: rule out leakage between splits, batch confounding, duplicated samples and a filter that changed the denominator."
+  },
+  "skills/hq-mode/references/principles/fix-root-causes.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-fix-root-causes", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/foundational-thinking.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-foundational-thinking", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/guard-the-context-window.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-guard-the-context-window", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/laziness-protocol.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-laziness-protocol", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/make-operations-idempotent.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-make-operations-idempotent", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages. Lab edit: On a shared filesystem a lock names its host and job, and per-job outputs are preferred; write to a temporary name, then rename; skip an output only if it exists and validates."
+  },
+  "skills/hq-mode/references/principles/migrate-callers-then-delete-legacy-apis.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-migrate-callers-then-delete-legacy-apis", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/minimize-reader-load.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-minimize-reader-load", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/model-the-domain.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-model-the-domain", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages. Lab edit: Pipeline stages that checkpoint to disk stay; the domain rules they share go in one module they import."
+  },
+  "skills/hq-mode/references/principles/never-block-on-the-human.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-never-block-on-the-human", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/outcome-oriented-execution.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-outcome-oriented-execution", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/prove-it-works.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-prove-it-works", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/redesign-from-first-principles.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-redesign-from-first-principles", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/separate-before-serializing-shared-state.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-separate-before-serializing-shared-state", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/principles/sequence-verifiable-units.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-sequence-verifiable-units", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages. Lab edit: When each unit is a long batch job, prove one as a pilot, then run the rest concurrently and check each as it finishes."
+  },
+  "skills/hq-mode/references/principles/subtract-before-you-add.md": {
+    "from": [
+      {"upstream": "pstack", "item": "principle-subtract-before-you-add", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path instead of a skill; links point at the sibling pages."
+  },
+  "skills/hq-mode/references/show-me-your-work.md": {
+    "from": [
+      {"upstream": "pstack", "item": "show-me-your-work", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "A page hq-mode reads by path. The audit reads this harness's session log, not Cursor's transcript path; the reviewer is a fresh subagent, on another model where the harness offers one; scripts/log.sh writes the header row, so the template file is left out."
+  },
+  "skills/hq-mode/references/verification.md": {
+    "from": [
+      {"upstream": "pstack", "item": "create-verification-skill", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"},
+      {"upstream": "pstack", "item": "maintain-verification-skill", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"},
+      {"upstream": "pstack", "item": "principle-test-behavior-not-implementation", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ],
+    "changes": "The pair's idea in the lab's words: an agent that can check its own work can be trusted with more. Built on each repo's gate and the lanes AGENTS.md lists, not a generated verify skill; carries test-behavior-not-implementation's would-it-pass test."
+  },
+  "skills/hq-mode/scripts/log.sh": {
+    "from": [
+      {"upstream": "pstack", "item": "show-me-your-work/scripts/log.sh", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
+    ]
+  },
   "skills/ketchup": {
     "from": [
       {"upstream": "pstack", "item": "ketchup", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
