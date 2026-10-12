@@ -14,7 +14,7 @@ travel with it. Contrast a derived skill, which the lab owns from the start. See
 
 ### Agent-facing document
 
-A document written for a machine that has to act on it: `AGENTS.md`, `CONTEXT.md`, the
+A document written for a machine that has to act on it: `AGENTS.md`, `GLOSSARY.md`, the
 pages under `docs/agents/` and `docs/adr/`, and the skill bodies. Capped in words, exempt
 from the jargon and reading-grade rules, and kept out of the site navigation. Its opposite
 is a human-facing page — `README.md`, `CHANGELOG.md`, and the browsable `docs/` pages —

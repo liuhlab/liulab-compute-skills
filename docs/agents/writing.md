@@ -19,9 +19,9 @@ targets.
 | --- | --- |
 | `AGENTS.md`, `docs/agents/*`, `upstream/README.md`, `skills/*/references/*`, other pages beside a skill body, `skills/*/playbooks/*` | 1200 (`Lab.LengthDoc`) |
 | `skills/*/SKILL.md`, the maintainer-only skill in `.claude/commands/` | 600 (`Lab.LengthSkill`) |
-| An adopted skill's pages | none — upstream text passes unchanged (`upstream/README.md`) |
+| An adopted skill's pages | none — upstream text passes unchanged (`upstream/README.md`); a lab side page beside them, `*.lab.md`, takes the 1200 cap |
 | `docs/adr/*` | 400 (`Lab.LengthAdr`) |
-| `CONTEXT.md` | 200 words per glossary entry, checked by conformance |
+| `GLOSSARY.md` | 200 words per glossary entry, checked by conformance |
 | `docs/research/*` | none — a research note is long by nature |
 
 A skill body and the pages behind it are capped apart, because they are different things. The
@@ -30,7 +30,7 @@ body that outgrows that is detail belonging in `references/`. The reference page
 repo's densest agent-facing prose and keep the document cap; the lab template's
 `skills/*/SKILL.md` glob does not reach them at all.
 
-`CONTEXT.md` has no file cap. A glossary grows one term at a time and never shrinks, so a
+`GLOSSARY.md` has no file cap. A glossary grows one term at a time and never shrinks, so a
 file-level count measures how big the domain is, not how well the entries are written — a
 cap set for twenty terms fires again at twenty-five. The per-entry cap is the unit that
 matches how the file grows, and it is the only one.

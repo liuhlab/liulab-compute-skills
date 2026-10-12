@@ -2,8 +2,8 @@
 
 Skills are prose that steers an agent, so they are tested at three layers of
 increasing cost. Run layer 1 on every change, layer 2 when setting up a machine,
-and layer 3 only when a skill's behaviour has changed. Two pieces of real code, one
-skill's and the maintainer's upstream sync, have unit tests of their own,
+and layer 3 only when a skill's behaviour has changed. Two skills also ship real
+code, and so does the maintainer's upstream sync. Each has unit tests of its own,
 described first.
 
 `pixi run check` runs everything cheap and safe: the static linters, the unit
@@ -44,14 +44,33 @@ conflict, a deletion with and without a fork, a rename, a new skill, a forked sk
 left alone, a lost pin, the moved pin and a fork. Nothing reaches the network, and
 git reads none of your own settings.
 
+## Unit tests — the setup script: `tests/lab_setup/`
+
+Free, seconds, in the same `pixi run test`. They drive `/lab-setup`'s script,
+`skills/lab-setup/scripts/lab_setup.py`, at its command line against a **fake
+home** in a temporary directory, with a stub `codex` that writes what the real
+one would. `HOME` points at the fake home too, so nothing can reach the real one.
+They pin what a member would see: the settings, Kimi config and PATH link it
+leaves, that it removes nothing and keeps entries it did not write, the clash
+report against planted skills, the refusal without a marketplace clone, and that
+a second run leaves every file byte-identical.
+
+## Unit tests — lab side pages: `tests/test_side_pages.py`
+
+Free, seconds, in the same `pixi run test`. A lab edit too long for an upstream
+file sits beside it as `<topic>.lab.md`. These run vale and markdownlint with the
+repo's own configuration on a copy of one adopted skill's folder, and check that
+the upstream page keeps its exemption while the side page meets the lab's rules.
+
 ## Layer 1 — static lint: `tests/lint.sh`
 
 Free, seconds. Tests the **files**: manifests are valid JSON, every skill has
 parseable `name`/`description` front matter, names follow the naming policy
 (`lab-*`, or recorded as adopted in `upstream/`), each description fits the
 per-skill listing limit, and a tagged version still names the tree it was tagged
-on. A user-invoked skill must carry Codex's opt-out file, and a lab-owned skill's
-listed triggers must fit in the 247 characters Kimi Code shows. It also
+on. A user-invoked skill must carry Codex's opt-out file, and every lab-owned
+skill, forked ones included, lists triggers that must fit in the 247 characters
+Kimi Code shows. It also
 self-tests the two preflights, the eval guard, the naming check, those two rules,
 and the eval assertions (below).
 
@@ -118,6 +137,8 @@ before `--all` or anything live.
 | `edison-molecules` | Chemistry routes to `MOLECULES`, never to the retired job that 404s |
 | `edison-kosmos` | Kosmos is explained as a fan-out chat session, and nothing is substituted for it |
 | `edison-recover` | A run whose id was lost is found in task history, not bought again |
+| `prototype-language` | In a Python repo, `prototype` writes the logic in Python, not in an HTML page |
+| `diagnosing-bugs-slow-loop` | A loop that takes minutes takes the slow-loop path instead of stalling |
 | `live-sbatch` | Really ssh to arc, submit a tiny job to a free partition, clean it up |
 | `live-edison` | One real literature call comes back with citations, for one credit |
 

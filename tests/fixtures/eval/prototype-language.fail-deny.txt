@@ -1,0 +1,4 @@
+Logic branch. Following LOGIC.md, I would build one self-contained page,
+sample_state_demo.html, with the reducer in a script block, free-play buttons and a tab per
+walkthrough. Once the model holds up, I would port the reducer by hand into
+src/sampletrack/sample_state.py, since the repo is Python.

@@ -14,10 +14,53 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 
 - **`/grilling`**, the first skill from mattpocock/skills. It ships exactly as upstream
   wrote it, under its own name. Its MIT license is in `upstream/mattpocock/LICENSE`.
+- **The other 24 skills from mattpocock/skills**, such as `/tdd`, `/wayfinder` and
+  `/code-review`. Each ships as upstream wrote it, under its own name, and the README lists
+  them all. The ones you start yourself carry the file Codex reads, so Codex never starts
+  them unasked. Upstream's `wizard` stays out, and its `ask-matt` becomes part of `/hq-mode`.
 - **`upstream/`**, where the repo records what it takes from outside. Each upstream has a
   pin there: the commit last merged or read, and which lab file each upstream skill feeds.
   A skill the lab changes for good gets an attribution record instead.
   `upstream/README.md` gives both formats.
+- **`unslop` and `technical-writing`**, two writing skills from pstack, now owned and
+  changed by the lab. Your agent can use them without being asked. `unslop` takes the tells
+  of AI writing out of a draft. It no longer rewrites science words such as vector,
+  locus, modality and scaffold, and it keeps citations, statistics, units and
+  number ranges. It does the job `avoid-ai-writing` did, so you can remove that skill if you
+  installed it. `technical-writing` keeps papers and grants in their own style, asks for
+  quantities with units, and uses spaces, not tabs, in code.
+- **`/ketchup`**, pstack's catch-up: what happened since your last message, and what waits
+  on you. It now checks Slurm jobs and Edison runs too, in plain words. It runs only when
+  you type it, in every agent.
+- **pstack's pin.** The lab reads pstack and never merges it. `upstream/pstack/pin.json`
+  records the last pstack commit read, `978ca6e` (v0.15.17), and the lab file each item
+  feeds, the items taken only as ideas included. pstack's MIT license is in
+  `upstream/pstack/LICENSE`. Like the lab's own skills, each of the three starts its
+  description with its triggers, and the tests now check that for every skill the lab
+  forks.
+- **`/lab-setup`.** Type it once in Claude Code after the two install commands. It turns on
+  updates for the `liulab` marketplace, installs the plugin in Codex, points Kimi Code at the
+  copy Claude Code keeps current, and links `edison-cli` into a folder on your PATH. It asks
+  before each change, removes nothing, and is safe to run again. It also lists any skill of
+  yours that takes a name the plugin ships, because that copy wins over the plugin's without
+  a word.
+- **`/prototype` handles analysis and works outside JavaScript.** Upstream knew two kinds of
+  prototype, a web page to click through and a set of screen designs. It now has a third for
+  an analysis or a figure: a short script or notebook on part of the data that shows 2 or 3
+  versions side by side. For an analysis, it fixes how to judge them before they run and
+  reports all of them, so the pick does not follow the result. In a Python or R repo, the
+  logic is now written in that language and run from a script or notebook, because logic
+  written for a web page can't move into Python or R code. The page is built only when
+  someone who doesn't code must click through it.
+- **`/diagnosing-bugs` keeps going when one run takes minutes.** Upstream wants a test loop
+  that runs in seconds, which a bug that shows only on the full dataset can never meet, so
+  the agent stalled. Now it shrinks the input while the bug still shows, restarts from the
+  last good saved file, or takes a batch job as the loop.
+- **An eval case for each of those two changes.** `prototype-language` and
+  `diagnosing-bugs-slow-loop` check that the agent still takes the lab's path. A later
+  upstream rewording could undo either change without a merge conflict, so the upstream
+  sync reruns the case when upstream touches that skill. Both changes only add lines to
+  upstream's text.
 - **The monthly upstream sync, for the maintainer.** `/lab-upstream-sync` brings upstream's
   changes into the skills the lab takes from mattpocock/skills, and ends in one pull request.
   Its script merges each file from the pin to upstream's latest commit and keeps the lab's own
@@ -27,6 +70,12 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 
 ### Changed
 
+- **Updates arrive on their own.** After `/lab-setup`, a release reaches Claude Code, Codex
+  and Kimi Code with no command, and loads the next time each one starts. To update by
+  hand, run `claude plugin marketplace update liulab`, then `claude plugin update
+  lab@liulab`. Releasing is now just pushing. (#77)
+- **The install pages** give the two commands, then `/lab-setup`. They no longer tell you to
+  link skills into other agents with `skills/install.py`.
 - **Each lab skill's description now starts with its triggers.** Kimi Code shows only the
   first 247 characters of a description, so the words that should load a skill now come
   first. The tests list those words for every lab skill and fail when one falls past that
@@ -37,6 +86,34 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 - **The writing checks take upstream text as it is.** vale and markdownlint each skip the
   rules upstream text breaks, for the skills `upstream/` records and no others. Lab pages
   beside a skill body and in playbook folders now carry the 1200-word cap.
+- **The glossary is now `GLOSSARY.md`.** It was `CONTEXT.md`. The skills from
+  mattpocock/skills read and write `GLOSSARY.md` and nothing else, so under the old name they
+  would miss it and start a second one. The entries are unchanged. The repo checks are the lab
+  template's new copy: they fail a repo still on `CONTEXT.md`, and a repo skill that takes
+  any name the plugin ships.
+- **Lab edits to six skills from mattpocock/skills.** Each one adds what science work
+  needs and removes no line of upstream text. A longer one sits in its own page beside the
+  skill, named `*.lab.md`, and the writing checks hold that page to the lab's rules.
+  - `code-review` also looks for science smells, such as a random step with no seed, rows
+    dropped with no count, or a threshold with no source. Its fixed smell list is about
+    objects, so a review of analysis code missed the faults that change a result.
+  - `research` keeps what a paper reports apart from how well it is established, and takes
+    a review as the source for where consensus stands. Before, it could pass on one
+    preprint's claim as fact.
+  - `tdd` takes a frozen golden output as a known-good value, with a rule for tolerance:
+    compare bytes first, then mask fields that change between runs, then use
+    `pytest.approx` with a stated reason. Most analysis outputs have no other known-good
+    value, so the agent turned such tests down or wrote empty ones.
+  - `implement` runs `pixi run check` plus the steps `AGENTS.md` lists outside it. With no
+    test suite, it reruns on the fixture and compares with the saved result. Upstream
+    assumes a type checker and a test suite, so without them the agent made up commands
+    or skipped the check.
+  - `to-spec` gains an analysis plan: the question, the data and where it came from,
+    methods, outputs, checks and controls, and what is out of scope. An analysis has no
+    users, so the user stories the usual template asks for were made up.
+  - `to-tickets` treats a pipeline's stages as its layers, so a ticket takes one sample
+    through every stage to a figure. Upstream names web layers, and the easy misreading
+    was one ticket per stage.
 
 ### Fixed
 
@@ -51,6 +128,16 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   that has the setting without the file, or the file without the setting. (#75)
 - **The docs said every other agent ignores that setting.** Claude Code and Kimi Code honour
   it; only Codex needs the file. The README, the glossary and the `lab-edison` page now say so.
+
+### Upgrading
+
+If you installed skills from mattpocock/skills with `npx skills`, remove those copies once on
+each machine. The plugin now ships the same skills under the same names. A copy on your
+machine wins over the plugin's without a word, so you would keep running the old one.
+
+`npx skills` puts its copies in `~/.agents/skills` and links them into `~/.claude/skills`. For
+each skill the README lists from mattpocock/skills, delete the copy and its link. If nothing
+else on the machine came from `npx skills`, delete its list too, `~/.agents/.skill-lock.json`.
 
 ## 2026.10.3 — 2026-10-11
 

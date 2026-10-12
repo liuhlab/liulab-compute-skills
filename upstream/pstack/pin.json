@@ -1,0 +1,26 @@
+{
+  "repo": "https://github.com/cursor/plugins",
+  "commit": "978ca6e9c0e012047cd5058b8e829240336e704e",
+  "sync": "review",
+  "skills_dir": "pstack/skills",
+  "items": {
+    "automate-me": "skills/hq-mode/references/working-style.md",
+    "create-verification-skill": "skills/hq-mode/references/verification.md",
+    "figure-it-out": "skills/hq-mode/references/playbooks/figure-it-out.md",
+    "how": "skills/hq-mode/references/playbooks/investigation.md",
+    "ketchup": "skills/ketchup",
+    "maintain-verification-skill": "skills/hq-mode/references/verification.md",
+    "poteto-mode": "skills/hq-mode/SKILL.md",
+    "poteto-mode/playbooks/autonomous-run.md": "skills/hq-mode/references/playbooks/long-run.md",
+    "poteto-mode/playbooks/feature.md": "skills/hq-mode/references/playbooks/land-the-tickets.md",
+    "poteto-mode/playbooks/hillclimb.md": "skills/hq-mode/references/playbooks/improve-a-metric.md",
+    "poteto-mode/playbooks/investigation.md": "skills/hq-mode/references/playbooks/investigation.md",
+    "poteto-mode/playbooks/pause-safely.md": "skills/hq-mode/references/playbooks/long-run.md",
+    "poteto-mode/playbooks/refactoring.md": "skills/hq-mode/references/playbooks/refactor-analysis-code.md",
+    "poteto-mode/playbooks/session-pickup.md": "skills/hq-mode/references/playbooks/long-run.md",
+    "recall": "skills/hq-mode/references/playbooks/long-run.md",
+    "technical-writing": "skills/technical-writing",
+    "unslop": "skills/unslop",
+    "why": "skills/hq-mode/references/working-style.md"
+  }
+}

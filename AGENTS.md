@@ -71,7 +71,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
   `jupyter-ircbc`, `reuse-job`, `edison-refuse`, `edison-molecules`,
-  `edison-kosmos`, `edison-recover`, `live-sbatch`, `live-edison`.
+  `edison-kosmos`, `edison-recover`, `prototype-language`,
+  `diagnosing-bugs-slow-loop`, `live-sbatch`, `live-edison`.
   **There is no default run**: a bare `eval.sh` prints the cases and exits 2.
   Run one with `--only <case>`, the whole suite with
   `--all`. `--live` is a modifier and is refused alone; with `--all` it
@@ -100,11 +101,10 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
    pointer and nothing reads it — no GitHub Release; the `CHANGELOG.md`
    entry is the release notes. A version heading with no tag leaves whoever
    installed that version no commit to check out.
-4. Push both: `git push origin main --tags`. Installed machines pick it up
-   via `claude plugin marketplace update liulab` — manual on purpose
-   (ADR 0004).
-5. To test locally before/after: `claude plugin update lab@liulab`
-   (plain `install` does not upgrade in place).
+4. Push both: `git push origin main --tags`. That is the release; machines
+   that ran `/lab-setup` take it at their next launch (ADR 0014). By hand:
+   `claude plugin marketplace update liulab`, then
+   `claude plugin update lab@liulab`.
 
 ## Architecture / editing skills
 
@@ -132,7 +132,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   toolchain and storage; `arc-slurm.md` / `ircbc-slurm.md` for partitions,
   choosing one, and submitting.
 - `skills/lab-edison/` is the one skill with no cluster in it — the Edison
-  cloud platform — and the one that is **user-invoked only**
+  cloud platform — and is **user-invoked only**, as `lab-setup` is
   (`disable-model-invocation: true`, plus the `agents/openai.yaml` Codex
   needs), so it never triggers on its own and never spends a credit
   unprompted. Its spend path is the `src/edison_cli/` package run through
@@ -151,7 +151,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   without `squeue --me`, no internet on compute nodes, SOCKS-proxy-on-login
   gotchas), so read the relevant reference before writing cluster commands.
   Vendor and package facts carry a **provenance block** giving their source,
-  date and default tier — verified, read or unverified (`CONTEXT.md`,
+  date and default tier — verified, read or unverified (`GLOSSARY.md`,
   `docs/adr/0009-facts-carry-their-provenance.md`); lint fails a `lab-edison`
   reference page without one.
 - **Record configuration, never measurements.** Configuration is what an
@@ -175,7 +175,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 | When | Read |
 | --- | --- |
-| Before changing anything | `CONTEXT.md`, then any `docs/adr/` record covering the area |
+| Before changing anything | `GLOSSARY.md`, then any `docs/adr/` record covering the area |
 | Recording vocabulary or a decision | `docs/agents/domain.md` |
 | Filing or working an issue | `docs/agents/issue-tracker.md` |
 | Labelling someone else's issue | `docs/agents/triage-labels.md` |

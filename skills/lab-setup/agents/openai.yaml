@@ -1,0 +1,5 @@
+interface:
+  display_name: "Lab Setup"
+  short_description: "Set this machine up to follow the lab plugin"
+policy:
+  allow_implicit_invocation: false

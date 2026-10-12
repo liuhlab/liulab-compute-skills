@@ -1,0 +1,12 @@
+Phase 1 needs a loop that is fast: seconds, not minutes. One run here takes about 40 minutes
+and small inputs come out right, so there is no tight loop to build, and the skill is clear
+that without one there is no Phase 2.
+
+So I am stopping here, as "When you genuinely cannot build a loop" says. What I considered:
+a failing test (small inputs pass, so it cannot go red) and a differential run against an
+older version (40 minutes per side).
+
+To go further I need one of:
+(a) access to an environment that holds the full dataset and can run it,
+(b) a redacted log from a run that dropped cells, or
+(c) permission to add temporary instrumentation to the production pipeline.

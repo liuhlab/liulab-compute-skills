@@ -35,12 +35,15 @@ directory holding its `LICENSE` and no pin.
 | `repo` | The upstream's clone URL. |
 | `commit` | The full commit last synced (`merge`) or reviewed (`review`). |
 | `sync` | `merge`: every item is a tracked skill, merged file by file on each sync with `commit` as the base. `review`: items are only diffed for the sync's summary, never merged. |
-| `skills_dir` | Where the upstream keeps its skills. The sync finds an item under it by frontmatter `name`, so a bucket move costs nothing. |
+| `skills_dir` | Where the upstream keeps its skills. The sync finds a tracked skill under it by frontmatter `name`, so a bucket move costs nothing. |
 | `items` | Upstream item name to the lab path it feeds, relative to the repo root. |
 
 Under `merge`, every value is a whole skill, `skills/<name>`, and each name maps to itself
 until one clashes (`docs/adr/0013-adopted-skills-keep-upstream-names.md`). Under `review`,
-`items` also holds the items taken only as ideas, each mapped to the lab file it shaped.
+`items` also holds the items taken only as ideas, each mapped to the lab file it shaped, and
+each item is named by its path under `skills_dir`: a skill by its directory, a file inside one
+by its file path, such as `poteto-mode/playbooks/hillclimb.md`. pstack's `poteto-mode` calls
+itself `Poteto Mode`, so a frontmatter name would not find it.
 Moving `commit` forward goes in the sync's one pull request.
 
 ## The attribution record: `attribution.json`
@@ -74,6 +77,22 @@ here, with the pin's `commit`. `python scripts/upstream_sync.py fork <name>` doe
 3. Add its name to the adopted-skill section of `.vale.ini` and as a filter line in the
    override in `.markdownlint-cli2.yaml`. That is how upstream text passes the gate
    unchanged.
+
+## Lab edits
+
+A lab edit adds to a tracked skill's upstream text and removes no line of it (`GLOSSARY.md`).
+Nothing in this directory records one: its record is the diff against the pin, with its
+reason in the commit message and the changelog (ADR 0012). Lint never reads upstream, so
+nothing automatic checks that an edit removed no line: read the diff against the pin.
+
+- A branch or a loop path goes in place, in the upstream file.
+- A whole new section goes in a side page beside that file, named `<topic>.lab.md`, with a
+  one-line pointer from it. The suffix tells the gate it is lab text: `.vale.ini`'s
+  `[skills/*/*.lab.md]` section and the markdownlint override's `!**/*.lab.md` line hold it
+  to the rules for any page beside a skill body. `tests/test_side_pages.py` checks both.
+- An edit that pushes against upstream's own steer gets an eval case named `<name>-*` in
+  `tests/eval.sh`. An upstream rewording can undo it without a conflict, so a sync that
+  changes the skill reruns that case.
 
 ## What reads these
 

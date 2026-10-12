@@ -1,0 +1,14 @@
+Phase 1 first. A full run takes about 40 minutes, so a loop at full size can never meet the
+"seconds, not minutes" gate, and small inputs come out right, so a tiny fixture will not go
+red either. That is the slow-loop path:
+
+1. Shrink the input until it still goes red. Halve the cells, seeded and by sample, and rerun
+   until the loss disappears; keep the smallest size that still drops cells.
+2. Restart from the last good intermediate file. The cells are all present in the table that
+   goes into the merge step, so save that table once and start each run at the merge, which
+   skips the steps before it.
+3. If a run still takes minutes, accept a batch job as the loop: one command that runs the
+   merge on the saved input and asserts that the cell count going in equals the count coming
+   out, run unattended, with each run cut to the minimum.
+
+Its red signal is your symptom, cells lost across the merge, so it can go green once fixed.
