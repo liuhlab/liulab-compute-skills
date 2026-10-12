@@ -283,4 +283,4 @@ per skill on the one tree where those names are correct. Waived here and nowhere
 skill-symlinks = """These skills also ship as a Claude Code plugin, so a committed \
 project-local symlink would load every one of them twice for anyone who opens this repo \
 as their working directory with the plugin installed. Nothing is linked into the tree, \
-and the documented install is user-level: `python skills/install.py --target all --user`."""
+and the documented install is the plugin itself, with `/lab-setup` for Codex and Kimi Code."""

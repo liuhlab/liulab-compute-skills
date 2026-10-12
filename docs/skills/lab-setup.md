@@ -1,0 +1,54 @@
+# lab-setup: one step after installing
+
+Type it once on each machine, in Claude Code, right after the two install commands on the
+[home page](../index.md#install):
+
+```text
+/lab-setup
+```
+
+From then on Claude Code, Codex and Kimi Code all use the lab skills, and all three keep them
+up to date without you running anything. `edison-cli` works in all three as well.
+
+## What it sets up
+
+- **Claude Code** updates the plugin by itself. It checks in the background while you work,
+  and a new release loads the next time you start it.
+- **Codex** gets the same plugin, and checks for a new release each time it starts.
+- **Kimi Code** reads the skills from the copy Claude Code keeps up to date, so it follows
+  every Claude Code update.
+- **`edison-cli`** gets a link in `~/.local/bin` or `~/bin`, whichever your shell already
+  searches, so the command works outside Claude Code too.
+
+If you don't have Codex or Kimi Code, it skips that part and says so.
+
+It runs a small Python script, which needs Python 3.11 or newer. A fresh Mac has an older
+one. There the agent runs it through [pixi](https://pixi.sh) instead, which lab-edison needs
+anyway.
+
+## It asks first, and removes nothing
+
+The agent shows you every change before it makes one, and asks about each. You can say no to
+any of them. Nothing on your machine is deleted, and a setting you wrote yourself stays as it
+was.
+
+Running it again is safe. On a machine that is already set up it changes nothing, and on a
+machine that is half set up it finishes the job.
+
+## Old copies of the same skills
+
+You call a skill by its plain name, so an old copy in your own skills folder can win over
+the plugin's copy without a word. `/lab-setup` lists every such copy and where it lives. It
+leaves them alone: what to do with each one is your call. If you once installed skills with
+`npx skills`, those are the copies to remove.
+
+## Updating by hand
+
+You don't need to. If you want a release before your agent picks it up:
+
+```bash
+claude plugin marketplace update liulab
+claude plugin update lab@liulab
+```
+
+Then restart Claude Code.

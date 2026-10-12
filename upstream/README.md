@@ -35,12 +35,15 @@ directory holding its `LICENSE` and no pin.
 | `repo` | The upstream's clone URL. |
 | `commit` | The full commit last synced (`merge`) or reviewed (`review`). |
 | `sync` | `merge`: every item is a tracked skill, merged file by file on each sync with `commit` as the base. `review`: items are only diffed for the sync's summary, never merged. |
-| `skills_dir` | Where the upstream keeps its skills. The sync finds an item under it by frontmatter `name`, so a bucket move costs nothing. |
+| `skills_dir` | Where the upstream keeps its skills. The sync finds a tracked skill under it by frontmatter `name`, so a bucket move costs nothing. |
 | `items` | Upstream item name to the lab path it feeds, relative to the repo root. |
 
 Under `merge`, every value is a whole skill, `skills/<name>`, and each name maps to itself
 until one clashes (`docs/adr/0013-adopted-skills-keep-upstream-names.md`). Under `review`,
-`items` also holds the items taken only as ideas, each mapped to the lab file it shaped.
+`items` also holds the items taken only as ideas, each mapped to the lab file it shaped, and
+each item is named by its path under `skills_dir`: a skill by its directory, a file inside one
+by its file path, such as `poteto-mode/playbooks/hillclimb.md`. pstack's `poteto-mode` calls
+itself `Poteto Mode`, so a frontmatter name would not find it.
 Moving `commit` forward goes in the sync's one pull request.
 
 ## The attribution record: `attribution.json`
