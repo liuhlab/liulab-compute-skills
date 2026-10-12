@@ -9,6 +9,9 @@ from __future__ import annotations
 
 from tests.upstream_sync.conftest import MakeLab, Upstream, numbered, skill
 
+#: The lab defaults page `/lab-setup` points every agent at. Nothing lists it for the check.
+DEFAULTS = "skills/lab-setup/references/defaults.md"
+
 
 def test_a_lab_edit_still_using_a_word_upstream_removed_is_reported(
     upstream: Upstream, make_lab: MakeLab
@@ -43,7 +46,7 @@ def test_every_lab_page_is_read_wherever_it_lives_and_history_is_not(
     base = upstream.commit()
     lab = make_lab(upstream, base, tracked={"domain-modeling": "engineering"})
     pages = {
-        "defaults/lab-defaults.md": "# Lab defaults\n\nThe glossary is `CONTEXT.md`.\n",
+        DEFAULTS: "# Lab defaults\n\nThe glossary is `CONTEXT.md`.\n",
         "skills/lab-hpc/SKILL.md": "# lab-hpc\n\nRecord cluster terms in CONTEXT.md.\n",
         "CHANGELOG.md": "# Changelog\n\n- The glossary was `CONTEXT.md`.\n",
         "docs/adr/0001-glossary.md": "# Glossary\n\nWe chose `CONTEXT.md`.\n",
@@ -62,24 +65,21 @@ def test_every_lab_page_is_read_wherever_it_lives_and_history_is_not(
 
     assert run.returncode == 0, run.stdout + run.stderr
     assert (
-        "- `CONTEXT.md` in `defaults/lab-defaults.md:3`, `docs/agents/domain.md:3`, "
-        "`skills/lab-hpc/SKILL.md:3`.\n"
+        "- `CONTEXT.md` in `docs/agents/domain.md:3`, `skills/lab-hpc/SKILL.md:3`, "
+        f"`{DEFAULTS}:3`.\n"
     ) in run.stdout
 
 
 def test_a_link_to_a_page_upstream_renamed_is_reported(
     upstream: Upstream, make_lab: MakeLab
 ) -> None:
-    """The defaults page links upstream's seed pages by path, so a renamed page is a stale word."""
+    """The defaults page names upstream's seed pages by path, so a renamed page is a stale word."""
     setup = "setup-matt-pocock-skills"
     upstream.add(setup, text=skill(setup, ["See [the GitHub page](issue-tracker-github.md)."]))
     upstream.write(f"skills/engineering/{setup}/issue-tracker-github.md", "# GitHub issues\n")
     base = upstream.commit()
     lab = make_lab(upstream, base, tracked={setup: "engineering"})
-    lab.write(
-        "defaults/lab-defaults.md",
-        f"# Lab defaults\n\n- [Issue tracker](../skills/{setup}/issue-tracker-github.md)\n",
-    )
+    lab.write(DEFAULTS, f"# Lab defaults\n\nIssues: `skills/{setup}/issue-tracker-github.md`.\n")
     lab.commit("defaults page")
     upstream.remove(f"skills/engineering/{setup}/issue-tracker-github.md")
     upstream.write(f"skills/engineering/{setup}/tracker-github.md", "# GitHub issues\n")
@@ -93,7 +93,7 @@ def test_a_link_to_a_page_upstream_renamed_is_reported(
 
     assert run.returncode == 0, run.stdout + run.stderr
     assert not lab.exists(f"skills/{setup}/issue-tracker-github.md")
-    assert "- `issue-tracker-github.md` in `defaults/lab-defaults.md:3`.\n" in run.stdout
+    assert f"- `issue-tracker-github.md` in `{DEFAULTS}:3`.\n" in run.stdout
 
 
 def test_a_word_upstream_still_uses_elsewhere_is_not_stale(
