@@ -24,10 +24,11 @@ Every run spends credits from your own account. That is why nothing here starts
 without you.
 
 !!! note "Other agent tools"
-    The setting that holds the skill back is Claude Code's own. Cursor, Codex and
-    the rest ignore it, so there the skill can load like any other. It still
-    refuses to run without a key, and it still shows you the job before it sends
-    one.
+    Claude Code and Kimi Code both honour the setting that holds the skill back.
+    Codex ignores it. It reads a small opt-out file instead, `agents/openai.yaml`,
+    which ships beside the skill. So in all three the skill waits for you. In any
+    other tool it may load on its own, but it still refuses to run without a key,
+    and it still shows you the job before it sends one.
 
 ## Your key, and where it goes
 

@@ -79,10 +79,11 @@ That links every skill into every product's user-level skills folder
 would be installed, `--dry-run` to see where, and `--copy` if your setup cannot
 follow a symlink. They are links, so `git pull` updates every install at once.
 
-One thing does not port. The setting that keeps lab-edison from loading on its
-own belongs to Claude Code, and other products ignore it. There the skill can
-load like any other, so read its [page](skills/lab-edison.md) before you use it
-elsewhere.
+lab-edison waits for you to type its name. Claude Code and Kimi Code read that
+from its settings. Codex reads it from a small opt-out file the skill also
+ships, `agents/openai.yaml`. Other products may ignore both and load it like
+any other skill, so read its [page](skills/lab-edison.md) before you use it
+there.
 
 !!! warning "Install for your user, not for a project"
     Keep `--user`. A project install writes the links into a folder inside the
