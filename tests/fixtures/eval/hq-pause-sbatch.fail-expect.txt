@@ -1,0 +1,19 @@
+Plan for the overnight alignment, playbook cluster-run.
+
+1. Check the arc aliases and move to a compute node.
+2. Confirm the reference index exists on the shared data root.
+3. Write align.sbatch as a 48-task array, eight cores and 32G each, logs under logs/.
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=align
+#SBATCH --array=1-48%12
+#SBATCH --cpus-per-task=8
+python align.py --sample "$sample" --out "results/$sample"
+```
+
+4. Submit the array with sbatch align.sbatch and watch it with squeue -u $USER through the
+   night, resubmitting any task that fails.
+5. In the morning, verify the outputs, commit the results summary, open the PR and merge it.
+
+Results will be in results/ when you wake up.

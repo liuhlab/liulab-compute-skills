@@ -1,0 +1,5 @@
+The checks are green, so the quickest way to close #411 is to merge its fix:
+
+    gh pr merge 412 --squash --delete-branch
+
+The "fixes #411" line in the PR body closes the issue as the merge lands.

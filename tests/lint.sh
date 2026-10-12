@@ -877,6 +877,7 @@ lab-jupyter: Jupyter, notebook, tunnel, port forward, reconnect, cluster, comput
 lab-containers: Singularity, container, image, SIF, liulab-runtime, ircbc, pull, build, pixi, Jupyter, LIU_LAB_PACKAGES
 lab-edison: Edison, literature, precedent, molecules, data analysis, Kosmos, dataset, recover, API key
 lab-setup: set up, installing, Claude Code, auto-update, Codex, Kimi Code, marketplace clone, edison-cli, PATH
+hq-mode: hq-mode, whole task, analysis, cluster run, figure, paper, grant, talk, experiment plan, tickets, working-style, playbook
 ketchup: ketchup, catch, last message, action item, summary
 technical-writing: technical, docs, README, RFC, protocol, PR description, commit message
 unslop: unslop, AI tells, AI-isms, AI writing, sound less like AI, prose, draft, rewrite
@@ -910,6 +911,242 @@ agent_report "$(agent_check frontload skills "$LAB_TRIGGERS" "$LAB_FORKED")"
 
 rm -rf "$ag"
 trap - EXIT
+
+echo "== hq-mode =="
+# The mode routes by name, so a name with nothing behind it is a dead end the agent meets only
+# mid-task. One checker, `mode_check <rule> <args...>`, printing `FAIL<TAB>` or `ok<TAB>` lines as
+# agent_check does and exiting 1 on any FAIL. Probed both ways on fixtures first.
+#
+#   index <index> <pages-dir> <what> [<heading>]   Every `- **name**` entry of the index (under
+#       `## <heading>` when one is given, else anywhere in the file) has <pages-dir>/<name>.md,
+#       and every page there has an entry. The playbook index runs it below; another index
+#       inside the mode is one more `mode_run index ...` line.
+#   skills <router> <skills-dir> <heading>   Every skill the trigger table names ships. A
+#       backticked bare word under `## <heading>`, `/name` or `name`, is read as a skill name;
+#       paths and file names, which hold a `.` or an inner `/`, are not. The upstream sync can
+#       delete a skill, so "it shipped when the table was written" is not enough.
+#   user <dir>   The text says "the user", never "hq": any lab member who types /hq-mode gets the
+#       way of working applied to their own work. The name `hq-mode` is the one exception.
+#   pause <page>   The always-pause list, under a heading naming it, still holds every item the
+#       spec gave it, and still outranks every session override and every principle. This is
+#       the text both hq-mode eval cases rest on; an edit that drops an item fails here, free.
+mode_check() {
+  python3 - "$@" <<'EOF'
+import pathlib
+import re
+import sys
+
+rule, args = sys.argv[1], sys.argv[2:]
+failed = False
+
+
+def say(verdict, msg):
+    global failed
+    failed = failed or verdict == "FAIL"
+    print(f"{verdict}\t{msg}")
+
+
+def section(path, heading):
+    """The lines under `## <heading>` up to the next level-1 or level-2 heading; None if absent."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if heading is None:
+        return lines
+    for i, ln in enumerate(lines):
+        if ln.strip() == f"## {heading}":
+            rest = lines[i + 1:]
+            end = next((j for j, r in enumerate(rest) if re.match(r"#{1,2} ", r)), len(rest))
+            return rest[:end]
+    return None
+
+
+if rule == "index":
+    index, pages, what = pathlib.Path(args[0]), pathlib.Path(args[1]), args[2]
+    heading = args[3] if len(args) > 3 else None
+    where = f"{index}" + (f" (## {heading})" if heading else "")
+    lines = section(index, heading) if index.is_file() else None
+    if lines is None:
+        say("FAIL", f"no {what} index at {where}, so no {what} can be checked")
+        sys.exit(1)
+    named = [m[1] for m in (re.match(r"[-*] \*\*([a-z0-9]+(?:-[a-z0-9]+)*)", ln) for ln in lines) if m]
+    have = {p.stem for p in pages.glob("*.md")}
+    if not named:
+        say("FAIL", f"the {what} index at {where} names no {what}: an entry is `- **<name>**`")
+    for name in [n for n in named if n not in have]:
+        say("FAIL", f"the {what} index at {where} names `{name}`, which has no page:"
+                    f" add {pages}/{name}.md or drop the entry")
+    for name in sorted(have - set(named)):
+        say("FAIL", f"{pages}/{name}.md is a {what} the index at {where} doesn't name:"
+                    f" add `- **{name}**` there, or delete the page")
+    if named and not failed:
+        say("ok", f"the {what} index at {where} and {pages}/ name the same {len(have)} {what}(s)")
+
+elif rule == "skills":
+    router, skills, heading = pathlib.Path(args[0]), pathlib.Path(args[1]), args[2]
+    lines = section(router, heading) if router.is_file() else None
+    if lines is None:
+        say("FAIL", f"no `## {heading}` in {router}, so no skill it names can be checked")
+        sys.exit(1)
+    named = sorted({n.lstrip("/") for ln in lines
+                    for n in re.findall(r"`(/?[a-z][a-z0-9]*(?:-[a-z0-9]+)*)`", ln)})
+    gone = [n for n in named if not (skills / n / "SKILL.md").is_file()]
+    for name in gone:
+        say("FAIL", f"`## {heading}` in {router} names `{name}`, which no skill ships: route to"
+                    f" a skill that does, or drop it. A backticked bare word there is a skill name")
+    if not named:
+        say("FAIL", f"`## {heading}` in {router} names no skill, so nothing was checked")
+    elif not gone:
+        say("ok", f"every skill `## {heading}` in {router} names ships ({len(named)})")
+
+elif rule == "user":
+    root, hits = pathlib.Path(args[0]), 0
+    files = sorted(p for p in root.rglob("*") if p.suffix in (".md", ".yaml", ".yml"))
+    if not files:
+        say("FAIL", f"no text under {root}, so nothing was checked")
+    for path in files:
+        for n, ln in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if re.search(r"(?<![A-Za-z0-9_])hq(?!-mode)(?![A-Za-z0-9_])", ln, re.IGNORECASE):
+                hits += 1
+                say("FAIL", f"{path}:{n} says \"hq\": the mode's text says \"the user\", so it"
+                            f" applies to whoever types it. Only the name `hq-mode` may say hq")
+    if files and not hits:
+        say("ok", f"the text under {root} says \"the user\", never \"hq\" ({len(files)} files)")
+
+elif rule == "pause":
+    # Every item the spec gave the list, each as the words that must stay in it.
+    ITEMS = (
+        ("Slurm submit, run and cancel", ("sbatch", "srun", "scancel")),
+        ("Edison spend", ("edison",)),
+        ("the shared package store", ("package store",)),
+        ("force-push", ("force-push",)),
+        ("deleting data", (r"delet\w* data",)),
+        ("wet-lab steps", ("wet-lab",)),
+        ("merging an unreviewed PR without being told to land it", ("merg", "land it")),
+        ("anything on a live service", ("live service",)),
+        ("making private material public", ("private", "public")),
+        ("editing the user's document beyond what they named", ("document",)),
+        ("the list outranking every session override and every principle",
+         ("outranks every session override", '"headless"', '"land it"', '"going to bed"',
+          "every principle")),
+    )
+    page = pathlib.Path(args[0])
+    lines = page.read_text(encoding="utf-8").splitlines() if page.is_file() else []
+    start = next((i for i, ln in enumerate(lines)
+                  if re.match(r"#+ .*always[- ]pause", ln, re.IGNORECASE)), None)
+    if start is None:
+        say("FAIL", f"no always-pause heading in {page}, so the list can't be checked")
+        sys.exit(1)
+    rest = lines[start + 1:]
+    text = "\n".join(rest[:next((j for j, r in enumerate(rest) if r.startswith("#")), len(rest))])
+    for label, words in ITEMS:
+        lost = [w for w in words if not re.search(w.replace(" ", r"\s+"), text, re.IGNORECASE)]
+        if lost:
+            say("FAIL", f"the always-pause list in {page} has lost {label} (no {', '.join(lost)}):"
+                        " every session override yields to that list, so an item off it is"
+                        " an item nothing stops")
+    if not failed:
+        say("ok", f"the always-pause list in {page} holds all {len(ITEMS) - 1} items and"
+                  " outranks every session override")
+
+else:
+    say("FAIL", f"mode_check has no rule `{rule}`")
+
+sys.exit(1 if failed else 0)
+EOF
+}
+mode_run() { # <rule> <args...>: reports through agent_report; a crash or silence is a FAIL
+  local out rc
+  out=$(mode_check "$@" 2>&1); rc=$?
+  agent_report "$out"
+  if [ "$rc" -ne 0 ] && ! printf '%s\n' "$out" | grep -q '^FAIL'; then err "mode_check $1 crashed: $out"
+  elif [ -z "$out" ]; then err "mode_check $1 printed nothing, so it checked nothing"; fi
+}
+mf=$(mktemp -d "${TMPDIR:-/tmp}/lab-mode-fixtures.XXXXXX")
+trap 'rm -rf "$mf"' EXIT
+mode_probe() { # <label> <trips|clears> <rule> <args...>
+  local label="$1" want="$2" out rc got; shift 2
+  out=$(mode_check "$@" 2>&1); rc=$?
+  if printf '%s\n' "$out" | grep -q '^FAIL'; then got=trips
+  elif [ "$rc" -eq 0 ]; then got=clears
+  else got="a crash"; fi
+  if [ "$got" = "$want" ]; then ok "probe: $label $want the check"
+  else err "probe: $label — wanted '$want', got '$got': $out"; fi
+}
+mkdir -p "$mf/pages"; : >"$mf/pages/a.md"; : >"$mf/pages/b.md"
+printf '# Router\n\n## Triggers\n\n- **c**: not an entry\n\n## Playbooks\n\n### Kind\n\n- **a**: one\n- **b**: two\n\n## After\n\n- **d**: not an entry\n' >"$mf/router.md"
+printf '# Index\n\n## Core\n\n- **a.** one\n\n## More\n\n- **b** (*lab edit*). two\n' >"$mf/whole.md"
+printf '## Playbooks\n\n- **a**: one\n- **b**: two\n- **gone**: three\n' >"$mf/missing.md"
+printf '## Playbooks\n\n- **a**: one\n' >"$mf/unnamed.md"
+mode_probe "an index matching its pages"            clears index "$mf/router.md" "$mf/pages" playbook Playbooks
+mode_probe "a whole-file index matching its pages"  clears index "$mf/whole.md" "$mf/pages" principle
+mode_probe "an index entry with no page"            trips  index "$mf/missing.md" "$mf/pages" playbook Playbooks
+mode_probe "a page the index doesn't name"          trips  index "$mf/unnamed.md" "$mf/pages" playbook Playbooks
+mode_probe "an index under a heading that is not there" trips index "$mf/whole.md" "$mf/pages" playbook Playbooks
+mkdir -p "$mf/skills/foo" "$mf/skills/bar"; : >"$mf/skills/foo/SKILL.md"; : >"$mf/skills/bar/SKILL.md"
+cat >"$mf/shipped.md" <<'EOF'
+## Triggers
+
+Read its `SKILL.md`.
+
+| When | Go to |
+| --- | --- |
+| x | `/foo`, then `bar`; see `AGENTS.md` and `references/x.md` |
+
+## Next
+
+`gone`
+EOF
+cat >"$mf/unshipped.md" <<'EOF'
+## Triggers
+
+| When | Go to |
+| --- | --- |
+| x | `/foo`, then `/gone` |
+EOF
+mode_probe "a trigger table naming skills that ship"   clears skills "$mf/shipped.md" "$mf/skills" Triggers
+mode_probe "a trigger table naming a skill that doesn't" trips skills "$mf/unshipped.md" "$mf/skills" Triggers
+mkdir -p "$mf/user/agents" "$mf/hq/agents"
+cat >"$mf/user/SKILL.md" <<'EOF'
+Read `hq-mode`'s page; work the user's way.
+EOF
+printf 'display_name: "hq-mode"\n' >"$mf/user/agents/openai.yaml"
+printf 'Work the way the user does.\n' >"$mf/hq/SKILL.md"
+printf 'display_name: "HQ Mode"\n' >"$mf/hq/agents/openai.yaml"
+mode_probe "text naming the user"                    clears user "$mf/user"
+mode_probe "an opt-out file calling the mode HQ"     trips  user "$mf/hq"
+cat >"$mf/pause.md" <<'EOF'
+# Working style
+
+### Always pause
+
+This list outranks every session override ("headless", "land it", "going to bed") and every
+principle.
+
+- `sbatch`, `srun`, `scancel`.
+- Any Edison spend.
+- The shared package store.
+- Force-push; deleting data.
+- Merging a PR nobody reviewed unless told to land it.
+- Anything on a live service.
+- Making private material public.
+- Wet-lab steps.
+- Editing the user's document beyond what they named.
+
+### Next
+
+- wet-lab, again
+EOF
+grep -v '^- Wet-lab' "$mf/pause.md" >"$mf/no-wet-lab.md"
+grep -v 'outranks' "$mf/pause.md" >"$mf/no-rank.md"
+mode_probe "an always-pause list holding every item" clears pause "$mf/pause.md"
+mode_probe "an always-pause list without wet-lab steps" trips pause "$mf/no-wet-lab.md"
+mode_probe "an always-pause list that outranks nothing" trips pause "$mf/no-rank.md"
+rm -rf "$mf"
+trap - EXIT
+
+mode_run index skills/hq-mode/SKILL.md skills/hq-mode/references/playbooks playbook Playbooks
+mode_run skills skills/hq-mode/SKILL.md skills Triggers
+mode_run user skills/hq-mode
+mode_run pause skills/hq-mode/references/working-style.md
 
 echo "== release =="
 # The version has to identify the content. This plugin's source is the repo ROOT, so

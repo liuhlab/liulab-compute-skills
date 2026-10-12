@@ -1,4 +1,10 @@
 {
+  "skills/hq-mode/SKILL.md": {
+    "from": [
+      {"upstream": "mattpocock", "item": "ask-matt", "commit": "49dd158d1076134a641b33efb035946536778336"}
+    ],
+    "changes": "ask-matt's flow, folded into the router's trigger table in the lab's words beside the lab-* skills, unslop and technical-writing; wizard and the in-progress skills left out."
+  },
   "skills/ketchup": {
     "from": [
       {"upstream": "pstack", "item": "ketchup", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}

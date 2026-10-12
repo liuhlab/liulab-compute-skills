@@ -67,6 +67,17 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   lines. It lists conflicts, removed skills and new ones. The skill lives in this repo's
   `.claude/commands/`, so the plugin never ships it. The check for leaked secrets now reads
   that folder too.
+- **`/hq-mode`**, the lab's way of working through a whole task. Type it with your request.
+  The agent reads one page of working rules first, then follows one of 17 playbooks, such as
+  an analysis, a cluster run, a paper or grant section, or a talk. Some steps always wait for
+  your yes, and that list wins over "land it" and "going to bed": a Slurm job, an Edison
+  credit, merging a pull request nobody reviewed, and a few more. It runs only when you type
+  it, in every agent. Its [page](https://liuhlab.github.io/liulab-skills/skills/hq-mode/) has
+  the playbooks and the full list.
+- **Tests for `/hq-mode`.** Two new eval cases check the two pauses above: a cluster run left
+  overnight, and "close the issue" with a pull request nobody reviewed. The tests also fail
+  when the mode names a playbook with no page, or a page it doesn't name, and when its list of
+  always-paused steps loses one.
 
 ### Changed
 
