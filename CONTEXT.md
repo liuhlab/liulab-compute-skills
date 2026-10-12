@@ -377,12 +377,12 @@ upstream: it stays on its own channel or retires.
 
 ### Upstream sync
 
-One run of the maintainer-only sync skill in this repo's `.claude/skills/`, which is not
-shipped, started by hand about monthly. It merges every tracked skill from its pin to
-upstream's tip, and reports conflicts, deletions, stale words (a token upstream removed that
-lab text still uses) and dropped edits (a line the lab added that the merge lost). It
-summarises what is new in both upstreams and opens one pull request, so one version under
-`docs/adr/0008-version-identifies-the-content.md`.
+One run of `/lab-upstream-sync`, the maintainer-only skill in this repo's `.claude/commands/`,
+which is not shipped, started by hand about monthly. Its script, `scripts/upstream_sync.py`,
+merges every tracked skill from its pin to upstream's tip, and reports conflicts, deletions,
+stale words (a token upstream removed that lab text still uses) and dropped edits (a line the
+lab added that the merge lost). The skill summarises what is new in both upstreams and opens
+one pull request, so one version under `docs/adr/0008-version-identifies-the-content.md`.
 
 ### Waiver
 

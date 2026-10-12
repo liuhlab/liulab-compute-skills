@@ -266,6 +266,7 @@ reportMissingTypeStubs = "none"
 "skills/*/*.md" = "LengthDoc"          # support files beside a skill body
 "skills/*/playbooks/" = "LengthDoc"
 "skills/*/SKILL.md" = "LengthSkill"
+".claude/commands/" = "LengthSkill"    # the maintainer-only skill, which the plugin never ships
 "docs/adr/" = "LengthAdr"
 
 # Conformance rules this repo does not meet on purpose. Keyed by rule name, value the
