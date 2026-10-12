@@ -259,7 +259,7 @@ reportMissingTypeStubs = "none"
 # directory nobody wrote would fail rule 3 on the section that has no key to pair with.
 [tool.liulab.agent-docs]
 "AGENTS.md" = "LengthDoc"
-"CONTEXT.md" = false                   # capped per entry by conformance rule 4, not per file
+"GLOSSARY.md" = false                  # capped per entry by conformance rule 4, not per file
 "docs/agents/" = "LengthDoc"
 "upstream/README.md" = "LengthDoc"     # the pin and attribution formats
 "skills/*/references/" = "LengthDoc"
@@ -273,13 +273,13 @@ reportMissingTypeStubs = "none"
 # reason has to read well to someone who has never seen the issue that added it.
 # `placeholder-rename` refuses to be waived.
 [tool.liulab.waived]
-skill-name-prefix = """The rule stops a repo-local skill from shadowing the lab's shared \
-`lab` plugin: both are discovered the same way, so a directory named `lab-*` in \
-someone's working repo silently wins over the plugin's copy of that skill for everyone \
-who opens it. This repo IS that plugin — every `skills/lab-*` directory here is the \
-original every other repo is being protected from shadowing — so the rule fires once per \
-skill on the one tree where the prefix is the correct name. Waived here and nowhere \
-else."""
+skill-name-clash = """The rule stops a repo-local skill from replacing one the lab's shared \
+`lab` plugin ships: both are discovered the same way, so a directory in someone's working \
+repo that takes a `lab-*` name, or any other name the plugin ships, silently wins over the \
+plugin's copy for everyone who opens it. This repo IS that plugin — every directory under \
+`skills/` here is the original every other repo is being protected from shadowing, and the \
+shipped names are read from an installed copy of this very tree — so the rule fires once \
+per skill on the one tree where those names are correct. Waived here and nowhere else."""
 skill-symlinks = """These skills also ship as a Claude Code plugin, so a committed \
 project-local symlink would load every one of them twice for anyone who opens this repo \
 as their working directory with the plugin installed. Nothing is linked into the tree, \

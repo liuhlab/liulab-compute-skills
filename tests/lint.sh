@@ -410,7 +410,7 @@ fi
 
 echo "== vendor attribution =="
 # The Edison platform is run by Edison Scientific, FutureHouse's commercial spinout, and the
-# Edison entry in CONTEXT.md is the single authority on that. Four other registers say it in
+# Edison entry in GLOSSARY.md is the single authority on that. Four other registers say it in
 # their own words — the skill body, its trigger description, README.md and the published page
 # — and nothing can lint five registers for "says the right thing". This lints all of them
 # for "never says the wrong thing". Same shape as the eval suite's DENY assertions, which
@@ -455,7 +455,7 @@ vendor_hits=$(SWEEP '[Ff]uture[ -]?[Hh]ouse' | grep -v '^\./CHANGELOG\.md:' \
               | vendor_elide | grep -iE "$VENDOR_WRONG")
 if [ -n "$vendor_hits" ]; then
   printf '%s\n' "$vendor_hits"
-  err "the Edison platform is attributed to FutureHouse (above, with job names elided) — Edison Scientific runs it; CONTEXT.md's Edison entry is the authority"
+  err "the Edison platform is attributed to FutureHouse (above, with job names elided) — Edison Scientific runs it; GLOSSARY.md's Edison entry is the authority"
 else
   ok "no FutureHouse attribution of the Edison platform (CHANGELOG history exempt)"
 fi

@@ -14,6 +14,10 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 
 - **`/grilling`**, the first skill from mattpocock/skills. It ships exactly as upstream
   wrote it, under its own name. Its MIT license is in `upstream/mattpocock/LICENSE`.
+- **The other 24 skills from mattpocock/skills**, such as `/tdd`, `/wayfinder` and
+  `/code-review`. Each ships as upstream wrote it, under its own name, and the README lists
+  them all. The ones you start yourself carry the file Codex reads, so Codex never starts
+  them unasked. Upstream's `wizard` stays out, and its `ask-matt` becomes part of `/hq-mode`.
 - **`upstream/`**, where the repo records what it takes from outside. Each upstream has a
   pin there: the commit last merged or read, and which lab file each upstream skill feeds.
   A skill the lab changes for good gets an attribution record instead.
@@ -43,6 +47,11 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 - **The writing checks take upstream text as it is.** vale and markdownlint each skip the
   rules upstream text breaks, for the skills `upstream/` records and no others. Lab pages
   beside a skill body and in playbook folders now carry the 1200-word cap.
+- **The glossary is now `GLOSSARY.md`.** It was `CONTEXT.md`. The skills from
+  mattpocock/skills read and write `GLOSSARY.md` and nothing else, so under the old name they
+  would miss it and start a second one. The entries are unchanged. The repo checks are the lab
+  template's new copy: they fail a repo still on `CONTEXT.md`, and a repo skill that takes
+  any name the plugin ships.
 
 ### Fixed
 
@@ -57,6 +66,16 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   that has the setting without the file, or the file without the setting. (#75)
 - **The docs said every other agent ignores that setting.** Claude Code and Kimi Code honour
   it; only Codex needs the file. The README, the glossary and the `lab-edison` page now say so.
+
+### Upgrading
+
+If you installed skills from mattpocock/skills with `npx skills`, remove those copies once on
+each machine. The plugin now ships the same skills under the same names. A copy on your
+machine wins over the plugin's without a word, so you would keep running the old one.
+
+`npx skills` puts its copies in `~/.agents/skills` and links them into `~/.claude/skills`. For
+each skill the README lists from mattpocock/skills, delete the copy and its link. If nothing
+else on the machine came from `npx skills`, delete its list too, `~/.agents/.skill-lock.json`.
 
 ## 2026.10.3 — 2026-10-11
 

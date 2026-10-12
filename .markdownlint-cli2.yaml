@@ -43,7 +43,31 @@ config:
 # `upstream/` and against the adopted-skill section of `.vale.ini`.
 overrides:
   - filter:
+      - "skills/code-review/**"
+      - "skills/codebase-design/**"
+      - "skills/diagnosing-bugs/**"
+      - "skills/domain-modeling/**"
+      - "skills/grill-me/**"
+      - "skills/grill-with-docs/**"
       - "skills/grilling/**"
+      - "skills/handoff/**"
+      - "skills/implement/**"
+      - "skills/implement-spec/**"
+      - "skills/improve-codebase-architecture/**"
+      - "skills/pr/**"
+      - "skills/prototype/**"
+      - "skills/research/**"
+      - "skills/retro/**"
+      - "skills/setup-matt-pocock-skills/**"
+      - "skills/tdd/**"
+      - "skills/teach/**"
+      - "skills/to-questionnaire/**"
+      - "skills/to-spec/**"
+      - "skills/to-tickets/**"
+      - "skills/triage/**"
+      - "skills/wait-what/**"
+      - "skills/wayfinder/**"
+      - "skills/writing-for-agents/**"
     combine: merge
     config:
       MD012: false

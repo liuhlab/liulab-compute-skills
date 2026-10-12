@@ -150,7 +150,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   without `squeue --me`, no internet on compute nodes, SOCKS-proxy-on-login
   gotchas), so read the relevant reference before writing cluster commands.
   Vendor and package facts carry a **provenance block** giving their source,
-  date and default tier — verified, read or unverified (`CONTEXT.md`,
+  date and default tier — verified, read or unverified (`GLOSSARY.md`,
   `docs/adr/0009-facts-carry-their-provenance.md`); lint fails a `lab-edison`
   reference page without one.
 - **Record configuration, never measurements.** Configuration is what an
@@ -174,7 +174,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 | When | Read |
 | --- | --- |
-| Before changing anything | `CONTEXT.md`, then any `docs/adr/` record covering the area |
+| Before changing anything | `GLOSSARY.md`, then any `docs/adr/` record covering the area |
 | Recording vocabulary or a decision | `docs/agents/domain.md` |
 | Filing or working an issue | `docs/agents/issue-tracker.md` |
 | Labelling someone else's issue | `docs/agents/triage-labels.md` |
