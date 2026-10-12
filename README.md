@@ -2,9 +2,8 @@
 
 Liu Lab's shared [Agent Skills](https://agentskills.io), packaged as a Claude
 Code **plugin marketplace** (marketplace `liulab`, plugin `lab`; call a skill by
-its own name, such as `/lab-hpc`). Other agentic tools (Cursor,
-Codex, Gemini CLI, …) can consume the same skills — SKILL.md follows the
-open Agent Skills standard.
+its own name, such as `/lab-hpc`). Codex and Kimi Code read the same
+skills — SKILL.md follows the open Agent Skills standard.
 
 **Docs:** <https://liuhlab.github.io/liulab-skills/> — human-readable
 guide (what this is, install, usage, one page per skill).
@@ -34,6 +33,46 @@ Current skills:
   shows the job and the query before it spends, and it never transmits the
   key. Kosmos is a chat session that fans out into many tasks, and the skill
   will not start one unless you ask for that run.
+- **`lab-setup`** — type it once per machine, after installing. It sets
+  `autoUpdate` on the `liulab` marketplace in Claude Code, installs the
+  plugin in Codex, points Kimi Code's `extra_skill_dirs` at Claude Code's
+  marketplace clone, links `edison-cli` onto your PATH, and lists any skill
+  of yours that takes a name the plugin ships. It asks before each change and
+  removes nothing; its script (`scripts/lab_setup.py`) is safe to rerun.
+- **`hq-mode`** — type `/hq-mode` with a task to have the agent work the lab's
+  way: it reads one page of working rules, then follows the playbook that
+  fits (an analysis, a cluster run, a figure, a paper or grant section, a
+  talk, landing tickets, and more). Its always-pause list, which outranks "land it"
+  and "going to bed", keeps it from submitting Slurm work, spending Edison
+  credits or merging an unreviewed pull request without your yes.
+
+Skills taken from other projects keep their own names. These come from
+[mattpocock/skills](https://github.com/mattpocock/skills). Most are
+unchanged. A few carry a lab edit, which only adds what science work needs,
+and the changelog names each one:
+
+- **Plan:** `grilling`, `grill-me`, `grill-with-docs`, `wayfinder`, `to-spec`,
+  `to-tickets`, `to-questionnaire`, `triage`.
+- **Build:** `implement`, `implement-spec`, `tdd`, `prototype`,
+  `diagnosing-bugs`, `codebase-design`, `improve-codebase-architecture`,
+  `domain-modeling`.
+- **Review and hand over:** `code-review`, `pr`, `retro`, `handoff`.
+- **Learn and write:** `research`, `teach`, `writing-for-agents`, `wait-what`.
+- **Set up a repo:** `setup-matt-pocock-skills`.
+
+These three come from [pstack](https://github.com/cursor/plugins/tree/main/pstack),
+changed for lab work:
+
+- **`unslop`** takes the tells of AI writing out of a draft. It leaves science
+  words such as vector, locus and modality alone, and keeps citations,
+  statistics and units.
+- **`technical-writing`** sets the standard for docs, protocols, pull requests
+  and commit messages. Papers and grants keep their own style, and a protocol
+  gives every amount its unit.
+- **`ketchup`**: type `/ketchup` to hear what happened since your last
+  message, and what waits on you.
+
+Each project's MIT license is in `upstream/<project>/LICENSE`.
 
 ## Security policy (hard rule)
 
@@ -47,15 +86,22 @@ user's own `~/.ssh/config` at run time (`tests/lint.sh` enforces this).
 Setting up SSH access (hosts, keys, accounts, VPN) is **out of scope** for
 this repo — get it from a lab admin through a secure channel.
 
-## Setup — Claude Code (2 commands)
+## Setup (two commands, then `/lab-setup`)
 
 ```bash
 claude plugin marketplace add liuhlab/liulab-skills
 claude plugin install lab@liulab
 ```
 
-`lab-edison` also wants [pixi](https://pixi.sh) on your PATH. It is the only
-extra tool any of these skills asks for, and nothing else here needs it.
+Then start Claude Code and type `/lab-setup`. From then on Claude Code,
+Codex and Kimi Code all follow the plugin and update on their own, and
+`edison-cli` works in all three. All three also read the lab's defaults: where
+issues go, which labels to use, and the safety rules for the clusters. Its
+[page](https://liuhlab.github.io/liulab-skills/skills/lab-setup/) has the
+details.
+
+`lab-edison` also wants [pixi](https://pixi.sh) on your PATH, and
+`/lab-setup` uses it where the machine's Python is older than 3.11.
 
 ## Per-user config (once per machine)
 
@@ -67,10 +113,7 @@ extra tool any of these skills asks for, and nothing else here needs it.
 2. Copy [templates/personal.md](templates/personal.md) to
    `~/.claude/lab/personal.md` and fill in your usernames/directories.
    Never commit it anywhere.
-3. Append [templates/CLAUDE-stub.md](templates/CLAUDE-stub.md) to your
-   `~/.claude/CLAUDE.md` so the two safety rules apply even in sessions where
-   the skill doesn't auto-trigger.
-4. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
+3. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
    not have it, then copy [templates/edison.env](templates/edison.env) to
    `~/.claude/lab/edison.env`, replace the placeholder with your own
    Edison key, and `chmod 600` it. It goes *beside* `personal.md`, never
@@ -82,41 +125,31 @@ extra tool any of these skills asks for, and nothing else here needs it.
    [lab-edison page](https://liuhlab.github.io/liulab-skills/skills/lab-edison/)
    has the rest.
 
-## Other agentic tools (Cursor, Codex, Gemini CLI, …)
+## Codex and Kimi Code
 
-`git clone` this repo anywhere, then run the installer:
+`/lab-setup` sets both up from Claude Code (ADR 0014). Codex installs the same
+plugin from `.claude-plugin/` and upgrades it at every startup. Kimi Code reads
+the skills live from Claude Code's marketplace clone through `extra_skill_dirs`,
+so it follows every Claude Code update. No other agent tool is supported.
 
-```bash
-python skills/install.py --target all --user
-```
-
-That links every skill into every product's user-level skills
-directory (`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
-`~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see
-what would be installed, `--dry-run` to see where, and `--copy` where a
-symlink won't do. Because they are links, `git pull` updates every install.
-`lab-hpc` is the required base for the cluster skills; `lab-jupyter` and
-`lab-containers` build on it. `lab-edison` stands alone and needs none of
-them.
-
-One caveat outside Claude Code: `lab-edison` is user-invoked via
-`disable-model-invocation: true`, a Claude Code frontmatter key. Other
-products ignore it and will trigger the skill like any other. It still
-refuses without a key file and still shows the job before submitting.
-
-Install at the user level, not into a project. Claude Code users should use
-EITHER the plugin OR symlinks into `~/.claude/skills/` — never both (the
-skills would load twice).
+A user-invoked skill, such as `lab-edison` or `lab-setup`, loads only when you
+type its name. Claude Code and Kimi Code read that from
+`disable-model-invocation: true` in its frontmatter. Codex ignores that key and
+reads the opt-out file beside the skill instead, `agents/openai.yaml`, which
+sets `allow_implicit_invocation: false`.
 
 ## Updating
+
+Nothing to run once `/lab-setup` has: a release reaches each agent on its own,
+and Claude Code loads it at its next launch. To update by hand:
 
 ```bash
 claude plugin marketplace update liulab
 claude plugin update lab@liulab
 ```
 
-(or `git pull` for clone-based installs). Claude Code loads plugins when it
-starts, so restart your session before the updated skills are there.
+Claude Code loads plugins when it starts, so restart your session before the
+updated skills are there.
 
 ### Moving from `lab-compute`
 
@@ -133,7 +166,9 @@ mv ~/.claude/compute ~/.claude/lab
 
 The last line moves your per-user files to where the skills now read them.
 Every skill refuses to run while `~/.claude/compute` is still there.
-Clone-based installs: re-clone, then run `skills/install.py` again.
+If you installed by cloning this repo instead, use the two commands under
+Setup. `/lab-setup` then lists the links your old install left, for you to
+remove.
 
 ## Testing
 
@@ -156,12 +191,16 @@ config, so they stay a pre-push control — run the gate locally before you push
 1. Create `skills/<new-skill>/SKILL.md` — frontmatter with `name` +
    `description` (open-standard core); keep the body lean and put long
    detail in `references/`. Add `disable-model-invocation: true` only when
-   a skill must never load on its own, as `lab-edison` does.
-2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
+   a skill must never load on its own, as `lab-edison` does, and copy its
+   `agents/openai.yaml` for Codex. Put the words that should trigger the
+   skill in the first 247 characters of its description, which is all Kimi
+   Code shows, and list them in `tests/lint.sh`.
+2. Name a skill you write `lab-*`, not `liulab-*`. A skill taken from another
+   project keeps its own name and is recorded in `upstream/` (see
+   `upstream/README.md`). Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
    `~/.ssh/config` / `~/.claude/lab/personal.md`.
 3. Run `pixi run check`; bump `version` (CalVer `YYYY.M.PATCH`) in
    `.claude-plugin/plugin.json` and add a `CHANGELOG.md` entry in the same
    commit; tag that commit `v<version>`; push with `git push origin main
-   --tags`. Installed machines pick it up on
-   `claude plugin marketplace update liulab`.
+   --tags`. Installed machines pick it up on their own at their next launch.

@@ -1,0 +1,14 @@
+This is a question about a state model, so it takes the logic branch: one self-contained
+HTML page that anyone can open by double-click and drive with buttons.
+
+File: sample-state-prototype.html, next to the code it prototypes for.
+
+- A <script> block holding a pure reducer, (state, action) => state, with the states
+  received, sequenced, qc_pass and qc_fail, and a rerun counter capped at two.
+- A current-state panel, re-rendered after every click.
+- Free-play buttons: Receive, Sequence, QC pass, QC fail, Rerun.
+- Guided walkthroughs, one tab each: the happy path; two failed reruns and then a refused
+  third; a pass followed by a failed rerun that must leave the pass in place.
+
+Once it answers the question, the reducer lifts into the real code and the page goes to a
+throwaway branch.

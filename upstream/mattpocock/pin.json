@@ -1,0 +1,33 @@
+{
+  "repo": "https://github.com/mattpocock/skills",
+  "commit": "49dd158d1076134a641b33efb035946536778336",
+  "sync": "merge",
+  "skills_dir": "skills",
+  "items": {
+    "code-review": "skills/code-review",
+    "codebase-design": "skills/codebase-design",
+    "diagnosing-bugs": "skills/diagnosing-bugs",
+    "domain-modeling": "skills/domain-modeling",
+    "grill-me": "skills/grill-me",
+    "grill-with-docs": "skills/grill-with-docs",
+    "grilling": "skills/grilling",
+    "handoff": "skills/handoff",
+    "implement": "skills/implement",
+    "implement-spec": "skills/implement-spec",
+    "improve-codebase-architecture": "skills/improve-codebase-architecture",
+    "pr": "skills/pr",
+    "prototype": "skills/prototype",
+    "research": "skills/research",
+    "retro": "skills/retro",
+    "setup-matt-pocock-skills": "skills/setup-matt-pocock-skills",
+    "tdd": "skills/tdd",
+    "teach": "skills/teach",
+    "to-questionnaire": "skills/to-questionnaire",
+    "to-spec": "skills/to-spec",
+    "to-tickets": "skills/to-tickets",
+    "triage": "skills/triage",
+    "wait-what": "skills/wait-what",
+    "wayfinder": "skills/wayfinder",
+    "writing-for-agents": "skills/writing-for-agents"
+  }
+}

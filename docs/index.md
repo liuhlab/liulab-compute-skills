@@ -6,7 +6,7 @@ in any tool that reads the open skills standard.
 
 Ask an agent to "run this on the cluster" and it needs lab knowledge it cannot
 guess: which clusters exist, how a job gets submitted, what is safe to do. This
-plugin holds that knowledge, in four skills.
+plugin holds that knowledge.
 
 | Skill | What it covers |
 | --- | --- |
@@ -14,9 +14,13 @@ plugin holds that knowledge, in four skills.
 | [lab-jupyter](skills/lab-jupyter.md) | Jupyter Lab on a compute node, tunnelled to your local browser. |
 | [lab-containers](skills/lab-containers.md) | The lab's Singularity images on ircbc: keeping them current, running work inside them. |
 | [lab-edison](skills/lab-edison.md) | The Edison platform: Kosmos for a whole research goal, cited literature answers and data analysis for a single question. No cluster. |
+| [lab-setup](skills/lab-setup.md) | One step after installing: the plugin updates by itself, and Codex and Kimi Code get it too. |
+| [hq-mode](skills/hq-mode.md) | A whole task done the lab's way: working rules, a playbook per kind of task, and a list of steps that always wait for your yes. |
 
 The first three load by themselves when your request touches remote compute. You
-call lab-edison by name, because every run of it costs you money.
+call the last three by name: lab-edison because every run of it costs you money,
+lab-setup because you need it once per machine, and hq-mode because you choose
+when a task gets it.
 
 ## What the agent will not do
 
@@ -31,14 +35,22 @@ loop.
     as ssh alias names, and the rest is read from *your* `~/.ssh/config` at run
     time. That is what makes this repo safe to publish.
 
-## Install in Claude Code
+## Install
+
+Two commands in your terminal:
 
 ```bash
 claude plugin marketplace add liuhlab/liulab-skills
 claude plugin install lab@liulab
 ```
 
-Then set the machine up once.
+Then start Claude Code and type `/lab-setup`. It turns on updates for the plugin,
+and sets up Codex and Kimi Code if you have them. It also points each agent at the
+lab's defaults: where issues go, which labels to use, and the safety rules for the
+clusters. It asks before each change, and it removes nothing. Its
+[page](skills/lab-setup.md) has the details.
+
+Then set the machine up for the clusters once.
 
 1. **SSH aliases.** Your `~/.ssh/config` needs the lab's usual alias names:
    `arc`, `chimera-login`, `chimera-transfer`, `chimera-gpu`, `chimera-cpu`, the
@@ -49,12 +61,8 @@ Then set the machine up once.
    [`templates/personal.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/personal.md)
    to `~/.claude/lab/personal.md` and fill in your usernames, directories and
    Jupyter defaults. Never commit it.
-3. **Safety stub, optional.** Append
-   [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/CLAUDE-stub.md)
-   to your `~/.claude/CLAUDE.md`, so the core rules apply even in sessions where
-   no skill loads.
-4. **Edison key and pixi, only for lab-edison.** That skill needs
-   [pixi](https://pixi.sh) on your PATH; no other skill here does. Then copy
+3. **Edison key and pixi, only for lab-edison.** That skill needs
+   [pixi](https://pixi.sh) on your PATH. Then copy
    [`templates/edison.env`](https://github.com/liuhlab/liulab-skills/blob/main/templates/edison.env)
    to `~/.claude/lab/edison.env`, paste your own key over the placeholder,
    and `chmod 600` it. It sits beside `personal.md`, never inside it. Never
@@ -63,42 +71,29 @@ Then set the machine up once.
 To check the result, ask Claude: *"Am I set up for the lab HPC clusters?"* The
 skill runs its preflight and reports per cluster.
 
-## Install in other agents
+## Codex and Kimi Code
 
-The skills follow the open Agent Skills standard, so the same files work in
-Cursor, Codex, Gemini CLI and the rest. Only the folder each product reads is
-different. Clone this repo anywhere, then run the installer:
+`/lab-setup` sets both up from Claude Code, so there is nothing to install by hand.
+Codex gets the same plugin and checks for a new release each time it starts. Kimi
+Code reads the skills from the copy Claude Code keeps up to date. No other agent
+tool is supported.
 
-```bash
-python skills/install.py --target all --user
-```
-
-That links every skill into every product's user-level skills folder
-(`~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`,
-`~/.gemini/skills/`). Use `--target codex` for one product, `--list` to see what
-would be installed, `--dry-run` to see where, and `--copy` if your setup cannot
-follow a symlink. They are links, so `git pull` updates every install at once.
-
-One thing does not port. The setting that keeps lab-edison from loading on its
-own belongs to Claude Code, and other products ignore it. There the skill can
-load like any other, so read its [page](skills/lab-edison.md) before you use it
-elsewhere.
-
-!!! warning "Install for your user, not for a project"
-    Keep `--user`. A project install writes the links into a folder inside the
-    repo, and these skills also ship as a plugin, so anyone who opened this repo
-    with the plugin installed would load all of them twice. Pick either the
-    plugin or the links, never both.
+lab-edison waits for you to type its name in all three. Claude Code and Kimi Code
+read that from its settings. Codex reads it from a small opt-out file the skill
+also ships, `agents/openai.yaml`.
 
 ## Updating
+
+Once `/lab-setup` has run, there is nothing to do: each agent picks up a new
+release on its own. To update by hand:
 
 ```bash
 claude plugin marketplace update liulab
 claude plugin update lab@liulab
 ```
 
-For clone-based installs, `git pull`. Claude Code loads plugins when it starts,
-so restart your session before the updated skills are there.
+Claude Code loads plugins when it starts, so restart your session before the
+updated skills are there.
 
 ### Moving from `lab-compute`
 
@@ -115,4 +110,5 @@ mv ~/.claude/compute ~/.claude/lab
 
 The last line moves your own files to where the skills now look for them. Every
 skill refuses to run while `~/.claude/compute` is still there. If you installed
-from a clone, clone again and rerun the installer.
+from a clone instead, use the two commands under Install. `/lab-setup` then lists
+the links your old install left, for you to remove.

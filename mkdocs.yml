@@ -45,6 +45,8 @@ nav:
       - lab-jupyter: skills/lab-jupyter.md
       - lab-containers: skills/lab-containers.md
       - lab-edison: skills/lab-edison.md
+      - lab-setup: skills/lab-setup.md
+      - hq-mode: skills/hq-mode.md
 
 # `not_found:` and `anchors:` are zensical's defaults, spelled out because they are the two
 # keys mkdocs also understands. The five under them are zensical's own and mkdocs rejects

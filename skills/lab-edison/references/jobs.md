@@ -1,6 +1,6 @@
 # Jobs, and how to run one
 
-> **Provenance** — Source: `edison-client` 0.16.1, this repo's own `pyproject.toml`, and a live smoke test of `edison-cli` on 2026-09-06 · Checked: 2026-09-06 · Default tier: read.
+> **Provenance** — Source: `edison-client` 0.16.1, this repo's own `pyproject.toml`, a live smoke test of `edison-cli` on 2026-09-06, and the codex-cli 0.162.1 and Kimi Code 2.1.1 sources on 2026-10-10 · Checked: 2026-09-06 · Default tier: read.
 > A claim at another tier is tagged `[verified]`, `[read]` or `[unverified]` where it is made.
 
 Companion to `SKILL.md`, and the first page to read in a session: nothing is submitted until a
@@ -60,8 +60,9 @@ plugin ships `bin/edison-cli`, and Claude Code puts `<plugin-root>/bin` on PATH 
 that directory exists, without a restart. So every `edison-cli` line in `references/` is what you
 type, and `Bash(edison-cli:*)` is a permission rule that survives a release.
 
-Where it is not on PATH — the other agent tools install a plugin by symlink and get no such
-entry — the same command is
+`[read]` 2026-10-10, codex-cli 0.162.1 and Kimi Code 2.1.1 source: neither puts a plugin's
+`bin/` on PATH, so there the bare name works through the link `/lab-setup` makes. Where it
+is not on PATH, the same command is
 `pixi run --manifest-path <plugin root>/pyproject.toml edison-cli <args>`. Read that line off
 `edison-cli preflight`, which prints whichever spelling the machine takes, rather than writing
 the path out: the plugin cache holds one directory per version, so a spelling with a version in

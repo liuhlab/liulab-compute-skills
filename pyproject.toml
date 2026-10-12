@@ -244,23 +244,31 @@ reportMissingTypeStubs = "none"
 # plain path prefix — a trailing `/` matches a directory, any other key matches that one
 # path — and reads only the keys under the site source, so the `skills/` keys never reach
 # it. Conformance rule 3 looks for the key verbatim INSIDE a `.vale.ini` section header, and
-# there a glob is what pairs. The two `skills/` keys below are globs for that reason.
+# there a glob is what pairs. The `skills/` keys below are globs for that reason.
 #
 # Every key must appear verbatim in exactly one `.vale.ini` section header — a key in zero
 # sections is checked by nothing, and a key in two cannot be paired. That is why there is no
 # plain `skills/` key: it is a substring of the references header AND of the skill-body
 # header, so it would match twice and fail. Skill bodies carry LengthSkill at 600; the
 # reference pages keep LengthDoc, a glob wider than the lab template's `skills/*/SKILL.md`
-# so that the per-cluster and per-platform pages are capped at all.
+# so that the per-cluster and per-platform pages are capped at all. The support files beside
+# a body and playbook folders keep LengthDoc too; adopted skills, upstream text, are exempt in
+# a `.vale.ini` section of their own that no key names. A lab side page beside an adopted
+# skill, `*.lab.md`, is lab text and keeps LengthDoc in a later section.
 #
 # `docs/research/` is absent because this repo has no research notes; declaring a key for a
 # directory nobody wrote would fail rule 3 on the section that has no key to pair with.
 [tool.liulab.agent-docs]
 "AGENTS.md" = "LengthDoc"
-"CONTEXT.md" = false                   # capped per entry by conformance rule 4, not per file
+"GLOSSARY.md" = false                  # capped per entry by conformance rule 4, not per file
 "docs/agents/" = "LengthDoc"
+"upstream/README.md" = "LengthDoc"     # the pin and attribution formats
 "skills/*/references/" = "LengthDoc"
+"skills/*/*.md" = "LengthDoc"          # support files beside a skill body
+"skills/*/*.lab.md" = "LengthDoc"      # lab side pages beside an adopted skill's text
+"skills/*/playbooks/" = "LengthDoc"
 "skills/*/SKILL.md" = "LengthSkill"
+".claude/commands/" = "LengthSkill"    # the maintainer-only skill, which the plugin never ships
 "docs/adr/" = "LengthAdr"
 
 # Conformance rules this repo does not meet on purpose. Keyed by rule name, value the
@@ -268,14 +276,14 @@ reportMissingTypeStubs = "none"
 # reason has to read well to someone who has never seen the issue that added it.
 # `placeholder-rename` refuses to be waived.
 [tool.liulab.waived]
-skill-name-prefix = """The rule stops a repo-local skill from shadowing the lab's shared \
-`lab` plugin: both are discovered the same way, so a directory named `lab-*` in \
-someone's working repo silently wins over the plugin's copy of that skill for everyone \
-who opens it. This repo IS that plugin — every `skills/lab-*` directory here is the \
-original every other repo is being protected from shadowing — so the rule fires once per \
-skill on the one tree where the prefix is the correct name. Waived here and nowhere \
-else."""
+skill-name-clash = """The rule stops a repo-local skill from replacing one the lab's shared \
+`lab` plugin ships: both are discovered the same way, so a directory in someone's working \
+repo that takes a `lab-*` name, or any other name the plugin ships, silently wins over the \
+plugin's copy for everyone who opens it. This repo IS that plugin — every directory under \
+`skills/` here is the original every other repo is being protected from shadowing, and the \
+shipped names are read from an installed copy of this very tree — so the rule fires once \
+per skill on the one tree where those names are correct. Waived here and nowhere else."""
 skill-symlinks = """These skills also ship as a Claude Code plugin, so a committed \
 project-local symlink would load every one of them twice for anyone who opens this repo \
 as their working directory with the plugin installed. Nothing is linked into the tree, \
-and the documented install is user-level: `python skills/install.py --target all --user`."""
+and the documented install is the plugin itself, with `/lab-setup` for Codex and Kimi Code."""

@@ -88,16 +88,20 @@ def on_path() -> bool:
     """Say whether the caller's own shell would find `edison-cli` as a bare command.
 
     Claude Code puts `<plugin-root>/bin` on PATH, so the wrapper shipped there is usually
-    reachable by name. The other agent tools this repo supports install a plugin by symlink
-    and get no such entry, which is why this is asked rather than assumed.
+    reachable by name. Codex and Kimi Code put no plugin `bin/` on PATH; there the name works
+    only through the link `/lab-setup` makes in a directory already on it. Neither is certain,
+    which is why this is asked rather than assumed.
 
     PATH is read and `shutil.which` is not: inside `pixi run` the environment's own console
     script is also called `edison-cli` and sits earlier on PATH, so `which` answers yes on
-    every machine and would tell the caller to type a command their shell cannot find.
+    every machine and would tell the caller to type a command their shell cannot find. Only an
+    entry that is, or links to, this plugin's wrapper counts.
     """
     if not WRAPPER.is_file():
         return False
-    return str(WRAPPER.parent) in os.environ.get("PATH", "").split(os.pathsep)
+    wrapper = WRAPPER.resolve()
+    entries = os.environ.get("PATH", "").split(os.pathsep)
+    return any((Path(entry) / WRAPPER.name).resolve() == wrapper for entry in entries)
 
 
 def command() -> str:

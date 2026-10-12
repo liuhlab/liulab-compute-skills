@@ -16,8 +16,12 @@
 # environment wears this same name, this wrapper is earlier on PATH, and calling it by name would
 # make this file exec itself until the machine gives up. The module entry point cannot recurse.
 #
-# The other agent tools this repo supports install a plugin by symlink and get no such PATH entry.
-# There the fallback is the explicit form, which `SKILL.md` step 0 keeps and the preflight prints.
+# Codex copies the plugin and Kimi Code reads Claude Code's marketplace clone; neither puts a
+# `bin/` on PATH. So `/lab-setup` links the clone's copy of this file into a directory already on
+# PATH, for all three agents, and `$0` may be that link: it is followed to the clone below. The
+# Python that runs is then the clone's, and in Claude Code and Codex it can be a release apart
+# from the skill text loaded until the agent relaunches; ADR 0014 accepts that. Without the
+# link, the fallback is the explicit form, which `SKILL.md` step 0 keeps and the preflight prints.
 set -eu
 
 if ! command -v pixi >/dev/null 2>&1; then
@@ -26,7 +30,19 @@ if ! command -v pixi >/dev/null 2>&1; then
     exit 127
 fi
 
-# `CDPATH=''` because a user's own CDPATH would otherwise make `cd` land somewhere else and print
-# where it went. `--` because a plugin cache path is not this script's to vouch for.
-root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+# Follow `$0` to the file itself, link by link: through `/lab-setup`'s link, `$0` is the link,
+# and the directory above it is not the project. Plain `readlink` and `cd -P`, because
+# `readlink -f` is GNU's alone. A relative target is read from the link's own directory, as
+# the kernel reads it. `CDPATH=''` because a user's own CDPATH would otherwise make `cd` land
+# somewhere else and print where it went. `--` because a path is not this script's to vouch for.
+self=$0
+while [ -L "$self" ]; do
+    target=$(readlink -- "$self")
+    case $target in
+        /*) self=$target ;;
+        *) self=$(dirname -- "$self")/$target ;;
+    esac
+    self=$(CDPATH='' cd -P -- "$(dirname -- "$self")" && pwd)/$(basename -- "$self")
+done
+root=$(CDPATH='' cd -- "$(dirname -- "$self")/.." && pwd)
 exec pixi run --manifest-path "$root/pyproject.toml" python -m edison_cli "$@"

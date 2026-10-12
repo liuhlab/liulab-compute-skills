@@ -1,0 +1,21 @@
+This is a question about a state model, so it takes the logic branch. The repo is Python, so
+it takes the lab's page for languages other than JavaScript: the pure logic is written in
+Python, where it can move into the real code as it is, and a scenario script drives it. No
+one outside the code has to click through it, so there is no page.
+
+Files, on a throwaway branch, next to the code they prototype for:
+
+    src/sampletrack/prototype_sample_state.py
+        The question, as the module docstring. A frozen dataclass SampleState and one pure
+        function step(state, action) -> SampleState. No I/O and no printing inside it.
+
+    src/sampletrack/prototype_sample_scenarios.py
+        Runs with `python src/sampletrack/prototype_sample_scenarios.py`. Each scenario
+        resets to a received sample, applies its actions in order and prints the full state
+        after every step:
+          1. happy path: received, sequenced, QC pass
+          2. two failed reruns, then a third attempt that must be refused
+          3. a pass followed by a failed rerun, which must leave the pass in place
+
+Once the model holds up, step() and SampleState move into the real module, and the scenario
+script goes to the throwaway branch with the answer noted on the issue.

@@ -44,7 +44,8 @@ and unenforceable besides.
 ## What it costs
 
 `disable-model-invocation: true`, the frontmatter key making this skill user-invoked, is
-Claude Code's and not part of the open Agent Skills standard. **Other agent tools ignore it
-and will treat `lab-edison` as normally triggerable.** There, "never spends a credit
-unprompted" rests on the preflight and the description alone. The README's claim that any
-agentic tool can consume these skills is still true, and weaker than it was.
+Claude Code's and not part of the open Agent Skills standard. Kimi Code honours it too.
+**Codex ignores it**, and holds the skill back only through an opt-out file beside it,
+`agents/openai.yaml`, which `lab-edison` ships. An agent tool that reads neither treats
+`lab-edison` as normally triggerable, and there "never spends a credit unprompted" rests on
+the preflight and the description alone.

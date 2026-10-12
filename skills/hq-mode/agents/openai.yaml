@@ -1,0 +1,5 @@
+interface:
+  display_name: "hq-mode"
+  short_description: "Work through a whole task the lab's way"
+policy:
+  allow_implicit_invocation: false

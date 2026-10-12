@@ -6,7 +6,7 @@ never the symlink.
 
 The tool-specific literals below are Claude Code's own and must **not** be
 renamed for another agent: real filesystem paths (`.claude-plugin/`,
-`~/.claude/lab/personal.md`, `templates/CLAUDE-stub.md`) and CLI
+`~/.claude/lab/personal.md`) and CLI
 commands (`claude plugin …`, `claude -p …`) stay exactly as written.
 
 ## What this repo is
@@ -40,9 +40,10 @@ by policy).
 
 ## Naming policy
 
-Internal names are `lab`/`lab-*` (`lab-hpc`, `lab-jupyter`,
-`lab-containers`, `lab-edison`), never `liulab-*`. The lab identity lives only in the
-repo name, the GitHub org, and the marketplace name `liulab`.
+A skill the lab wrote or derived is `lab-*`; `liulab` names only the repo, the GitHub org
+and the marketplace. An adopted skill keeps its upstream name (`docs/adr/0013-adopted-skills-keep-upstream-names.md`): lint admits a name
+outside `lab-*` only when `upstream/` records it (see `upstream/README.md`), or for
+`hq-mode`. Never edit upstream text to pass the gate.
 
 ## Commands
 
@@ -58,13 +59,11 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   `scripts/check.sh`) + `skill-lint` (`tests/lint.sh`). The static steps start
   together and **every** failure is reported in one run, so read to the bottom.
   The step list lives in the `check-static` task in `pyproject.toml` and
-  nowhere else — not here either, which is why this sentence does not repeat
-  it. `.github/workflows/ci.yml` invokes the task by name, so the local gate
+  nowhere else. `.github/workflows/ci.yml` invokes the task by name, so the local gate
   and CI cannot drift. Add a step there, not in the workflow.
 - The writing gates: vale reads language, markdownlint reads structure. The
   caps, the per-file-class sections of `.vale.ini` and how to measure against
-  them are in `docs/agents/writing.md`. Read it before writing anything — this
-  file is subject to one of the caps.
+  them are in `docs/agents/writing.md`. Read it before writing anything.
 - `tests/preflight.sh` and `tests/eval.sh` deliberately **never run in CI**
   (one reads a real ssh config, the other spends API tokens). The no-secrets
   sweep is also half-blind in CI — its username/hostname checks read the local
@@ -72,9 +71,11 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
   `jupyter-ircbc`, `reuse-job`, `edison-refuse`, `edison-molecules`,
-  `edison-kosmos`, `edison-recover`, `live-sbatch`, `live-edison`.
-  **There is no default run**: a bare `eval.sh` prints the cases and exits 2,
-  having spent nothing. Run one with `--only <case>`, the whole suite with
+  `edison-kosmos`, `edison-recover`, `prototype-language`,
+  `diagnosing-bugs-slow-loop`, `hq-pause-sbatch`, `hq-pause-merge`,
+  `live-sbatch`, `live-edison`.
+  **There is no default run**: a bare `eval.sh` prints the cases and exits 2.
+  Run one with `--only <case>`, the whole suite with
   `--all`. `--live` is a modifier and is refused alone; with `--all` it
   submits and cleans up a real tiny Slurm job on arc and spends one of the
   user's Edison credits, and any `live-*` name turns it on by itself. Cases
@@ -101,11 +102,10 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
    pointer and nothing reads it — no GitHub Release; the `CHANGELOG.md`
    entry is the release notes. A version heading with no tag leaves whoever
    installed that version no commit to check out.
-4. Push both: `git push origin main --tags`. Installed machines pick it up
-   via `claude plugin marketplace update liulab` — manual on purpose
-   (ADR 0004).
-5. To test locally before/after: `claude plugin update lab@liulab`
-   (plain `install` does not upgrade in place).
+4. Push both: `git push origin main --tags`. That is the release; machines
+   that ran `/lab-setup` take it at their next launch (ADR 0014). By hand:
+   `claude plugin marketplace update liulab`, then
+   `claude plugin update lab@liulab`.
 
 ## Architecture / editing skills
 
@@ -133,9 +133,9 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   toolchain and storage; `arc-slurm.md` / `ircbc-slurm.md` for partitions,
   choosing one, and submitting.
 - `skills/lab-edison/` is the one skill with no cluster in it — the Edison
-  cloud platform — and the one that is **user-invoked only**
-  (`disable-model-invocation: true`, a Claude Code key other agent tools
-  ignore), so it never triggers on its own and never spends a credit
+  cloud platform — and is **user-invoked only**, as `lab-setup` is
+  (`disable-model-invocation: true`, plus the `agents/openai.yaml` Codex
+  needs), so it never triggers on its own and never spends a credit
   unprompted. Its spend path is the `src/edison_cli/` package run through
   pixi, not a script, typed as the bare `edison-cli` because Claude Code puts
   `bin/` on PATH; step 0 is `edison-cli preflight`, which refuses on a
@@ -152,7 +152,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   without `squeue --me`, no internet on compute nodes, SOCKS-proxy-on-login
   gotchas), so read the relevant reference before writing cluster commands.
   Vendor and package facts carry a **provenance block** giving their source,
-  date and default tier — verified, read or unverified (`CONTEXT.md`,
+  date and default tier — verified, read or unverified (`GLOSSARY.md`,
   `docs/adr/0009-facts-carry-their-provenance.md`); lint fails a `lab-edison`
   reference page without one.
 - **Record configuration, never measurements.** Configuration is what an
@@ -165,10 +165,10 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   `df -h`", not "81% used"). A version is configuration when behavior depends
   on it (Slurm 18.08 is why ircbc needs `squeue -u $USER`), a measurement
   otherwise. The README and the browsable docs pages follow this rule too.
-- Behavior changes to a skill are tested with `tests/eval.sh` (agent evals),
-  not just lint — lint only proves the files are well-formed.
+- Behavior changes to a skill are tested with `tests/eval.sh`, not just lint,
+  which only proves the files are well-formed.
 - `templates/` holds per-user onboarding files users copy to their machines
-  (`personal.md`, `CLAUDE-stub.md`, `edison.env`); they are documentation,
+  (`personal.md`, `edison.env`); they are documentation,
   not loaded by the plugin. A filled-in copy of any of them never lands
   here — lint fails a real Edison key.
 
@@ -176,8 +176,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 | When | Read |
 | --- | --- |
-| Before changing anything | `CONTEXT.md`, then any `docs/adr/` record covering the area |
+| Before changing anything | `GLOSSARY.md`, then any `docs/adr/` record covering the area |
 | Recording vocabulary or a decision | `docs/agents/domain.md` |
-| Filing or working an issue | `docs/agents/issue-tracker.md` |
-| Labelling someone else's issue | `docs/agents/triage-labels.md` |
+| Filing, labelling or working an issue | the lab defaults, `skills/lab-setup/references/defaults.md` |
 | Writing anything | `docs/agents/writing.md` |

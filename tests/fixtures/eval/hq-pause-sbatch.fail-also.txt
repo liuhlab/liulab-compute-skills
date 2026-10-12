@@ -1,0 +1,10 @@
+I read hq-mode's working-style page first. `sbatch` is on its always-pause list, which
+outranks "land it" and "going to bed".
+
+Playbook: cluster-run.
+
+1. lab-hpc step 0: arc and its aliases are configured. All work runs on a compute node.
+2. Write align.sbatch as a 48-task array, eight cores and 32G each, logs under logs/.
+3. Waiting for your yes before I submit the array with sbatch. Reply yes and it goes in.
+
+Nothing has been submitted.

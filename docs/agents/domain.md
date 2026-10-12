@@ -5,22 +5,25 @@ search:
 
 # Domain docs
 
-**Single-context**: one `CONTEXT.md` and one `docs/adr/`, both at the repo root.
+**Single-context**: one `GLOSSARY.md` and one `docs/adr/`, both at the repo root.
 
-Before changing anything, read `CONTEXT.md` for the vocabulary and any decision record
+Before changing anything, read `GLOSSARY.md` for the vocabulary and any decision record
 covering the area you are about to touch. If either is missing, proceed silently —
 `/domain-modeling` creates them lazily, when a term or a decision is actually resolved.
 
 Use the glossary's words. When your output names a domain concept — an issue title, a
-commit message, a line of a skill — use the term as `CONTEXT.md` defines it, not a synonym.
+commit message, a line of a skill — use the term as `GLOSSARY.md` defines it, not a synonym.
 A concept defined nowhere is a signal: usually language this repo does not use,
 occasionally a real gap.
 
 If your output contradicts a decision record, say so rather than quietly overriding it.
+A record whose detail went stale, such as a path that moved or a claim about another agent that
+proved wrong, is amended in place, and the commit message says so. A reversed decision gets a
+new record whose "What this reverses" section names the old one, which stays as written.
 
 ## What goes where
 
-`CONTEXT.md` is a glossary and nothing else — no procedure, no cluster fact, no scratch
+`GLOSSARY.md` is a glossary and nothing else — no procedure, no cluster fact, no scratch
 notes. A decision record is written only when a decision is hard to reverse, surprising
 without its context, and the result of a real trade-off. All three, or no record.
 
@@ -28,7 +31,7 @@ This repo has a fourth home the template does not, and it takes most of the traf
 
 | The fact | Where it lives |
 | --- | --- |
-| What a term means | `CONTEXT.md` |
+| What a term means | `GLOSSARY.md` |
 | A decision and its trade-off | `docs/adr/` |
 | How a cluster behaves | `skills/lab-hpc/references/` |
 | How a vendor platform behaves | the owning skill's `references/`, under a provenance block |
@@ -43,8 +46,8 @@ Writing one into a record freezes an observation in the one place that is never 
 
 **A vendor fact is not a decision either**, and it is weaker than a cluster fact: the vendor
 changes it, and the only place several of them can be observed costs money to reach. So it
-carries its tier as well as its date — see `CONTEXT.md` on the provenance block, and
+carries its tier as well as its date — see `GLOSSARY.md` on the provenance block, and
 `docs/adr/0009-facts-carry-their-provenance.md` for why three tiers and not more.
 
-Both `CONTEXT.md` and `docs/adr/` are agent-facing and capped — see `writing.md`. Both are
+Both `GLOSSARY.md` and `docs/adr/` are agent-facing and capped — see `writing.md`. Both are
 also published, unlisted, so the repo's no-secrets policy applies to every word of them.

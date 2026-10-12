@@ -33,3 +33,56 @@ config:
   # repeating its own section, which is the duplicate that is a real mistake.
   MD024:
     siblings_only: true
+
+# Adopted skills: upstream text, passed unchanged (ADR 0012). Each rule below is one upstream
+# breaks by choice: a body that opens on prose, a fence with no language, gaps in a numbered
+# list whose numbers are ids other skills cite. Measured over the 25 mattpocock skills at
+# `49dd158` and pstack's `unslop`, `technical-writing` and `ketchup` at `978ca6e`; these ten
+# rules were every one they broke. Every other rule still reads these files, and a lab side
+# page meets all of them. One filter line per tracked skill, and per forked skill whose
+# upstream text breaks a rule: `tests/lint.sh` checks the list against `upstream/` and
+# against the adopted-skill section of `.vale.ini`.
+overrides:
+  - filter:
+      - "skills/code-review/**"
+      - "skills/codebase-design/**"
+      - "skills/diagnosing-bugs/**"
+      - "skills/domain-modeling/**"
+      - "skills/grill-me/**"
+      - "skills/grill-with-docs/**"
+      - "skills/grilling/**"
+      - "skills/handoff/**"
+      - "skills/implement/**"
+      - "skills/implement-spec/**"
+      - "skills/improve-codebase-architecture/**"
+      - "skills/pr/**"
+      - "skills/prototype/**"
+      - "skills/research/**"
+      - "skills/retro/**"
+      - "skills/setup-matt-pocock-skills/**"
+      - "skills/tdd/**"
+      - "skills/teach/**"
+      - "skills/technical-writing/**"
+      - "skills/to-questionnaire/**"
+      - "skills/to-spec/**"
+      - "skills/to-tickets/**"
+      - "skills/triage/**"
+      - "skills/unslop/**"
+      - "skills/wait-what/**"
+      - "skills/wayfinder/**"
+      - "skills/writing-for-agents/**"
+      # Lab side pages: a lab edit too long for an upstream file sits beside it as
+      # `<topic>.lab.md`. That is lab text, so it meets every rule (upstream/README.md).
+      - "!**/*.lab.md"
+    combine: merge
+    config:
+      MD012: false
+      MD025: false
+      MD029: false
+      MD031: false
+      MD032: false
+      MD033: false
+      MD036: false
+      MD040: false
+      MD041: false
+      MD049: false

@@ -2,8 +2,9 @@
 
 Skills are prose that steers an agent, so they are tested at three layers of
 increasing cost. Run layer 1 on every change, layer 2 when setting up a machine,
-and layer 3 only when a skill's behaviour has changed. One skill also ships real
-code, and that has unit tests of its own, described first.
+and layer 3 only when a skill's behaviour has changed. Two skills also ship real
+code, and so does the maintainer's upstream sync. Each has unit tests of its own,
+described first.
 
 `pixi run check` runs everything cheap and safe: the static linters, the unit
 tests and layer 1, all started at once, every failure reported in one run.
@@ -32,13 +33,56 @@ did arrive, and appears in no argument, no output and no file under `src/`; and
 `project delete` removes nothing without `--yes` and a stated disposition for the
 run history.
 
+## Unit tests — the upstream sync: `tests/upstream_sync/`
+
+Free, seconds, in the same `pixi run test`. Tests `scripts/upstream_sync.py`, the
+script behind the maintainer's monthly merge of upstream skills. Each test builds a
+small upstream and a lab tree as git repos in a temporary directory, runs the
+script at its command line, and reads what a person would: the files it wrote, the
+report it printed and its exit status. There is one case each for a clean merge, a
+conflict, a deletion with and without a fork, a rename, a new skill, a forked skill
+left alone, a lost pin, the moved pin and a fork. Then the reports a clean merge
+hides: stale words, in a lab edit and on any lab page, the defaults page among them;
+dropped edits, at the merge and again in `recheck` after a resolution; what upstream
+did to a forked skill's original; the pstack section; and which eval cases to rerun.
+Nothing reaches the network, and git reads none of your own settings.
+
+## Unit tests — the setup script: `tests/lab_setup/`
+
+Free, seconds, in the same `pixi run test`. They drive `/lab-setup`'s script,
+`skills/lab-setup/scripts/lab_setup.py`, at its command line against a **fake
+home** in a temporary directory, with a stub `codex` that writes what the real
+one would. `HOME` points at the fake home too, so nothing can reach the real one.
+They pin what a member would see: the settings, Kimi config and PATH link it
+leaves, the defaults block in all three agents' instructions files with the
+member's text around it kept, that it removes nothing and keeps entries it did
+not write, the clash report against planted skills, the refusal without a
+marketplace clone, and that a second run leaves every file byte-identical. One
+test points the fake clone at this repo and follows the block to the defaults
+page and on to every seed page it names, so an upstream rename fails here.
+
+## Unit tests — lab side pages: `tests/test_side_pages.py`
+
+Free, seconds, in the same `pixi run test`. A lab edit too long for an upstream
+file sits beside it as `<topic>.lab.md`. These run vale and markdownlint with the
+repo's own configuration on a copy of one adopted skill's folder, and check that
+the upstream page keeps its exemption while the side page meets the lab's rules.
+
 ## Layer 1 — static lint: `tests/lint.sh`
 
 Free, seconds. Tests the **files**: manifests are valid JSON, every skill has
-parseable `name`/`description` front matter, names follow the `lab-*` policy, each
-description fits the per-skill listing limit, and a tagged version still names the
-tree it was tagged on. It also self-tests the two preflights, the eval guard, and
-the eval assertions (below).
+parseable `name`/`description` front matter, names follow the naming policy
+(`lab-*`, or recorded as adopted in `upstream/`), every item a pin maps points at a
+lab file that exists, each description fits the
+per-skill listing limit, and a tagged version still names the tree it was tagged
+on. A user-invoked skill must carry Codex's opt-out file, and every lab-owned
+skill, forked ones included, lists triggers that must fit in the 247 characters
+Kimi Code shows. For `hq-mode`, the playbook index and the playbook pages must
+name the same playbooks, the principles index and the principle pages the same
+principles, every skill its trigger table names must ship, its text
+must say "the user" and never "hq", and its always-pause list must keep every item.
+It also self-tests the two preflights, the eval guard, the naming check, those
+rules, and the eval assertions (below).
 
 The Edison preflight is a Python module, `src/edison_cli/preflight.py`, and this
 suite runs it as a file with a bare interpreter. That is deliberate: the no-secrets
@@ -103,14 +147,19 @@ before `--all` or anything live.
 | `edison-molecules` | Chemistry routes to `MOLECULES`, never to the retired job that 404s |
 | `edison-kosmos` | Kosmos is explained as a fan-out chat session, and nothing is substituted for it |
 | `edison-recover` | A run whose id was lost is found in task history, not bought again |
+| `prototype-language` | In a Python repo, `prototype` writes the logic in Python, not in an HTML page |
+| `diagnosing-bugs-slow-loop` | A loop that takes minutes takes the slow-loop path instead of stalling |
+| `hq-pause-sbatch` | Under `/hq-mode`, "going to bed, land it" still shows the script and waits for a yes before `sbatch` |
+| `hq-pause-merge` | Under `/hq-mode`, "close the issue" never merges a pull request nobody reviewed |
 | `live-sbatch` | Really ssh to arc, submit a tiny job to a free partition, clean it up |
 | `live-edison` | One real literature call comes back with citations, for one credit |
 
 Assertions are loose key-phrase greps, because evals are non-deterministic. Most
-cases carry a second, negative assertion — the thing the answer must *not* say.
+cases carry a second, negative assertion — the thing the answer must *not* say —
+and a case can carry a second positive one, ALSO, for a thing on another line.
 `tests/lint.sh` tests those regexes for free against the synthetic transcripts in
 `fixtures/eval/`, reading them from `eval.sh --dump` so it checks the assertions
-that actually run. Seven cases still have no fixtures; lint names them each run.
+that actually run. Some cases still have no fixtures; lint names them each run.
 
 A failure means "read the transcript in the temp directory", not necessarily "the
 skill is broken".
