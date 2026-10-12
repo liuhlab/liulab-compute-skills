@@ -410,7 +410,7 @@ fi
 
 echo "== vendor attribution =="
 # The Edison platform is run by Edison Scientific, FutureHouse's commercial spinout, and the
-# Edison entry in CONTEXT.md is the single authority on that. Four other registers say it in
+# Edison entry in GLOSSARY.md is the single authority on that. Four other registers say it in
 # their own words — the skill body, its trigger description, README.md and the published page
 # — and nothing can lint five registers for "says the right thing". This lints all of them
 # for "never says the wrong thing". Same shape as the eval suite's DENY assertions, which
@@ -455,7 +455,7 @@ vendor_hits=$(SWEEP '[Ff]uture[ -]?[Hh]ouse' | grep -v '^\./CHANGELOG\.md:' \
               | vendor_elide | grep -iE "$VENDOR_WRONG")
 if [ -n "$vendor_hits" ]; then
   printf '%s\n' "$vendor_hits"
-  err "the Edison platform is attributed to FutureHouse (above, with job names elided) — Edison Scientific runs it; CONTEXT.md's Edison entry is the authority"
+  err "the Edison platform is attributed to FutureHouse (above, with job names elided) — Edison Scientific runs it; GLOSSARY.md's Edison entry is the authority"
 else
   ok "no FutureHouse attribution of the Edison platform (CHANGELOG history exempt)"
 fi
@@ -853,14 +853,15 @@ echo "== front-loaded descriptions =="
 # restate part of each description on purpose, so dropping a trigger takes a visible edit here.
 #
 # Lab-owned means every `lab-*` skill, `hq-mode`, and each skill forked in
-# `upstream/attribution.json`; all three fail without a row. A tracked skill gets none: its description is
-# upstream text, merged at each sync and never edited here. A trigger matches from a word
-# start, ignoring case.
+# `upstream/attribution.json`; all three fail without a row. A tracked skill gets none: its
+# description is upstream text, merged at each sync and never edited here. A trigger matches
+# from a word start, ignoring case.
 LAB_TRIGGERS='
 lab-hpc: HPC, cluster, arc, chimera, ircbc, ssh, Slurm, sbatch, srun, squeue, compute, login, GPU, remote, files
 lab-jupyter: Jupyter, notebook, tunnel, port forward, reconnect, cluster, compute node, GPU, arc, ircbc
 lab-containers: Singularity, container, image, SIF, liulab-runtime, ircbc, pull, build, pixi, Jupyter, LIU_LAB_PACKAGES
 lab-edison: Edison, literature, precedent, molecules, data analysis, Kosmos, dataset, recover, API key
+lab-setup: set up, installing, Claude Code, auto-update, Codex, Kimi Code, marketplace clone, edison-cli, PATH
 ketchup: ketchup, catch, last message, action item, summary
 technical-writing: technical, docs, README, RFC, protocol, PR description, commit message
 unslop: unslop, AI tells, AI-isms, AI writing, sound less like AI, prose, draft, rewrite
