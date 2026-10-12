@@ -78,6 +78,14 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   overnight, and "close the issue" with a pull request nobody reviewed. The tests also fail
   when the mode names a playbook with no page, or a page it doesn't name, and when its list of
   always-paused steps loses one.
+- **The lab defaults.** `/lab-setup` now adds one short block to each agent's own notes file:
+  `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` and `~/.kimi-code/AGENTS.md`. The block points
+  at one page in the plugin, `skills/lab-setup/references/defaults.md`. That page says where
+  a repo's issues go, which labels to use, where its glossary lives, and the safety rules for
+  the clusters. So a new repo needs no setup, and Codex and Kimi Code get the same rules as
+  Claude Code. A change to the page reaches every machine with the next update. Text outside
+  the block is yours, and a second run replaces only the block. A repo's own page under
+  `docs/agents/` replaces only the default it covers. (#101)
 
 ### Changed
 
@@ -87,6 +95,11 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   lab@liulab`. Releasing is now just pushing. (#77)
 - **The install pages** give the two commands, then `/lab-setup`. They no longer tell you to
   link skills into other agents with `skills/install.py`.
+- **`templates/CLAUDE-stub.md` is gone**, and so is the install step that told you to paste it
+  into `~/.claude/CLAUDE.md`. The defaults page carries its three rules now. (#101)
+- **This repo's own issue and label pages are gone** from `docs/agents/`. They said what the
+  defaults page says. Its domain page stays, because its table of what goes where is this
+  repo's own. (#101)
 - **Each lab skill's description now starts with its triggers.** Kimi Code shows only the
   first 247 characters of a description, so the words that should load a skill now come
   first. The tests list those words for every lab skill and fail when one falls past that
@@ -149,6 +162,9 @@ machine wins over the plugin's without a word, so you would keep running the old
 `npx skills` puts its copies in `~/.agents/skills` and links them into `~/.claude/skills`. For
 each skill the README lists from mattpocock/skills, delete the copy and its link. If nothing
 else on the machine came from `npx skills`, delete its list too, `~/.agents/.skill-lock.json`.
+
+If you pasted `templates/CLAUDE-stub.md` into `~/.claude/CLAUDE.md`, delete that section once
+`/lab-setup` has run. The defaults page carries the same rules, so the copy only repeats them.
 
 ## 2026.10.3 — 2026-10-11
 
