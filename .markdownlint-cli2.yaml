@@ -33,3 +33,26 @@ config:
   # repeating its own section, which is the duplicate that is a real mistake.
   MD024:
     siblings_only: true
+
+# Adopted skills: upstream text, passed unchanged (ADR 0012). Each rule below is one upstream
+# breaks by choice: a body that opens on prose, a fence with no language, gaps in a numbered
+# list whose numbers are ids other skills cite. Measured over the 25 mattpocock skills at
+# `49dd158` and pstack's `unslop`, `technical-writing` and `ketchup` at `978ca6e`; these ten
+# rules were every one they broke. Every other rule still reads these files, lab side pages
+# included. One filter line per adopted skill: `tests/lint.sh` checks the list against
+# `upstream/` and against the adopted-skill section of `.vale.ini`.
+overrides:
+  - filter:
+      - "skills/grilling/**"
+    combine: merge
+    config:
+      MD012: false
+      MD025: false
+      MD029: false
+      MD031: false
+      MD032: false
+      MD033: false
+      MD036: false
+      MD040: false
+      MD041: false
+      MD049: false

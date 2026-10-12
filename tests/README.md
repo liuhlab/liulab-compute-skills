@@ -35,9 +35,10 @@ run history.
 ## Layer 1 — static lint: `tests/lint.sh`
 
 Free, seconds. Tests the **files**: manifests are valid JSON, every skill has
-parseable `name`/`description` front matter, names follow the `lab-*` policy, each
-description fits the per-skill listing limit, and a tagged version still names the
-tree it was tagged on. It also self-tests the two preflights, the eval guard, and
+parseable `name`/`description` front matter, names follow the naming policy
+(`lab-*`, or recorded as adopted in `upstream/`), each description fits the
+per-skill listing limit, and a tagged version still names the tree it was tagged
+on. It also self-tests the two preflights, the naming check, the eval guard, and
 the eval assertions (below).
 
 The Edison preflight is a Python module, `src/edison_cli/preflight.py`, and this

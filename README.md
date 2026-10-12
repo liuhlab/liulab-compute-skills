@@ -35,6 +35,14 @@ Current skills:
   key. Kosmos is a chat session that fans out into many tasks, and the skill
   will not start one unless you ask for that run.
 
+Skills taken from other projects keep their own names:
+
+- **`grilling`** — from [mattpocock/skills](https://github.com/mattpocock/skills),
+  unchanged. It asks you about a plan, one round of questions at a time, until
+  you agree on every decision.
+
+Each project's MIT license is in `upstream/<project>/LICENSE`.
+
 ## Security policy (hard rule)
 
 This repo is **public**; what makes that safe is that it must **never**
@@ -157,7 +165,9 @@ config, so they stay a pre-push control — run the gate locally before you push
    `description` (open-standard core); keep the body lean and put long
    detail in `references/`. Add `disable-model-invocation: true` only when
    a skill must never load on its own, as `lab-edison` does.
-2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
+2. Name a skill you write `lab-*`, not `liulab-*`. A skill taken from another
+   project keeps its own name and is recorded in `upstream/` (see
+   `upstream/README.md`). Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
    `~/.ssh/config` / `~/.claude/lab/personal.md`.
 3. Run `pixi run check`; bump `version` (CalVer `YYYY.M.PATCH`) in

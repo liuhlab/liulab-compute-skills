@@ -35,10 +35,7 @@ for d in skills/*/; do
   fm_name=$(awk 'f && $1=="name:"{print $2; exit} /^---$/{f++}' "$s")
   if [ "$fm_name" = "$name" ]; then ok "$s frontmatter name matches dir"
   else err "$s frontmatter name '$fm_name' != dir '$name'"; fi
-  case "$name" in
-    lab-*) ok "skill '$name' follows lab-* policy" ;;
-    *)     err "skill '$name' must be lab-* (not liulab-*)" ;;
-  esac
+  # The naming policy is its own section, `== adopted skill names ==`, below.
   dlen=$(python3 - "$s" <<'EOF'
 import sys
 lines = open(sys.argv[1]).read().splitlines()
@@ -70,6 +67,255 @@ done
 # — not this plugin's. No number here can measure that, so nothing here may fail on it, and
 # adding a skill must not fail the gate. Do not reinstate the sum.
 ok "descriptions total ${total_desc} chars across ${n_skills} skills (informational)"
+
+echo "== adopted skill names =="
+# ADR 0013. A skill the lab wrote or derived is named `lab-*`. An adopted skill keeps its
+# upstream name, and passes only when `upstream/` records it: in a merged upstream's pin
+# (tracked) or in an attribution record (forked). `hq-mode` is the one derived skill without a
+# `lab-*` name. The record formats are in upstream/README.md.
+adopted_check() { # <root>: prints ok/FAIL lines, exits 1 on any FAIL
+  python3 - "$1" <<'EOF'
+import json
+import os
+import re
+import sys
+
+root = sys.argv[1]
+oks, problems = [], []
+HOW = ("a skill the lab wrote or derived is named lab-*; a skill taken from an upstream is "
+       "recorded in upstream/: tracked, under `items` in upstream/<upstream>/pin.json; forked, "
+       "as a record in upstream/attribution.json. Formats: upstream/README.md")
+SHA = re.compile(r"^[0-9a-f]{40}$")
+SKILL_PATH = re.compile(r"^skills/([^/]+)$")
+
+
+def here(rel):
+    return os.path.join(root, rel)
+
+
+def load(rel):
+    """The parsed JSON at `rel`, or None when it is absent or unreadable (reported)."""
+    if not os.path.exists(here(rel)):
+        return None
+    try:
+        with open(here(rel), encoding="utf-8") as f:
+            return json.load(f)
+    except ValueError as e:
+        problems.append(f"{rel} is not valid JSON: {e}")
+        return None
+
+
+tracked = {}  # skill name -> the upstream whose pin maps it
+upstreams = os.listdir(here("upstream")) if os.path.isdir(here("upstream")) else []
+for u in sorted(d for d in upstreams if os.path.isdir(here(f"upstream/{d}"))):
+    if not os.path.isfile(here(f"upstream/{u}/LICENSE")):
+        problems.append(f"upstream/{u}/ has no LICENSE: an upstream's license travels with "
+                        "what the lab takes from it, so copy it there verbatim")
+    rel = f"upstream/{u}/pin.json"
+    pin = load(rel)
+    if pin is None:
+        continue
+    bad = []
+    if not isinstance(pin, dict):
+        pin, bad = {}, ["it is not a JSON object"]
+    if not isinstance(pin.get("repo"), str):
+        bad.append("`repo` is not a string")
+    if not SHA.match(str(pin.get("commit", ""))):
+        bad.append("`commit` is not a full 40-character commit")
+    if pin.get("sync") not in ("merge", "review"):
+        bad.append("`sync` is not `merge` or `review`")
+    if not isinstance(pin.get("skills_dir"), str):
+        bad.append("`skills_dir` is not a string")
+    items = pin.get("items")
+    if not isinstance(items, dict) or not all(isinstance(v, str) for v in items.values()):
+        bad.append("`items` is not a map from upstream item to lab path")
+        items = {}
+    for b in bad:
+        problems.append(f"{rel}: {b} (format: upstream/README.md)")
+    if pin.get("sync") != "merge":
+        continue  # a reviewed upstream's items are all forked, so its pin admits no name
+    for item, path in sorted(items.items()):
+        m = SKILL_PATH.match(path)
+        if not m or not os.path.isdir(here(path)):
+            problems.append(f"{rel} maps `{item}` to `{path}`, which is not a skills/<name> "
+                            "directory here: a tracked item is a whole skill")
+            continue
+        tracked[m.group(1)] = u
+if tracked:
+    oks.append(f"{len(tracked)} tracked skill(s) in the merged upstreams' pins")
+
+forked = {}  # skill name -> the upstreams it was taken from
+rel = "upstream/attribution.json"
+records = load(rel)
+if records is not None and not isinstance(records, dict):
+    problems.append(f"{rel} is not a JSON object keyed by lab path (format: upstream/README.md)")
+    records = None
+for path, rec in sorted((records or {}).items()):
+    sources = rec.get("from") if isinstance(rec, dict) else None
+    if not isinstance(sources, list) or not sources:
+        problems.append(f"{rel}: `{path}` has no `from` list naming where it came from")
+        continue
+    if not os.path.exists(here(path)):
+        problems.append(f"{rel} records `{path}`, which does not exist here")
+    names = []
+    for src in sources:
+        src = src if isinstance(src, dict) else {}
+        u = str(src.get("upstream", ""))
+        if not isinstance(src.get("item"), str) or not SHA.match(str(src.get("commit", ""))):
+            problems.append(f"{rel}: a source of `{path}` lacks `item` or a full 40-character "
+                            "`commit` (format: upstream/README.md)")
+        if not u or not os.path.isfile(here(f"upstream/{u}/LICENSE")):
+            problems.append(f"{rel}: `{path}` comes from `{u}`, and there is no "
+                            f"upstream/{u}/LICENSE for its license to travel in")
+        names.append(u)
+    m = SKILL_PATH.match(path)
+    if m:
+        forked[m.group(1)] = ", ".join(names)
+for name in sorted(set(tracked) & set(forked)):
+    problems.append(f"skill '{name}' is both tracked and forked: forking moves it out of "
+                    f"upstream/{tracked[name]}/pin.json's `items`, so delete it there")
+
+skills_dir = here("skills")
+for name in sorted(os.listdir(skills_dir)):
+    if not os.path.isdir(os.path.join(skills_dir, name)):
+        continue
+    if name.startswith("lab-"):
+        oks.append(f"skill '{name}' is lab-written or derived (lab-*)")
+    elif name == "hq-mode":
+        oks.append(f"skill '{name}' is the mode, the one derived skill without a lab-* name")
+    elif name in tracked:
+        oks.append(f"skill '{name}' is tracked from {tracked[name]} "
+                   f"(upstream/{tracked[name]}/pin.json)")
+    elif name in forked:
+        oks.append(f"skill '{name}' is forked from {forked[name]} (upstream/attribution.json)")
+    else:
+        problems.append(f"skill '{name}' is not lab-* and is recorded nowhere as adopted: {HOW}")
+
+
+# Upstream text passes vale and markdownlint through configuration, never by editing it: one
+# `.vale.ini` section and one markdownlint override, each listing the adopted skills by name.
+def read(rel):
+    try:
+        with open(here(rel), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+
+VALE = ".vale.ini's adopted-skill section [skills/{...}/*.md]"
+MDL = ".markdownlint-cli2.yaml's adopted-skill override (a `- \"skills/<name>/**\"` filter line)"
+heads = re.findall(r"^\[skills/\{([^}]*)\}/\*\.md\][ \t]*$", read(".vale.ini"), re.M)
+if len(heads) > 1:
+    problems.append(f".vale.ini has {len(heads)} adopted-skill sections; keep one")
+vale = {n.strip() for h in heads for n in h.split(",") if n.strip()}
+mdl = set(re.findall(r'^[ \t]*-[ \t]*"skills/([^/"*{}]+)/\*\*"[ \t]*$',
+                     read(".markdownlint-cli2.yaml"), re.M))
+for name in sorted(tracked):
+    for listed, where in ((vale, VALE), (mdl, MDL)):
+        if name not in listed:
+            problems.append(f"tracked skill '{name}' is missing from {where}: upstream text "
+                            "passes the gate through configuration, never by editing it")
+for name in sorted((vale ^ mdl) - set(tracked)):
+    have, lack = (".vale.ini's adopted-skill section", ".markdownlint-cli2.yaml") \
+        if name in vale else (".markdownlint-cli2.yaml's adopted-skill override", ".vale.ini")
+    problems.append(f"'{name}' is in {have} but not in {lack}: the two lists must agree")
+for name in sorted((vale | mdl) - set(tracked) - set(forked)):
+    problems.append(f"the gate exempts '{name}', which is not recorded as adopted: the "
+                    "exemption is for upstream text, and lab text meets the gate")
+if vale and vale == mdl:
+    oks.append(f"vale and markdownlint exempt the same {len(vale)} adopted skill(s)")
+
+for line in oks:
+    print(f"  ok: {line}")
+for line in problems:
+    print(f"FAIL: {line}")
+sys.exit(1 if problems else 0)
+EOF
+}
+
+# Self-tests first, on fixture trees built here and deleted on the way out, in both
+# directions: a check that can no longer fail looks exactly like one that passes.
+an_fx=$(mktemp -d "${TMPDIR:-/tmp}/lab-adopted.XXXXXX")
+trap 'rm -rf "$an_fx"' EXIT
+adopted_case() { # <label> <root> <expected-exit> <substring the output must hold>
+  local label="$1" root="$2" wantrc="$3" want="$4" out rc
+  out=$(adopted_check "$root" 2>&1)
+  rc=$?
+  if [ "$rc" -eq "$wantrc" ] && printf '%s\n' "$out" | grep -qF -- "$want"; then
+    ok "naming self-test: $label"
+  else
+    err "naming self-test: $label — wanted exit $wantrc and '$want', got exit $rc: $out"
+  fi
+}
+an_tree() { # <fixture> <skill>...: a fixture repo holding lab-x and the named skill dirs
+  local root="$an_fx/$1"; shift
+  mkdir -p "$root/skills/lab-x"
+  for s in "$@"; do mkdir -p "$root/skills/$s"; done
+  printf '%s' "$root"
+}
+
+adopted_case "an unrecorded name fails and says how to record it" "$(an_tree unrecorded foo)" 1 \
+  "skill 'foo' is not lab-* and is recorded nowhere as adopted"
+adopted_case "the failure points at the formats" "$an_fx/unrecorded" 1 "upstream/README.md"
+adopted_case "hq-mode passes unrecorded" "$(an_tree mode hq-mode)" 0 "skill 'hq-mode' is the mode"
+
+an_pin() { # <root> <upstream> <merge|review> <item>: a pin mapping one item to skills/<item>
+  mkdir -p "$1/upstream/$2"
+  printf 'MIT License\n' >"$1/upstream/$2/LICENSE"
+  printf '{"repo": "https://example.org/%s", "commit": "%s", "sync": "%s", "skills_dir": "skills", "items": {"%s": "skills/%s"}}\n' \
+    "$2" "0123456789abcdef0123456789abcdef01234567" "$3" "$4" "$4" >"$1/upstream/$2/pin.json"
+}
+an_lists() { # <root> <vale names, comma-separated> <markdownlint names...>: the two exemptions
+  local root="$1" vale="$2"; shift 2
+  printf '[skills/{%s}/*.md]\nBasedOnStyles = Lab\n' "$vale" >"$root/.vale.ini"
+  { printf 'overrides:\n  - filter:\n'
+    for s in "$@"; do printf '      - "skills/%s/**"\n' "$s"; done
+    printf '    combine: merge\n    config:\n      MD041: false\n'; } >"$root/.markdownlint-cli2.yaml"
+}
+an_root=$(an_tree tracked foo); an_pin "$an_root" up merge foo; an_lists "$an_root" foo foo
+adopted_case "a name a merged upstream's pin maps passes as tracked" "$an_fx/tracked" 0 \
+  "skill 'foo' is tracked from up"
+an_pin "$(an_tree reviewed foo)" up review foo
+adopted_case "a reviewed upstream's pin admits no name" "$an_fx/reviewed" 1 \
+  "skill 'foo' is not lab-* and is recorded nowhere as adopted"
+
+an_record() { # <root> <upstream> <item>: an attribution record forking skills/<item>
+  printf '{"skills/%s": {"from": [{"upstream": "%s", "item": "%s", "commit": "%s"}], "changes": "fixture"}}\n' \
+    "$3" "$2" "$3" "0123456789abcdef0123456789abcdef01234567" >"$1/upstream/attribution.json"
+}
+an_root=$(an_tree forked bar); mkdir -p "$an_root/upstream/up"; printf 'MIT License\n' >"$an_root/upstream/up/LICENSE"
+an_record "$an_root" up bar
+adopted_case "a name an attribution record lists passes as forked" "$an_root" 0 \
+  "skill 'bar' is forked from up"
+an_root=$(an_tree unlicensed bar); mkdir -p "$an_root/upstream"
+an_record "$an_root" nowhere bar
+adopted_case "a record whose upstream has no license fails" "$an_root" 1 \
+  "no upstream/nowhere/LICENSE"
+an_root=$(an_tree both foo); an_pin "$an_root" up merge foo; an_record "$an_root" up foo
+adopted_case "a skill both tracked and forked fails" "$an_root" 1 "both tracked and forked"
+
+# The gate passes upstream text through two lists of names, one in `.vale.ini` and one in
+# `.markdownlint-cli2.yaml`. Two lists that must agree drift unless something checks them.
+an_root=$(an_tree unlisted foo); an_pin "$an_root" up merge foo
+adopted_case "a tracked skill missing from the vale section fails" "$an_root" 1 \
+  "tracked skill 'foo' is missing from .vale.ini"
+an_root=$(an_tree halflisted bar); mkdir -p "$an_root/upstream/up"
+printf 'MIT License\n' >"$an_root/upstream/up/LICENSE"; an_record "$an_root" up bar; an_lists "$an_root" bar
+adopted_case "a vale name the markdownlint override misses fails" "$an_root" 1 \
+  "'bar' is in .vale.ini's adopted-skill section but not in .markdownlint-cli2.yaml"
+an_root=$(an_tree overlisted foo); an_pin "$an_root" up merge foo; an_lists "$an_root" foo,lab-x foo lab-x
+adopted_case "an exemption for a skill nobody adopted fails" "$an_root" 1 \
+  "exempts 'lab-x', which is not recorded as adopted"
+
+rm -rf "$an_fx"
+trap - EXIT
+
+# Then this tree. stderr is captured too, so a crash in the check is a FAIL, never a pass.
+an_out=$(adopted_check . 2>&1)
+an_rc=$?
+printf '%s\n' "$an_out"
+if [ "$an_rc" -ne 0 ]; then fail=1
+elif [ -z "$an_out" ]; then err "the naming check printed nothing, so it checked nothing"; fi
 
 echo "== no-secrets sweep =="
 # Publishable tree only (what git tracks + working copies), minus this test

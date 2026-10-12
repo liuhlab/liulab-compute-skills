@@ -47,6 +47,14 @@ page. It outranks every session override ("headless", "land it", "going to bed")
 principle. A lab safety rule lives here or in a lab-owned skill, and never inside upstream
 text.
 
+### Attribution record
+
+The record that a forked item came from an upstream: the item's lab path, the upstream item
+and commit it was taken from, and optionally what the lab changed. Records live in
+`upstream/attribution.json`, and lint reads one as proof that a forked skill is adopted. The
+upstream's license sits in `upstream/<upstream>/LICENSE`. A tracked skill needs no record,
+because its pin maps it. Format: `upstream/README.md`.
+
 ### CalVer
 
 The versioning scheme of `.claude-plugin/plugin.json`: `YYYY.M.PATCH` — year, month with
@@ -268,8 +276,8 @@ preflights refuse and print the move rather than read either copy.
 Per upstream, the commit last synced (mattpocock/skills) or reviewed (pstack), plus a map
 from each upstream item to the lab file it feeds. The repo stores only the pin, never a copy
 of upstream: a sync fetches upstream and reads both ends from that one clone. Moving a pin
-forward goes in the sync's pull request. See
-`docs/adr/0012-upstream-skills-merge-from-a-pin.md`.
+forward goes in the sync's pull request. It lives at `upstream/<upstream>/pin.json`, in the
+format `upstream/README.md` gives. See `docs/adr/0012-upstream-skills-merge-from-a-pin.md`.
 
 ### Playbook
 
