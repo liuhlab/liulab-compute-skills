@@ -55,6 +55,8 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 - **Middle Man**: a class or function that mostly just delegates onward. → cut it, call the real target direct.
 - **Refused Bequest**: a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
 
+When the diff touches analysis code (a script, notebook or pipeline stage), the baseline also carries the science smells in [science-smells.lab.md](science-smells.lab.md), bound by the same two rules; paste them in with the rest.
+
 ### 4. Spawn both sub-agents in parallel
 
 Issue both sub-agent calls together, in the foreground, and aggregate the reports they return.

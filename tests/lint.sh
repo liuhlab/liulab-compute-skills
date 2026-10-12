@@ -330,13 +330,28 @@ echo "== no-secrets sweep =="
 # local username — so without it this gate flags its own plumbing and reports a
 # leak that is not there. A false positive here is how a security gate gets
 # switched off, so both spellings stay.
-SWEEP() { grep -rnE "$1" \
-  --exclude-dir=.git --exclude=.git --exclude-dir=.claude --exclude-dir=.pixi \
-  --exclude-dir=site --exclude-dir=dist --exclude-dir=build \
-  --exclude-dir=.cache --exclude-dir=__pycache__ \
-  --exclude-dir=.ruff_cache --exclude-dir=.mypy_cache \
-  --exclude-dir=.pytest_cache \
-  --exclude=lint.sh . ; }
+#
+# `.claude/` holds both kinds: machine-local files, all in .gitignore
+# (`settings.local.json`, `worktrees/`, the installer's `skills/`), and the
+# tracked maintainer-only skill in `.claude/commands/`. No directory exclusion
+# splits the two, so the walk skips `.claude/` and git names what in it is
+# publishable — tracked, or new and not ignored — to be swept file by file.
+claude_files=()
+while IFS= read -r f; do claude_files+=("./$f"); done \
+  < <(git ls-files -co --exclude-standard -- .claude 2>/dev/null)
+SWEEP() {
+  local hit=1
+  grep -rnE "$1" \
+    --exclude-dir=.git --exclude=.git --exclude-dir=.claude --exclude-dir=.pixi \
+    --exclude-dir=site --exclude-dir=dist --exclude-dir=build \
+    --exclude-dir=.cache --exclude-dir=__pycache__ \
+    --exclude-dir=.ruff_cache --exclude-dir=.mypy_cache \
+    --exclude-dir=.pytest_cache \
+    --exclude=lint.sh . && hit=0
+  if [ "${#claude_files[@]}" -gt 0 ] && grep -nE "$1" /dev/null "${claude_files[@]}"; then hit=0; fi
+  return "$hit"
+}
+ok "the sweep reads the ${#claude_files[@]} publishable file(s) under .claude/ by name"
 # 0.0.0.0 / 127.0.0.1 are well-known non-secret addresses (used in the
 # "bind to localhost only" safety instructions) — everything else flags.
 #

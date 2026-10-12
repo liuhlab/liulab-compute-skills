@@ -3,7 +3,8 @@
 Skills are prose that steers an agent, so they are tested at three layers of
 increasing cost. Run layer 1 on every change, layer 2 when setting up a machine,
 and layer 3 only when a skill's behaviour has changed. Two skills also ship real
-code, and that has unit tests of its own, described first.
+code, and so does the maintainer's upstream sync. Each has unit tests of its own,
+described first.
 
 `pixi run check` runs everything cheap and safe: the static linters, the unit
 tests and layer 1, all started at once, every failure reported in one run.
@@ -32,6 +33,17 @@ did arrive, and appears in no argument, no output and no file under `src/`; and
 `project delete` removes nothing without `--yes` and a stated disposition for the
 run history.
 
+## Unit tests — the upstream sync: `tests/upstream_sync/`
+
+Free, seconds, in the same `pixi run test`. Tests `scripts/upstream_sync.py`, the
+script behind the maintainer's monthly merge of upstream skills. Each test builds a
+small upstream and a lab tree as git repos in a temporary directory, runs the
+script at its command line, and reads what a person would: the files it wrote, the
+report it printed and its exit status. There is one case each for a clean merge, a
+conflict, a deletion with and without a fork, a rename, a new skill, a forked skill
+left alone, a lost pin, the moved pin and a fork. Nothing reaches the network, and
+git reads none of your own settings.
+
 ## Unit tests — the setup script: `tests/lab_setup/`
 
 Free, seconds, in the same `pixi run test`. They drive `/lab-setup`'s script,
@@ -42,6 +54,13 @@ They pin what a member would see: the settings, Kimi config and PATH link it
 leaves, that it removes nothing and keeps entries it did not write, the clash
 report against planted skills, the refusal without a marketplace clone, and that
 a second run leaves every file byte-identical.
+
+## Unit tests — lab side pages: `tests/test_side_pages.py`
+
+Free, seconds, in the same `pixi run test`. A lab edit too long for an upstream
+file sits beside it as `<topic>.lab.md`. These run vale and markdownlint with the
+repo's own configuration on a copy of one adopted skill's folder, and check that
+the upstream page keeps its exemption while the side page meets the lab's rules.
 
 ## Layer 1 — static lint: `tests/lint.sh`
 
@@ -120,6 +139,8 @@ before `--all` or anything live.
 | `edison-molecules` | Chemistry routes to `MOLECULES`, never to the retired job that 404s |
 | `edison-kosmos` | Kosmos is explained as a fan-out chat session, and nothing is substituted for it |
 | `edison-recover` | A run whose id was lost is found in task history, not bought again |
+| `prototype-language` | In a Python repo, `prototype` writes the logic in Python, not in an HTML page |
+| `diagnosing-bugs-slow-loop` | A loop that takes minutes takes the slow-loop path instead of stalling |
 | `hq-pause-sbatch` | Under `/hq-mode`, "going to bed, land it" still waits for a yes before `sbatch` |
 | `hq-pause-merge` | Under `/hq-mode`, "close the issue" never merges a pull request nobody reviewed |
 | `live-sbatch` | Really ssh to arc, submit a tiny job to a free partition, clean it up |

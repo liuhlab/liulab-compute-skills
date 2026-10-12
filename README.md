@@ -48,7 +48,9 @@ Current skills:
   credits or merging an unreviewed pull request without your yes.
 
 Skills taken from other projects keep their own names. These 25 come from
-[mattpocock/skills](https://github.com/mattpocock/skills), unchanged:
+[mattpocock/skills](https://github.com/mattpocock/skills). Most are
+unchanged. A few carry a lab edit, which only adds what science work needs,
+and the changelog names each one:
 
 - **Plan:** `grilling`, `grill-me`, `grill-with-docs`, `wayfinder`, `to-spec`,
   `to-tickets`, `to-questionnaire`, `triage`.

@@ -44,6 +44,29 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   before each change, removes nothing, and is safe to run again. It also lists any skill of
   yours that takes a name the plugin ships, because that copy wins over the plugin's without
   a word.
+- **`/prototype` handles analysis and works outside JavaScript.** Upstream knew two kinds of
+  prototype, a web page to click through and a set of screen designs. It now has a third for
+  an analysis or a figure: a short script or notebook on part of the data that shows 2 or 3
+  versions side by side. For an analysis, it fixes how to judge them before they run and
+  reports all of them, so the pick does not follow the result. In a Python or R repo, the
+  logic is now written in that language and run from a script or notebook, because logic
+  written for a web page can't move into Python or R code. The page is built only when
+  someone who doesn't code must click through it.
+- **`/diagnosing-bugs` keeps going when one run takes minutes.** Upstream wants a test loop
+  that runs in seconds, which a bug that shows only on the full dataset can never meet, so
+  the agent stalled. Now it shrinks the input while the bug still shows, restarts from the
+  last good saved file, or takes a batch job as the loop.
+- **An eval case for each of those two changes.** `prototype-language` and
+  `diagnosing-bugs-slow-loop` check that the agent still takes the lab's path. A later
+  upstream rewording could undo either change without a merge conflict, so the upstream
+  sync reruns the case when upstream touches that skill. Both changes only add lines to
+  upstream's text.
+- **The monthly upstream sync, for the maintainer.** `/lab-upstream-sync` brings upstream's
+  changes into the skills the lab takes from mattpocock/skills, and ends in one pull request.
+  Its script merges each file from the pin to upstream's latest commit and keeps the lab's own
+  lines. It lists conflicts, removed skills and new ones. The skill lives in this repo's
+  `.claude/commands/`, so the plugin never ships it. The check for leaked secrets now reads
+  that folder too.
 - **`/hq-mode`**, the lab's way of working through a whole task. Type it with your request.
   The agent reads one page of working rules first, then follows one of 17 playbooks, such as
   an analysis, a cluster run, a paper or grant section, or a talk. Some steps always wait for
@@ -79,6 +102,29 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   would miss it and start a second one. The entries are unchanged. The repo checks are the lab
   template's new copy: they fail a repo still on `CONTEXT.md`, and a repo skill that takes
   any name the plugin ships.
+- **Lab edits to six skills from mattpocock/skills.** Each one adds what science work
+  needs and removes no line of upstream text. A longer one sits in its own page beside the
+  skill, named `*.lab.md`, and the writing checks hold that page to the lab's rules.
+  - `code-review` also looks for science smells, such as a random step with no seed, rows
+    dropped with no count, or a threshold with no source. Its fixed smell list is about
+    objects, so a review of analysis code missed the faults that change a result.
+  - `research` keeps what a paper reports apart from how well it is established, and takes
+    a review as the source for where consensus stands. Before, it could pass on one
+    preprint's claim as fact.
+  - `tdd` takes a frozen golden output as a known-good value, with a rule for tolerance:
+    compare bytes first, then mask fields that change between runs, then use
+    `pytest.approx` with a stated reason. Most analysis outputs have no other known-good
+    value, so the agent turned such tests down or wrote empty ones.
+  - `implement` runs `pixi run check` plus the steps `AGENTS.md` lists outside it. With no
+    test suite, it reruns on the fixture and compares with the saved result. Upstream
+    assumes a type checker and a test suite, so without them the agent made up commands
+    or skipped the check.
+  - `to-spec` gains an analysis plan: the question, the data and where it came from,
+    methods, outputs, checks and controls, and what is out of scope. An analysis has no
+    users, so the user stories the usual template asks for were made up.
+  - `to-tickets` treats a pipeline's stages as its layers, so a ticket takes one sample
+    through every stage to a figure. Upstream names web layers, and the easy misreading
+    was one ticket per stage.
 
 ### Fixed
 
