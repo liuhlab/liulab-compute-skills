@@ -125,6 +125,8 @@ before `--all` or anything live.
 | `edison-molecules` | Chemistry routes to `MOLECULES`, never to the retired job that 404s |
 | `edison-kosmos` | Kosmos is explained as a fan-out chat session, and nothing is substituted for it |
 | `edison-recover` | A run whose id was lost is found in task history, not bought again |
+| `prototype-language` | In a Python repo, `prototype` writes the logic in Python, not in an HTML page |
+| `diagnosing-bugs-slow-loop` | A loop that takes minutes takes the slow-loop path instead of stalling |
 | `live-sbatch` | Really ssh to arc, submit a tiny job to a free partition, clean it up |
 | `live-edison` | One real literature call comes back with citations, for one credit |
 

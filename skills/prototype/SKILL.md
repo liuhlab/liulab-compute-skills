@@ -13,6 +13,7 @@ Identify which question is being answered, using the user's prompt, the surround
 
 - **"Does this logic / state model feel right?"** → [LOGIC.md](LOGIC.md). Build a single shareable HTML file (free-play buttons plus tabbed guided walkthroughs) that pushes the state machine through cases that are hard to reason about on paper, and that a non-developer can drive.
 - **"What should this look like?"** → [UI.md](UI.md). Generate several radically different UI variations on a single route, switchable via a URL search param and a floating bottom bar.
+- **"Which way should this analysis or figure go?"** → a throwaway script or notebook on a subsample that renders 2 or 3 variants side by side. For an analysis choice, fix the criterion before the variants run, and report every variant.
 
 The two branches produce very different artifacts, so getting this wrong wastes the whole prototype. If the question is genuinely ambiguous and the user isn't reachable, default to whichever branch better matches the surrounding code (a backend module → logic; a page or component → UI) and state the assumption at the top of the prototype.
 

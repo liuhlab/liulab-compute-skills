@@ -90,6 +90,9 @@ nothing automatic checks that an edit removed no line: read the diff against the
   one-line pointer from it. The suffix tells the gate it is lab text: `.vale.ini`'s
   `[skills/*/*.lab.md]` section and the markdownlint override's `!**/*.lab.md` line hold it
   to the rules for any page beside a skill body. `tests/test_side_pages.py` checks both.
+- An edit that pushes against upstream's own steer gets an eval case named `<name>-*` in
+  `tests/eval.sh`. An upstream rewording can undo it without a conflict, so a sync that
+  changes the skill reruns that case.
 
 ## What reads these
 
