@@ -21,7 +21,7 @@ Before writing code, write down what state model and what question you're protot
 
 ### 2. Isolate the logic in a portable module
 
-Outside a JavaScript codebase, write this module in the repo's language instead, as [LAB-LOGIC.md](LAB-LOGIC.md) describes.
+Outside a JavaScript codebase, write this module in the repo's language instead, as [logic-outside-javascript.lab.md](logic-outside-javascript.lab.md) describes.
 
 Put the actual logic (the bit that's answering the question) in a single `<script>` block written as a small, pure module that could be lifted out and dropped into the real codebase later. The page around it is throwaway; this module isn't.
 
