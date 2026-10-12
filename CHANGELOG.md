@@ -83,9 +83,10 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   it, in every agent. Its [page](https://liuhlab.github.io/liulab-skills/skills/hq-mode/) has
   the playbooks and the full list.
 - **Tests for `/hq-mode`.** Two new eval cases check the two pauses above: a cluster run left
-  overnight, and "close the issue" with a pull request nobody reviewed. The tests also fail
-  when the mode names a playbook with no page, or a page it doesn't name, and when its list of
-  always-paused steps loses one.
+  overnight, and "close the issue" with a pull request nobody reviewed. The first also checks
+  that the agent shows you the Slurm script it waits on, not only that it waits. The tests
+  also fail when the mode names a playbook with no page, or a page it doesn't name, and when
+  its list of always-paused steps loses one.
 - **`/hq-mode`'s principles, from pstack.** The mode reads one of 22 short pages when that
   principle applies, and an index says when each one does. Six were changed for science
   work. Before it trusts a cell count, it rules out data leaking between splits, batch

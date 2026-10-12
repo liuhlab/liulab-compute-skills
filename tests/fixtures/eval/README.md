@@ -6,9 +6,10 @@ assertions, so these test the regexes that actually run rather than copies that 
 
 | Suffix | Must |
 | --- | --- |
-| `.pass.txt` | match the case's expect regex, and not match its DENY |
+| `.pass.txt` | match the case's expect regex and its ALSO, and not match its DENY |
 | `.fail-expect.txt` | NOT match the expect regex |
 | `.fail-deny.txt` | match the DENY |
+| `.fail-also.txt` | NOT match the ALSO |
 
 Nothing here is a real transcript and nothing here contains a real credential. Several are
 regressions: a case that once reported a correct run as failed keeps its transcript here so
