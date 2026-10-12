@@ -43,7 +43,9 @@ until one clashes (`docs/adr/0013-adopted-skills-keep-upstream-names.md`). Under
 `items` also holds the items taken only as ideas, each mapped to the lab file it shaped, and
 each item is named by its path under `skills_dir`: a skill by its directory, a file inside one
 by its file path, such as `poteto-mode/playbooks/hillclimb.md`. pstack's `poteto-mode` calls
-itself `Poteto Mode`, so a frontmatter name would not find it.
+itself `Poteto Mode`, so a frontmatter name would not find it. An idea that shaped no lab file
+is a skipped item and stays out, as `blast-radius` and `correct` do: `pr` and `retro`, where
+their ideas were to go, ship as upstream wrote them.
 Moving `commit` forward goes in the sync's one pull request.
 
 ## The attribution record: `attribution.json`
@@ -69,6 +71,14 @@ or one file, such as a reference page.
 
 Forking a tracked skill is one step: delete it from its pin's `items` and add its record
 here, with the pin's `commit`. `python scripts/upstream_sync.py fork <name>` does both.
+
+A forked skill is lab text and meets the gate, as `ketchup` does, unless meeting it would
+reshape the upstream text. `unslop` and `technical-writing` stay in both gate lists below:
+each body runs past the 600-word skill cap, and `unslop` numbers its rules as ids the text
+cites, which markdownlint's MD029 rejects. Fitting them would move much of upstream's text
+into `references/`, so every upstream change would be ported by hand into another shape. The
+cost is small: in a skill body vale checks only that cap, and markdownlint still applies every
+rule outside the override's ten. Take a fork out of both lists once it fits.
 
 ## Adopting a tracked skill
 
