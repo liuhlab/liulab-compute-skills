@@ -71,7 +71,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
   `jupyter-ircbc`, `reuse-job`, `edison-refuse`, `edison-molecules`,
-  `edison-kosmos`, `edison-recover`, `live-sbatch`, `live-edison`.
+  `edison-kosmos`, `edison-recover`, `prototype-language`,
+  `diagnosing-bugs-slow-loop`, `live-sbatch`, `live-edison`.
   **There is no default run**: a bare `eval.sh` prints the cases and exits 2.
   Run one with `--only <case>`, the whole suite with
   `--all`. `--live` is a modifier and is refused alone; with `--all` it

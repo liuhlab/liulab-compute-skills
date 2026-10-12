@@ -22,6 +22,23 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   pin there: the commit last merged or read, and which lab file each upstream skill feeds.
   A skill the lab changes for good gets an attribution record instead.
   `upstream/README.md` gives both formats.
+- **`/prototype` handles analysis and works outside JavaScript.** Upstream knew two kinds of
+  prototype, a web page to click through and a set of screen designs. It now has a third for
+  an analysis or a figure: a short script or notebook on part of the data that shows 2 or 3
+  versions side by side. For an analysis, it fixes how to judge them before they run and
+  reports all of them, so the pick does not follow the result. In a Python or R repo, the
+  logic is now written in that language and run from a script or notebook, because logic
+  written for a web page can't move into Python or R code. The page is built only when
+  someone who doesn't code must click through it.
+- **`/diagnosing-bugs` keeps going when one run takes minutes.** Upstream wants a test loop
+  that runs in seconds, which a bug that shows only on the full dataset can never meet, so
+  the agent stalled. Now it shrinks the input while the bug still shows, restarts from the
+  last good saved file, or takes a batch job as the loop.
+- **An eval case for each of those two changes.** `prototype-language` and
+  `diagnosing-bugs-slow-loop` check that the agent still takes the lab's path. A later
+  upstream rewording could undo either change without a merge conflict, so the upstream
+  sync reruns the case when upstream touches that skill. Both changes only add lines to
+  upstream's text.
 
 ### Changed
 
