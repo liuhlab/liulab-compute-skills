@@ -67,6 +67,14 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   lines. It lists conflicts, removed skills and new ones. The skill lives in this repo's
   `.claude/commands/`, so the plugin never ships it. The check for leaked secrets now reads
   that folder too.
+- **The sync reports what a clean merge hides.** It lists each line the lab added that the
+  merge lost, and each lab page that still uses a name upstream dropped, such as an old file
+  name. It runs both checks again once the conflicts are fixed, since that is where a line
+  most often goes missing. It also says what is new in both upstreams: changes to the
+  skills the lab took and now owns, and a line for each pstack item. A change that only saves
+  tokens or moves the default model is marked low priority. pstack's pin moves in the same
+  pull request. When upstream changes `prototype` or `diagnosing-bugs`, the sync names that
+  skill's eval case and asks before it runs, since each case costs tokens.
 
 ### Changed
 

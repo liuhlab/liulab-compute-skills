@@ -146,13 +146,23 @@ class Lab(Tree):
         self, clone: Upstream | None = None, **others: Upstream
     ) -> subprocess.CompletedProcess[str]:
         """Run `merge` with `clone` as mattpocock's clone, and `others` keyed by upstream name."""
-        clones = ({UPSTREAM: clone} if clone else {}) | others
-        args = [arg for name, up in clones.items() for arg in ("--clone", f"{name}={up.root}")]
-        return self.sync("merge", *args)
+        return self.sync("merge", *clone_args(clone, others))
+
+    def recheck(
+        self, clone: Upstream | None = None, **others: Upstream
+    ) -> subprocess.CompletedProcess[str]:
+        """Run `recheck` with the same clones as `merge` takes."""
+        return self.sync("recheck", *clone_args(clone, others))
 
     def gate_names(self) -> tuple[str, str]:
         """Return `.vale.ini` and `.markdownlint-cli2.yaml`, which hold the gate lists."""
         return self.read(".vale.ini"), self.read(".markdownlint-cli2.yaml")
+
+
+def clone_args(clone: Upstream | None, others: dict[str, Upstream]) -> list[str]:
+    """Return `--clone NAME=DIR` for `clone` as mattpocock's and each of `others` by name."""
+    clones = ({UPSTREAM: clone} if clone else {}) | others
+    return [arg for name, up in clones.items() for arg in ("--clone", f"{name}={up.root}")]
 
 
 def gate_files(names: list[str]) -> tuple[str, str]:
@@ -169,6 +179,24 @@ def gate_files(names: list[str]) -> tuple[str, str]:
         "    combine: merge\n    config:\n      MD041: false\n"
     )
     return vale, mdl
+
+
+def follow_by_review(lab: Lab, name: str, base: str, items: dict[str, str]) -> None:
+    """Give the lab a `review` pin for upstream `name` at `base`, as pstack's, and commit it.
+
+    The upstream keeps its skills flat under `pstack/skills/`, and `items` maps each item, a
+    skill directory or a file inside one, to the lab file it feeds.
+    """
+    pin = {
+        "repo": f"https://example.invalid/fixture-{name}",
+        "commit": base,
+        "sync": "review",
+        "skills_dir": "pstack/skills",
+        "items": items,
+    }
+    lab.write(f"upstream/{name}/pin.json", json.dumps(pin, indent=2) + "\n")
+    lab.write(f"upstream/{name}/LICENSE", "MIT License\n")
+    lab.commit(f"follow {name}")
 
 
 @pytest.fixture
