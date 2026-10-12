@@ -78,6 +78,19 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   overnight, and "close the issue" with a pull request nobody reviewed. The tests also fail
   when the mode names a playbook with no page, or a page it doesn't name, and when its list of
   always-paused steps loses one.
+- **`/hq-mode`'s principles, from pstack.** The mode reads one of 22 short pages when that
+  principle applies, and an index says when each one does. Six were changed for science
+  work. Before it trusts a cell count, it rules out data leaking between splits, batch
+  effects, repeated samples and a filter that changed what the count is out of. It tries one
+  sample of a job array before it runs the rest. A step that reruns after a crash writes to
+  a new name and then renames it, so a half-written file never counts as done. The tests fail
+  when the index names a principle with no page, or a page it doesn't name.
+- **Three more pages for `/hq-mode`.** pstack's benchmark checklist now pins both sides of a
+  timing to one kind of node and records the job ID. pstack's decision log, for work you
+  leave running, reads this agent's own session log, not Cursor's. A new page says how the
+  agent finds the checks a task rests on before you step away: an agent that can check its
+  own work can be trusted with more. Each page records its pstack source in `upstream/`,
+  and the tests fail when pstack's pin points at a file that isn't there.
 
 ### Changed
 

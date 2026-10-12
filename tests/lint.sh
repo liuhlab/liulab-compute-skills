@@ -133,7 +133,14 @@ for u in sorted(d for d in upstreams if os.path.isdir(here(f"upstream/{d}"))):
     for b in bad:
         problems.append(f"{rel}: {b} (format: upstream/README.md)")
     if pin.get("sync") != "merge":
-        continue  # a reviewed upstream's items are all forked, so its pin admits no name
+        # A reviewed upstream's items are all forked or taken as ideas, so its pin admits no
+        # name. Each still maps to the lab file it feeds, and a map onto nothing is a dead
+        # record the sync's summary would point the maintainer at.
+        for item, path in sorted(items.items()):
+            if not os.path.exists(here(path)):
+                problems.append(f"{rel} maps `{item}` to `{path}`, which does not exist here: "
+                                "map it to the lab file it feeds")
+        continue
     for item, path in sorted(items.items()):
         m = SKILL_PATH.match(path)
         if not m or not os.path.isdir(here(path)):
@@ -278,6 +285,9 @@ adopted_case "a name a merged upstream's pin maps passes as tracked" "$an_fx/tra
 an_pin "$(an_tree reviewed foo)" up review foo
 adopted_case "a reviewed upstream's pin admits no name" "$an_fx/reviewed" 1 \
   "skill 'foo' is not lab-* and is recorded nowhere as adopted"
+an_pin "$(an_tree dangling)" up review gone
+adopted_case "a reviewed upstream's pin mapping onto nothing fails" "$an_fx/dangling" 1 \
+  "maps \`gone\` to \`skills/gone\`, which does not exist here"
 
 an_record() { # <root> <upstream> <item>: an attribution record forking skills/<item>
   printf '{"skills/%s": {"from": [{"upstream": "%s", "item": "%s", "commit": "%s"}], "changes": "fixture"}}\n' \
@@ -919,8 +929,8 @@ echo "== hq-mode =="
 #
 #   index <index> <pages-dir> <what> [<heading>]   Every `- **name**` entry of the index (under
 #       `## <heading>` when one is given, else anywhere in the file) has <pages-dir>/<name>.md,
-#       and every page there has an entry. The playbook index runs it below; another index
-#       inside the mode is one more `mode_run index ...` line.
+#       and every page there has an entry. The playbook and principle indexes run it below;
+#       another index inside the mode is one more `mode_run index ...` line.
 #   skills <router> <skills-dir> <heading>   Every skill the trigger table names ships. A
 #       backticked bare word under `## <heading>`, `/name` or `name`, is read as a skill name;
 #       paths and file names, which hold a `.` or an inner `/`, are not. The upstream sync can
@@ -1081,6 +1091,8 @@ mode_probe "a whole-file index matching its pages"  clears index "$mf/whole.md" 
 mode_probe "an index entry with no page"            trips  index "$mf/missing.md" "$mf/pages" playbook Playbooks
 mode_probe "a page the index doesn't name"          trips  index "$mf/unnamed.md" "$mf/pages" playbook Playbooks
 mode_probe "an index under a heading that is not there" trips index "$mf/whole.md" "$mf/pages" playbook Playbooks
+printf '# Index\n\n## Core\n\n- **a.** one\n- **b** (*lab edit*). two\n- **gone.** three\n' >"$mf/whole-missing.md"
+mode_probe "a whole-file index entry with no page"  trips  index "$mf/whole-missing.md" "$mf/pages" principle
 mkdir -p "$mf/skills/foo" "$mf/skills/bar"; : >"$mf/skills/foo/SKILL.md"; : >"$mf/skills/bar/SKILL.md"
 cat >"$mf/shipped.md" <<'EOF'
 ## Triggers
@@ -1144,6 +1156,7 @@ rm -rf "$mf"
 trap - EXIT
 
 mode_run index skills/hq-mode/SKILL.md skills/hq-mode/references/playbooks playbook Playbooks
+mode_run index skills/hq-mode/references/principles.md skills/hq-mode/references/principles principle
 mode_run skills skills/hq-mode/SKILL.md skills Triggers
 mode_run user skills/hq-mode
 mode_run pause skills/hq-mode/references/working-style.md

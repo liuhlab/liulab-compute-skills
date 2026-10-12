@@ -26,6 +26,11 @@ you can see what it will do and how far it has got. There are 17:
 
 When none fits, it designs one for the task, writes the steps down, and works through them.
 
+It also follows 22 working principles. Each is a short page it reads when that principle
+applies, such as "check the real output, not a sign of it". Six were changed for science
+work. For example, before it trusts a cell count, it rules out data leaking between splits,
+batch effects, repeated samples and a filter that changed what the count is out of.
+
 It also knows which skill to reach for along the way: the lab cluster skills before any
 ssh, `unslop` before you read its prose, and the planning skills such as `/grill-with-docs`
 and `/to-spec` for a new idea. A skill you start by typing its name stays yours to start. The
@@ -53,6 +58,6 @@ find the script ready in the morning. "Close the issue" is not "merge it".
 
 They are the lab's way of working, drawn from many real sessions and written as "the user",
 so they apply to whoever types `/hq-mode`. Several playbooks build on
-[pstack](https://github.com/cursor/plugins/tree/main/pstack)'s `poteto-mode`, and the
-planning flow follows [mattpocock/skills](https://github.com/mattpocock/skills). Both are MIT
-licensed.
+[pstack](https://github.com/cursor/plugins/tree/main/pstack)'s `poteto-mode`, the principles
+come from pstack too, and the planning flow follows
+[mattpocock/skills](https://github.com/mattpocock/skills). Both are MIT licensed.

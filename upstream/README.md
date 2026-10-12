@@ -98,8 +98,9 @@ nothing automatic checks that an edit removed no line: read the diff against the
 
 - `tests/lint.sh`, section `adopted skill names`. A skill outside `lab-*` passes only when
   a `merge` pin maps it, when a record lists it, or when it is `hq-mode`. The section also
-  fails a source with no `LICENSE`, a skill both tracked and forked, and the two gate lists
-  above when they miss a tracked skill, disagree, or name a skill nobody adopted.
+  fails a source with no `LICENSE`, a skill both tracked and forked, a `review` pin item
+  mapped to a lab path that does not exist, and the two gate lists above when they miss a
+  tracked skill, disagree, or name a skill nobody adopted.
 - The upstream sync, `scripts/upstream_sync.py`, which the maintainer runs through
   `/lab-upstream-sync` in `.claude/commands/`. It writes both files back in the layouts above,
   and adopts a skill new upstream by the three steps above.
