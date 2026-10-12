@@ -29,6 +29,7 @@ Break the work into **tracer bullet** tickets.
 <vertical-slice-rules>
 
 - Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests): vertical, NOT a horizontal slice of one layer
+- In a data pipeline the layers are its stages: a slice takes one sample, or a subsample, through every stage to a figure or table. One ticket per stage is the horizontal slice
 - A completed slice is demoable or verifiable on its own
 - Each slice is sized to fit in a single fresh context window
 - Any prefactoring should be done first

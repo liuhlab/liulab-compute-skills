@@ -85,6 +85,29 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   would miss it and start a second one. The entries are unchanged. The repo checks are the lab
   template's new copy: they fail a repo still on `CONTEXT.md`, and a repo skill that takes
   any name the plugin ships.
+- **Lab edits to six skills from mattpocock/skills.** Each one adds what science work
+  needs and removes no line of upstream text. A longer one sits in its own page beside the
+  skill, named `*.lab.md`, and the writing checks hold that page to the lab's rules.
+  - `code-review` also looks for science smells, such as a random step with no seed, rows
+    dropped with no count, or a threshold with no source. Its fixed smell list is about
+    objects, so a review of analysis code missed the faults that change a result.
+  - `research` keeps what a paper reports apart from how well it is established, and takes
+    a review as the source for where consensus stands. Before, it could pass on one
+    preprint's claim as fact.
+  - `tdd` takes a frozen golden output as a known-good value, with a rule for tolerance:
+    compare bytes first, then mask fields that change between runs, then use
+    `pytest.approx` with a stated reason. Most analysis outputs have no other known-good
+    value, so the agent turned such tests down or wrote empty ones.
+  - `implement` runs `pixi run check` plus the steps `AGENTS.md` lists outside it. With no
+    test suite, it reruns on the fixture and compares with the saved result. Upstream
+    assumes a type checker and a test suite, so without them the agent made up commands
+    or skipped the check.
+  - `to-spec` gains an analysis plan: the question, the data and where it came from,
+    methods, outputs, checks and controls, and what is out of scope. An analysis has no
+    users, so the user stories the usual template asks for were made up.
+  - `to-tickets` treats a pipeline's stages as its layers, so a ticket takes one sample
+    through every stage to a figure. Upstream names web layers, and the easy misreading
+    was one ticket per stage.
 
 ### Fixed
 

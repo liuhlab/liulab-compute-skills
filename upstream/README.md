@@ -78,16 +78,18 @@ here, with the pin's `commit`.
    override in `.markdownlint-cli2.yaml`. That is how upstream text passes the gate
    unchanged.
 
-## A lab edit to a tracked skill
+## Lab edits
 
-A lab edit only adds lines, and nothing here records it: its record is the diff against the
-pin, with its reason in the commit message and the changelog (ADR 0012). The pin still maps
-the whole skill, and nothing in the gate compares it with upstream.
+A lab edit adds to a tracked skill's upstream text and removes no line of it (`GLOSSARY.md`).
+Nothing in this directory records one: its record is the diff against the pin, with its
+reason in the commit message and the changelog (ADR 0012). Lint never reads upstream, so
+nothing automatic checks that an edit removed no line: read the diff against the pin.
 
 - A branch or a loop path goes in place, in the upstream file.
-- A whole new section goes in a lab-only page, `skills/<name>/LAB-<topic>.md`, with a
-  one-line pointer from the upstream file. The skill's gate exemption covers that page too,
-  so keep it to what a reference page beside a lab skill would pass.
+- A whole new section goes in a side page beside that file, named `<topic>.lab.md`, with a
+  one-line pointer from it. The suffix tells the gate it is lab text: `.vale.ini`'s
+  `[skills/*/*.lab.md]` section and the markdownlint override's `!**/*.lab.md` line hold it
+  to the rules for any page beside a skill body. `tests/test_side_pages.py` checks both.
 - An edit that pushes against upstream's own steer gets an eval case named `<name>-*` in
   `tests/eval.sh`. An upstream rewording can undo it without a conflict, so a sync that
   changes the skill reruns that case.
