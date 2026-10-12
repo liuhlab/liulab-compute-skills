@@ -35,11 +35,17 @@ Current skills:
   key. Kosmos is a chat session that fans out into many tasks, and the skill
   will not start one unless you ask for that run.
 
-Skills taken from other projects keep their own names:
+Skills taken from other projects keep their own names. These 25 come from
+[mattpocock/skills](https://github.com/mattpocock/skills), unchanged:
 
-- **`grilling`** — from [mattpocock/skills](https://github.com/mattpocock/skills),
-  unchanged. It asks you about a plan, one round of questions at a time, until
-  you agree on every decision.
+- **Plan:** `grilling`, `grill-me`, `grill-with-docs`, `wayfinder`, `to-spec`,
+  `to-tickets`, `to-questionnaire`, `triage`.
+- **Build:** `implement`, `implement-spec`, `tdd`, `prototype`,
+  `diagnosing-bugs`, `codebase-design`, `improve-codebase-architecture`,
+  `domain-modeling`.
+- **Review and hand over:** `code-review`, `pr`, `retro`, `handoff`.
+- **Learn and write:** `research`, `teach`, `writing-for-agents`, `wait-what`.
+- **Set up a repo:** `setup-matt-pocock-skills`.
 
 Each project's MIT license is in `upstream/<project>/LICENSE`.
 
