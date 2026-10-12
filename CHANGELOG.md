@@ -10,6 +10,22 @@ adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 The lab plugin now ships the whole skill set: the skills from mattpocock/skills under their
 own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 
+### Fixed
+
+- **Codex no longer starts `lab-edison` unasked.** Codex ignores the setting that keeps the
+  skill waiting for you, so it could spend your Edison credits without being asked. The skill
+  now ships the small file Codex reads instead, `agents/openai.yaml`. The tests fail any skill
+  that has the setting without the file, or the file without the setting.
+- **The docs said every other agent ignores that setting.** Claude Code and Kimi Code honour
+  it; only Codex needs the file. The README, the glossary and the `lab-edison` page now say so.
+
+### Changed
+
+- **Each lab skill's description now starts with its triggers.** Kimi Code shows only the
+  first 247 characters of a description, so the words that should load a skill now come
+  first. The tests list those words for every lab skill and fail when one falls past that
+  point.
+
 ## 2026.10.3 — 2026-10-11
 
 No skill changed. This release writes down how the lab will take in skills from outside,

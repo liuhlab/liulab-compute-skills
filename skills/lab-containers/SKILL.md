@@ -1,12 +1,11 @@
 ---
 name: lab-containers
 description: >-
-  Pull, build, update, version-check, or use the lab's Singularity container
-  images (SIF) from the ghcr.io liulab-runtime registry on ircbc, whose
-  compute nodes have no internet: crane pull on the login node, sbatch build
-  from docker-archive, digest-based version checks, and running commands,
-  interactive pixi-env shells, or Jupyter inside the containers.
-  $LIU_LAB_PACKAGES shared store.
+  Pull, build, update, version-check or use the lab's Singularity container
+  images (SIF, ghcr.io liulab-runtime) on ircbc: run commands, pixi-env
+  shells or Jupyter inside them, and the $LIU_LAB_PACKAGES shared store.
+  ircbc compute nodes have no internet, so: crane pull on the login node,
+  sbatch build from docker-archive, digest-based version checks.
 ---
 
 # Lab container images: check → pull → build → test → use
