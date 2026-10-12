@@ -43,6 +43,13 @@ leaves, that it removes nothing and keeps entries it did not write, the clash
 report against planted skills, the refusal without a marketplace clone, and that
 a second run leaves every file byte-identical.
 
+## Unit tests — lab side pages: `tests/test_side_pages.py`
+
+Free, seconds, in the same `pixi run test`. A lab edit too long for an upstream
+file sits beside it as `<topic>.lab.md`. These run vale and markdownlint with the
+repo's own configuration on a copy of one adopted skill's folder, and check that
+the upstream page keeps its exemption while the side page meets the lab's rules.
+
 ## Layer 1 — static lint: `tests/lint.sh`
 
 Free, seconds. Tests the **files**: manifests are valid JSON, every skill has

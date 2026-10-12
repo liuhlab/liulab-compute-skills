@@ -19,7 +19,7 @@ targets.
 | --- | --- |
 | `AGENTS.md`, `docs/agents/*`, `upstream/README.md`, `skills/*/references/*`, other pages beside a skill body, `skills/*/playbooks/*` | 1200 (`Lab.LengthDoc`) |
 | `skills/*/SKILL.md` | 600 (`Lab.LengthSkill`) |
-| An adopted skill's pages | none — upstream text passes unchanged (`upstream/README.md`) |
+| An adopted skill's pages | none — upstream text passes unchanged (`upstream/README.md`); a lab side page beside them, `*.lab.md`, takes the 1200 cap |
 | `docs/adr/*` | 400 (`Lab.LengthAdr`) |
 | `GLOSSARY.md` | 200 words per glossary entry, checked by conformance |
 | `docs/research/*` | none — a research note is long by nature |
