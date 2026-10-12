@@ -17,8 +17,8 @@ report with the maintainer and decide nothing alone.
 
 - Never commit a conflict marker, and never resolve a conflict by dropping a lab edit or
   upstream text without the maintainer's yes.
-- Upstream text changes only by a lab edit, which adds a capability (`CONTEXT.md`, "Lab edit").
-  Never edit it to pass the gate.
+- Upstream text changes only by a lab edit, which adds and never removes
+  (`upstream/README.md`, "Lab edits"). Never edit it to pass the gate.
 - Show the pull request's title and body and wait for a yes before you push anything.
 
 ## Steps
