@@ -51,9 +51,12 @@ Free, seconds, in the same `pixi run test`. They drive `/lab-setup`'s script,
 home** in a temporary directory, with a stub `codex` that writes what the real
 one would. `HOME` points at the fake home too, so nothing can reach the real one.
 They pin what a member would see: the settings, Kimi config and PATH link it
-leaves, that it removes nothing and keeps entries it did not write, the clash
-report against planted skills, the refusal without a marketplace clone, and that
-a second run leaves every file byte-identical.
+leaves, the defaults block in all three agents' instructions files with the
+member's text around it kept, that it removes nothing and keeps entries it did
+not write, the clash report against planted skills, the refusal without a
+marketplace clone, and that a second run leaves every file byte-identical. One
+test points the fake clone at this repo and follows the block to the defaults
+page and on to every seed page it names, so an upstream rename fails here.
 
 ## Unit tests — lab side pages: `tests/test_side_pages.py`
 

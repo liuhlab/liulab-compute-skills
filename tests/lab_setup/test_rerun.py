@@ -18,6 +18,7 @@ def lived_in(machine: FakeMachine) -> None:
     """Give the fake home the member's own files, which every run must keep."""
     home = machine.home
     (home / ".claude" / "settings.json").write_text(json.dumps({"model": "opus"}, indent=4))
+    (home / ".claude" / "CLAUDE.md").write_text("# Mine\n\nAnswer in English.\n")
     (home / ".kimi-code" / "config.toml").write_text(
         '# mine\nextra_skill_dirs = ["~/team-skills"]\n\n[thinking]\nenabled = true\n'
     )
@@ -42,7 +43,7 @@ def test_a_second_run_leaves_every_file_byte_identical(machine: FakeMachine) -> 
 
 
 def test_a_run_removes_nothing(machine: FakeMachine) -> None:
-    """Every file that was there is still there; only the three config files differ."""
+    """Every file that was there is still there; only the files the steps write differ."""
     lived_in(machine)
     before = machine.snapshot()
 
@@ -51,7 +52,7 @@ def test_a_run_removes_nothing(machine: FakeMachine) -> None:
     after = machine.snapshot()
     assert set(before) <= set(after)
     changed = {path for path in before if before[path] != after[path]}
-    assert changed == {".claude/settings.json", ".kimi-code/config.toml"}
+    assert changed == {".claude/settings.json", ".claude/CLAUDE.md", ".kimi-code/config.toml"}
 
 
 def test_a_dry_run_reports_each_change_and_makes_none(machine: FakeMachine) -> None:
@@ -63,7 +64,7 @@ def test_a_dry_run_reports_each_change_and_makes_none(machine: FakeMachine) -> N
 
     assert machine.snapshot() == before
     assert machine.codex_calls() == []
-    for step in ("claude", "codex", "kimi", "edison-cli"):
+    for step in ("claude", "codex", "kimi", "defaults", "edison-cli"):
         assert any(
             line.startswith("would change") and step in line for line in result.stdout.splitlines()
         ), step

@@ -96,7 +96,8 @@ claude plugin install lab@liulab
 
 Then start Claude Code and type `/lab-setup`. From then on Claude Code,
 Codex and Kimi Code all follow the plugin and update on their own, and
-`edison-cli` works in all three. Its
+`edison-cli` works in all three. All three also read the lab's defaults: where
+issues go, which labels to use, and the safety rules for the clusters. Its
 [page](https://liuhlab.github.io/liulab-skills/skills/lab-setup/) has the
 details.
 
@@ -113,10 +114,7 @@ details.
 2. Copy [templates/personal.md](templates/personal.md) to
    `~/.claude/lab/personal.md` and fill in your usernames/directories.
    Never commit it anywhere.
-3. Append [templates/CLAUDE-stub.md](templates/CLAUDE-stub.md) to your
-   `~/.claude/CLAUDE.md` so the two safety rules apply even in sessions where
-   the skill doesn't auto-trigger.
-4. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
+3. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
    not have it, then copy [templates/edison.env](templates/edison.env) to
    `~/.claude/lab/edison.env`, replace the placeholder with your own
    Edison key, and `chmod 600` it. It goes *beside* `personal.md`, never

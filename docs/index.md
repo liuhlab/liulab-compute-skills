@@ -45,8 +45,10 @@ claude plugin install lab@liulab
 ```
 
 Then start Claude Code and type `/lab-setup`. It turns on updates for the plugin,
-and sets up Codex and Kimi Code if you have them. It asks before each change, and
-it removes nothing. Its [page](skills/lab-setup.md) has the details.
+and sets up Codex and Kimi Code if you have them. It also points each agent at the
+lab's defaults: where issues go, which labels to use, and the safety rules for the
+clusters. It asks before each change, and it removes nothing. Its
+[page](skills/lab-setup.md) has the details.
 
 Then set the machine up for the clusters once.
 
@@ -59,11 +61,7 @@ Then set the machine up for the clusters once.
    [`templates/personal.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/personal.md)
    to `~/.claude/lab/personal.md` and fill in your usernames, directories and
    Jupyter defaults. Never commit it.
-3. **Safety stub, optional.** Append
-   [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/CLAUDE-stub.md)
-   to your `~/.claude/CLAUDE.md`, so the core rules apply even in sessions where
-   no skill loads.
-4. **Edison key and pixi, only for lab-edison.** That skill needs
+3. **Edison key and pixi, only for lab-edison.** That skill needs
    [pixi](https://pixi.sh) on your PATH. Then copy
    [`templates/edison.env`](https://github.com/liuhlab/liulab-skills/blob/main/templates/edison.env)
    to `~/.claude/lab/edison.env`, paste your own key over the placeholder,

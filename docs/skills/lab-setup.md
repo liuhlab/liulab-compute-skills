@@ -19,6 +19,10 @@ up to date without you running anything. `edison-cli` works in all three as well
   every Claude Code update.
 - **`edison-cli`** gets a link in `~/.local/bin` or `~/bin`, whichever your shell already
   searches, so the command works outside Claude Code too.
+- **The lab's defaults** reach all three agents. Each agent's own notes file gets a short
+  block that points at one page in the plugin. That page says where a repo's issues go,
+  which labels to use, and the safety rules for the clusters. So a new repo needs no setup,
+  and a change to the page reaches every agent with the next update.
 
 If you don't have Codex or Kimi Code, it skips that part and says so.
 
@@ -34,6 +38,16 @@ was.
 
 Running it again is safe. On a machine that is already set up it changes nothing, and on a
 machine that is half set up it finishes the job.
+
+## Your own notes files
+
+The block goes at the end of `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` and
+`~/.kimi-code/AGENTS.md`, between two marker lines. Text outside the markers is yours and
+stays as you wrote it. A second run replaces only what sits between them.
+
+If you once pasted the lab's safety rules into `~/.claude/CLAUDE.md` by hand, you can
+delete that section now. The defaults page carries the same rules, and Codex and Kimi Code
+get them too.
 
 ## Old copies of the same skills
 

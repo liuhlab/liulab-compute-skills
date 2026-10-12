@@ -194,10 +194,10 @@ reading a run that already exists are free, and are usually what was wanted.
 The issue tracker, triage labels and domain layout every lab machine provides, so a repo
 needs no setup for them. They live on one lab-owned page in the marketplace clone, which
 `/lab-setup` points each agent's user-level instructions file at, so an update reaches it
-with no rerun. The page indexes upstream's own seed pages and adds a few lab lines, among
-them the always-on rules from `templates/CLAUDE-stub.md` and the line that turns on the
-working-style page. A repo's own `docs/agents/<page>` overrides that one default and no
-other.
+with no rerun: `skills/lab-setup/references/defaults.md`. The page indexes upstream's own
+seed pages and adds a few lab lines, among them the always-on cluster rules members once
+appended to `~/.claude/CLAUDE.md` by hand, and the line that turns on the working-style page.
+A repo's own `docs/agents/<page>` overrides that one default and no other.
 
 ### Lab edit
 

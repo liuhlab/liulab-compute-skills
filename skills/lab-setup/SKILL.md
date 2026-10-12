@@ -4,8 +4,9 @@ description: >-
   Set this machine up for the lab plugin, once, after installing it: Claude Code auto-update,
   the plugin in Codex, Kimi Code reading the marketplace clone, and edison-cli on PATH. Use when
   the user types /lab-setup, asks to set up Codex or Kimi Code for the lab skills, wants the
-  plugin to update by itself, or asks which old skill copies shadow the plugin's. Confirms each
-  change with the user and removes nothing. User-invoked only.
+  plugin to update by itself, or asks which old skill copies shadow the plugin's. Also points
+  each agent at the lab defaults. Confirms each change with the user and removes nothing.
+  User-invoked only.
 disable-model-invocation: true
 ---
 
@@ -20,6 +21,7 @@ nothing. A second run on a set-up machine changes no file, so a rerun repairs a 
 | `claude` | `autoUpdate: true` on the `liulab` entry under `extraKnownMarketplaces` in `~/.claude/settings.json` |
 | `codex` | `codex plugin marketplace add liuhlab/liulab-skills`, then `codex plugin add lab@liulab` |
 | `kimi` | the marketplace clone's `skills/` in `extra_skill_dirs` in `~/.kimi-code/config.toml` |
+| `defaults` | one marked block pointing at [references/defaults.md](references/defaults.md) in `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` and `~/.kimi-code/AGENTS.md`; a rerun replaces only the block |
 | `edison-cli` | a link to the clone's `bin/edison-cli` in `~/.local/bin` or `~/bin`, whichever is on PATH |
 | `clashes` | reports user-level skills that take a name the plugin ships; changes nothing |
 
@@ -64,8 +66,12 @@ relay what it prints. Each line should now read `changed` or `ok`.
 - **Codex** upgrades the marketplace at every startup; restart it once now.
 - **Kimi Code** reads the clone live, so it follows each Claude Code update.
 - **`edison-cli`** works as a bare command in a new shell. `/lab-edison` checks the key.
+- **The lab defaults** load in each new session. An edit to the page reaches every agent with
+  the next update, no rerun. If the user once appended the old `CLAUDE-stub.md` rules to
+  `~/.claude/CLAUDE.md`, say the page carries them now; removing that copy is the user's call.
 
 ## Rules
 
-- Never remove a file, a link or an entry. A clash is reported, not fixed.
+- Never remove a file, a link or an entry. A clash is reported, not fixed. Text outside the
+  defaults block's markers is the user's.
 - Run only the steps the user agreed to, and never against another `--home`.
