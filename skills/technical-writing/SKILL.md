@@ -1,7 +1,6 @@
 ---
 name: technical-writing
-description: "Layered technical-writing standard: Diátaxis structure, Google developer style sentences, STE instruction rules, Global English syntax. Use for /technical-writing or when writing or reviewing docs, RFCs, readmes, PR descriptions, or commit messages."
-disable-model-invocation: true
+description: "Write or review technical prose: docs, READMEs, RFCs, protocols, PR descriptions and commit messages. A layered standard: Diátaxis structure, Google developer style sentences, STE instruction rules, Global English syntax. Use for /technical-writing or any of those."
 ---
 
 # Technical writing
@@ -28,6 +27,8 @@ A doc can obey every layer and still read machine-written: every sentence clippe
 - Be specific over sterile. Not "schema changes can cause issues" but "a column rename fails the build".
 
 ## Pick the mode first (Diátaxis)
+
+Diátaxis is for docs. Papers and grants follow IMRaD and the venue's style instead; the sentence layers below still apply where the venue allows.
 
 One document, one mode. Two questions pick it: does the content inform action (doing) or understanding (thinking), and does it serve learning or work?
 
@@ -67,6 +68,7 @@ Don't mix modes: no reference tables inside a tutorial, no tutorial hand-holding
 - One instruction per sentence. One thought per sentence everywhere else.
 - Split instructions longer than about 20 words and other sentences longer than about 25.
 - Put the warning or condition before the step it guards: "If hot oil touches your skin, injuries can occur."
+- Write quantities with units: "add 50 µL of buffer", not "add 50 of buffer". Nobody can repeat a protocol step without them.
 - Keep "the" and "a": "Remove backup file" reads two ways. "Remove the backup file" reads one.
 - Give each word one meaning and one job, then keep it. If "check" means inspect, don't also use it for restrain.
 - Pick one word per action and stick to it: "start", not "start" here and "initiate" there.
@@ -91,9 +93,9 @@ Don't mix modes: no reference tables inside a tutorial, no tutorial hand-holding
 ## Voice and repo specifics
 
 - Apply the **unslop** skill to every doc this skill touches. That skill owns the slop-pattern catalog: AI vocabulary, filler, hedging, formatting tells.
-- PR descriptions and commit messages are writing too. Every layer except Diátaxis applies to them. A PR body is a briefing that a reviewer can read in under a minute. Do not paste swarm logs, SHA lists, or metric tables. Link them.
+- PR descriptions and commit messages are writing too. Every layer except Diátaxis applies to them. A PR body is a briefing that a reviewer can read in under a minute. Do not paste swarm logs, SHA lists, or full metric dumps. Link them. A short table of the result numbers the change moves does belong in the body: for an analysis change, those numbers are the evidence.
 - Product UI strings are not documentation. Use your product's copy guidelines for those.
-- Indent code snippets with tabs. Write real paths. Make every count or tree claim true at the commit that lands it, and include the command that regenerates it.
+- Indent code snippets with spaces, not tabs. Write real paths. Make every count or tree claim true at the commit that lands it, and include the command that regenerates it.
 
 ## Worked example
 

@@ -38,8 +38,9 @@ Free, seconds. Tests the **files**: manifests are valid JSON, every skill has
 parseable `name`/`description` front matter, names follow the naming policy
 (`lab-*`, or recorded as adopted in `upstream/`), each description fits the
 per-skill listing limit, and a tagged version still names the tree it was tagged
-on. A user-invoked skill must carry Codex's opt-out file, and a lab-owned skill's
-listed triggers must fit in the 247 characters Kimi Code shows. It also
+on. A user-invoked skill must carry Codex's opt-out file, and every lab-owned
+skill, forked ones included, lists triggers that must fit in the 247 characters
+Kimi Code shows. It also
 self-tests the two preflights, the eval guard, the naming check, those two rules,
 and the eval assertions (below).
 

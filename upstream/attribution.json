@@ -2,16 +2,19 @@
   "skills/ketchup": {
     "from": [
       {"upstream": "pstack", "item": "ketchup", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
-    ]
+    ],
+    "changes": "Plain words through unslop instead of the skipped /bro voice; Slurm jobs and Edison runs are checked beside PRs and CI runs; Codex's opt-out file added."
   },
   "skills/technical-writing": {
     "from": [
       {"upstream": "pstack", "item": "technical-writing", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
-    ]
+    ],
+    "changes": "Model-invoked, description led by its triggers; papers and grants follow IMRaD and the venue's style; quantities with units; spaces, not tabs; a short table of the result numbers a change moves belongs in the PR body."
   },
   "skills/unslop": {
     "from": [
       {"upstream": "pstack", "item": "unslop", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
-    ]
+    ],
+    "changes": "Model-invoked, description led by its triggers; keeps terms of art used literally, citations, statistics, units, en-dash ranges and statistical 'significant'; absorbs avoid-ai-writing's triggers, venue rule and second pass, in the lab's words."
   }
 }

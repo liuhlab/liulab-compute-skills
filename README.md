@@ -40,6 +40,15 @@ Skills taken from other projects keep their own names:
 - **`grilling`** — from [mattpocock/skills](https://github.com/mattpocock/skills),
   unchanged. It asks you about a plan, one round of questions at a time, until
   you agree on every decision.
+- **`unslop`** — from [pstack](https://github.com/cursor/plugins/tree/main/pstack),
+  changed for lab work. It takes the tells of AI writing out of a draft. It
+  leaves science words such as vector, locus and modality alone, and keeps
+  citations, statistics and units.
+- **`technical-writing`** — from pstack, changed for lab work. It sets the
+  standard for docs, protocols, pull requests and commit messages. Papers and
+  grants keep their own style, and a protocol gives every amount its unit.
+- **`ketchup`** — from pstack, changed for lab work. Type `/ketchup` to hear
+  what happened since your last message, and what waits on you.
 
 Each project's MIT license is in `upstream/<project>/LICENSE`.
 
