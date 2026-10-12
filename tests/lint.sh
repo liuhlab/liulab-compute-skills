@@ -677,6 +677,216 @@ if [ "$prov_n" -eq 0 ]; then
   err "no pages under skills/lab-edison/references/, so the provenance rule checked nothing"
 fi
 
+# ======================= Codex and Kimi Code =======================
+# Two rules for the agents beside Claude Code, from #91. Both go through one checker,
+# `agent_check <rule> <skills-dir> [triggers]`, which prints a `FAIL<TAB>` or `ok<TAB>` line per
+# finding. Probes run each rule on fixture trees first, both ways, because a check that can no
+# longer fire looks exactly like one that passes. Standard library only, like the rest of this
+# file, so `bash tests/lint.sh` runs outside pixi.
+agent_check() {
+  python3 - "$1" "$2" "${3:-}" <<'EOF'
+import pathlib
+import re
+import sys
+
+rule, root, table = sys.argv[1], pathlib.Path(sys.argv[2]), sys.argv[3]
+skills = {p.parent.name: p for p in sorted(root.glob("*/SKILL.md"))}
+
+
+def frontmatter(path):
+    keys, key = {}, None
+    for ln in path.read_text(encoding="utf-8").splitlines()[1:]:
+        if ln == "---":
+            break
+        m = re.match(r"([A-Za-z0-9_-]+):\s*(.*)$", ln)
+        if m:
+            key = m[1]
+            keys[key] = [m[2].strip()]
+        elif key and (ln.startswith(" ") or not ln.strip()):
+            keys[key].append(ln.strip())
+    out = {}
+    for k, parts in keys.items():
+        v = re.sub(r"^[>|][+-]?\s*", "", " ".join(p for p in parts if p))
+        if len(v) > 1 and v[0] == v[-1] and v[0] in "\"'":
+            v = v[1:-1]
+        out[k] = v
+    return out
+
+
+def held_back_in_codex(path):
+    """True when agents/openai.yaml sets policy.allow_implicit_invocation: false."""
+    if not path.is_file():
+        return False
+    in_policy = False
+    for ln in path.read_text(encoding="utf-8").splitlines():
+        if not ln.strip() or ln.lstrip().startswith("#"):
+            continue
+        if not ln[0].isspace():
+            in_policy = ln.split("#")[0].strip() == "policy:"
+        elif in_policy and re.fullmatch(r"\s+allow_implicit_invocation:\s*false\s*(#.*)?", ln):
+            return True
+    return False
+
+
+def units(s):
+    return len(s.encode("utf-16-le")) // 2
+
+
+def kimi_sees(desc, listing_max=250, ellipsis=3):
+    """Kimi Code lists a description over 250 UTF-16 units as its first 247 plus '...'."""
+    if units(desc) <= listing_max:
+        return desc
+    seen = ""
+    for ch in desc:
+        if units(seen + ch) > listing_max - ellipsis:
+            break
+        seen += ch
+    return seen
+
+
+if rule == "invocation":
+    for name, skill in skills.items():
+        keyed = frontmatter(skill).get("disable-model-invocation", "").lower() == "true"
+        filed = held_back_in_codex(skill.parent / "agents" / "openai.yaml")
+        if keyed and not filed:
+            print(f"FAIL\t{name} sets disable-model-invocation: true, but no agents/openai.yaml"
+                  " sets policy.allow_implicit_invocation: false, so Codex can invoke it"
+                  " unasked. Copy the shape of skills/lab-edison/agents/openai.yaml")
+        elif filed and not keyed:
+            print(f"FAIL\t{name}: agents/openai.yaml holds it back in Codex, but without"
+                  " disable-model-invocation: true Claude Code and Kimi Code still invoke it."
+                  " Set both or neither")
+        elif keyed:
+            print(f"ok\t{name} is user-invoked in Claude Code, Kimi Code and Codex")
+
+if rule == "frontload":
+    triggers = {}
+    for ln in table.splitlines():
+        if ln.strip():
+            name, _, words = ln.partition(":")
+            triggers[name.strip()] = [w.strip() for w in words.split(",") if w.strip()]
+    for name in sorted(set(triggers) - set(skills)):
+        print(f"FAIL\ttriggers are recorded for {name}, which is not a skill. Drop its row")
+    for name, skill in skills.items():
+        if name not in triggers:
+            if name.startswith("lab-") or name == "hq-mode":
+                print(f"FAIL\t{name} is lab-owned and has no triggers recorded. Add a row"
+                      " naming the words a request uses when it wants this skill")
+            continue
+        seen = kimi_sees(frontmatter(skill).get("description", ""))
+        # From a word start, so `arc` is not found inside `search` but `node` finds `nodes`.
+        late = [w for w in triggers[name]
+                if not re.search(r"(?<![A-Za-z0-9_])" + re.escape(w), seen, re.IGNORECASE)]
+        if late:
+            print(f"FAIL\t{name}: Kimi Code's listing ends at '...{seen[-40:]}', so it never"
+                  f" sees: {', '.join(late)}. Move them forward")
+        else:
+            print(f"ok\t{name}: Kimi Code's listing keeps all {len(triggers[name])} triggers")
+EOF
+}
+agent_report() { # <checker output>
+  while IFS="$(printf '\t')" read -r verdict msg; do
+    case "$verdict" in
+      ok)   ok "$msg" ;;
+      FAIL) err "$msg" ;;
+    esac
+  done <<EOF
+$1
+EOF
+}
+ag=$(mktemp -d "${TMPDIR:-/tmp}/lab-agent-fixtures.XXXXXX")
+trap 'rm -rf "$ag"' EXIT
+fx_skill() { # <case> <name> <description> [extra frontmatter line]
+  mkdir -p "$ag/$1/$2"
+  { printf -- '---\nname: %s\ndescription: %s\n' "$2" "$3"
+    [ -z "${4:-}" ] || printf '%s\n' "$4"
+    printf -- '---\n\n# %s\n' "$2"; } >"$ag/$1/$2/SKILL.md"
+}
+fx_openai() { # <case> <name> <file body>
+  mkdir -p "$ag/$1/$2/agents"
+  printf '%s\n' "$3" >"$ag/$1/$2/agents/openai.yaml"
+}
+agent_probe() { # <label> <trips|clears> <rule> <case> [triggers]
+  local label="$1" want="$2" out got
+  out=$(agent_check "$3" "$ag/$4" "${5:-}" | grep '^FAIL')
+  if [ -n "$out" ]; then got=trips; else got=clears; fi
+  if [ "$got" = "$want" ]; then ok "probe: $label $want the check"
+  else err "probe: $label — wanted '$want', got '$got': $out"; fi
+}
+
+echo "== user-invoked in every agent =="
+# Claude Code and Kimi Code honour `disable-model-invocation: true`. Codex ignores the key and
+# holds a skill back only when `agents/openai.yaml` beside its SKILL.md sets
+# `policy.allow_implicit_invocation: false`, the file upstream's user-invoked skills carry.
+# Without it, Codex may run `lab-edison` unasked and spend a credit. Both ways, as upstream's
+# own rule has it: a skill is user-invoked in every agent or in none.
+fx_ui='disable-model-invocation: true'
+fx_optout='interface:
+  display_name: "Fixture"
+  short_description: "A fixture skill"
+policy:
+  allow_implicit_invocation: false'
+fx_skill no-file fixture "A user-invoked fixture skill with no opt-out file." "$fx_ui"
+fx_skill no-policy fixture "A user-invoked fixture skill whose file has no policy." "$fx_ui"
+fx_openai no-policy fixture 'interface:
+  display_name: "Fixture"'
+fx_skill allowed fixture "A user-invoked fixture skill that Codex may still invoke." "$fx_ui"
+fx_openai allowed fixture 'policy:
+  allow_implicit_invocation: true'
+fx_skill paired fixture "A user-invoked fixture skill paired the way upstream pairs it." "$fx_ui"
+fx_openai paired fixture "$fx_optout"
+fx_skill codex-only fixture "A model-invoked fixture skill that only Codex holds back."
+fx_openai codex-only fixture "$fx_optout"
+agent_probe "a user-invoked skill with no opt-out file"   trips  invocation no-file
+agent_probe "an opt-out file with no policy"              trips  invocation no-policy
+agent_probe "allow_implicit_invocation: true"             trips  invocation allowed
+agent_probe "the key paired with upstream's opt-out file" clears invocation paired
+agent_probe "an opt-out file on a model-invoked skill"    trips  invocation codex-only
+agent_report "$(agent_check invocation skills)"
+
+echo "== front-loaded descriptions =="
+# Kimi Code lists a description over 250 characters as its first 247 and an ellipsis, so a
+# trigger past that point never reaches it. Every lab-owned skill records the words a request
+# uses when it wants that skill, and lint FAILS when Kimi's listing drops one. A report would
+# change nothing: Kimi's cut is silent, and a skill it cannot find just never loads. The rows
+# restate part of each description on purpose, so dropping a trigger takes a visible edit here.
+#
+# Lab-owned means every `lab-*` skill and `hq-mode`, which fail without a row, and each forked
+# skill, which adds its row when it lands. A tracked skill gets no row: its description is
+# upstream text, merged at each sync and never edited here. A trigger matches from a word
+# start, ignoring case.
+LAB_TRIGGERS='
+lab-hpc: HPC, cluster, arc, chimera, ircbc, ssh, Slurm, sbatch, srun, squeue, compute, login, GPU, remote, files
+lab-jupyter: Jupyter, notebook, tunnel, port forward, reconnect, cluster, compute node, GPU, arc, ircbc
+lab-containers: Singularity, container, image, SIF, liulab-runtime, ircbc, pull, build, pixi, Jupyter, LIU_LAB_PACKAGES
+lab-edison: Edison, literature, precedent, molecules, data analysis, Kosmos, dataset, recover, API key
+'
+fx_fill() { printf '%*s' "$1" '' | tr ' ' w; } # <n>: one filler word, n characters long
+fx_skill early lab-fixture "Slurm $(fx_fill 300)"
+fx_skill late lab-fixture "$(fx_fill 259) Slurm"
+fx_skill ellipsis lab-fixture "$(fx_fill 244) Slurm $(fx_fill 20)"
+fx_skill exact lab-fixture "$(fx_fill 244) Slurm"
+fx_skill inside-word lab-fixture "Search the literature for this fixture."
+fx_skill unrecorded lab-fixture "A lab-owned fixture skill with no triggers recorded."
+fx_skill mode hq-mode "A mode fixture with no triggers recorded."
+fx_skill tracked grilling "An adopted fixture skill, upstream text, so exempt."
+fx_skill stale-row lab-fixture "Slurm fixture."
+fx_row='lab-fixture: Slurm'
+agent_probe "a trigger at the start"                    clears frontload early "$fx_row"
+agent_probe "a trigger at character 261"                trips  frontload late "$fx_row"
+agent_probe "a trigger under Kimi's ellipsis (246-250)" trips  frontload ellipsis "$fx_row"
+agent_probe "a 250-character description, trigger last" clears frontload exact "$fx_row"
+agent_probe "a trigger found only inside a word"        trips  frontload inside-word 'lab-fixture: arc'
+agent_probe "a lab-* skill with no row"                 trips  frontload unrecorded
+agent_probe "hq-mode with no row"                       trips  frontload mode
+agent_probe "a tracked skill with no row"               clears frontload tracked
+agent_probe "a row for a skill that is not there"       trips  frontload stale-row "$fx_row
+lab-gone: Slurm"
+agent_report "$(agent_check frontload skills "$LAB_TRIGGERS")"
+
+rm -rf "$ag"
+trap - EXIT
+
 echo "== release =="
 # The version has to identify the content. This plugin's source is the repo ROOT, so
 # `claude plugin update` clones the whole tree — tests, docs and tooling included — and two

@@ -26,10 +26,11 @@ other; if you cannot tell which, it is human-facing. See `docs/agents/writing.md
 A directory under `skills/` holding a `SKILL.md` whose frontmatter carries `name` and
 `description` — the open Agent Skills standard — plus optional `references/` and
 `scripts/`. The description is the trigger signal an agent matches a request against; the
-body is what it reads once triggered. One skill here carries a key beyond the standard:
-`lab-edison` sets `disable-model-invocation: true`, which makes it user-invoked only. That
-key is Claude Code's, and other agent tools ignore it and will trigger the skill as they
-would any other. See `docs/adr/0007-edison-key-file-and-never-transmit.md`.
+body is what it reads once triggered. A user-invoked skill, such as `lab-edison`, also sets
+`disable-model-invocation: true`, a key beyond the standard. Claude Code and Kimi Code
+honour it. Codex ignores it and needs the opt-out file instead: `agents/openai.yaml` beside
+the `SKILL.md`, setting `policy.allow_implicit_invocation: false`. The gate fails a skill
+that has one without the other. See `docs/adr/0007-edison-key-file-and-never-transmit.md`.
 
 ### Alias
 
@@ -105,8 +106,11 @@ the platform's limit on a single entry in the skill listing — and the gate fai
 description longer than that. The other is the share of the model's context window the
 listing occupies: genuinely shared, but across every skill installed on a machine rather
 than the ones in this repo, so no count taken here measures it. The gate prints the total
-of this repo's descriptions as information and fails nothing on it. Keeping each one
-keyword-dense is still the point; that is a judgement, not a threshold.
+of this repo's descriptions as information and fails nothing on it. Other agents cut each
+entry sooner: Codex at 1024 characters, Kimi Code at 250, of which it shows 247 and an
+ellipsis. So a lab-owned skill puts its triggers first, and the gate fails one whose
+recorded triggers fall past Kimi's cut. A tracked skill is exempt, its description being
+upstream text. Keeping each one keyword-dense is still the point.
 
 ### Digest sidecar
 

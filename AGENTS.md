@@ -133,8 +133,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   choosing one, and submitting.
 - `skills/lab-edison/` is the one skill with no cluster in it — the Edison
   cloud platform — and the one that is **user-invoked only**
-  (`disable-model-invocation: true`, a Claude Code key other agent tools
-  ignore), so it never triggers on its own and never spends a credit
+  (`disable-model-invocation: true`, plus the `agents/openai.yaml` Codex
+  needs), so it never triggers on its own and never spends a credit
   unprompted. Its spend path is the `src/edison_cli/` package run through
   pixi, not a script, typed as the bare `edison-cli` because Claude Code puts
   `bin/` on PATH; step 0 is `edison-cli preflight`, which refuses on a

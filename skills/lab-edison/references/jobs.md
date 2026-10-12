@@ -60,8 +60,8 @@ plugin ships `bin/edison-cli`, and Claude Code puts `<plugin-root>/bin` on PATH 
 that directory exists, without a restart. So every `edison-cli` line in `references/` is what you
 type, and `Bash(edison-cli:*)` is a permission rule that survives a release.
 
-Where it is not on PATH — the other agent tools install a plugin by symlink and get no such
-entry — the same command is
+Codex and Kimi Code put no plugin `bin/` on PATH; there the bare name works through the link
+`/lab-setup` makes. Where it is not on PATH, the same command is
 `pixi run --manifest-path <plugin root>/pyproject.toml edison-cli <args>`. Read that line off
 `edison-cli preflight`, which prints whichever spelling the machine takes, rather than writing
 the path out: the plugin cache holds one directory per version, so a spelling with a version in

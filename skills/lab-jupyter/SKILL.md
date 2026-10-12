@@ -1,8 +1,9 @@
 ---
 name: lab-jupyter
 description: >-
-  Start or reuse an interactive Jupyter Lab on a lab HPC cluster and tunnel it to the local machine. Use when the user wants Jupyter Lab or a notebook
-  on the cluster, an ssh tunnel or port forward to a compute node, to reconnect to a running Jupyter job, or to work on a GPU node from a local browser.
+  Start, reuse or reconnect to a Jupyter Lab or notebook on a lab HPC cluster (arc/chimera GPU, ircbc CPU),
+  tunnelled to the local machine. Use when the user wants Jupyter on the cluster, an ssh tunnel or port
+  forward to a compute node, or a GPU node in a local browser.
   Cluster-aware: arc/chimera = zhoulab_gpu_priority Slurm job + ssh -L tunnel; ircbc = Jupyter inside the lab's Singularity image (lab-containers). Confirm the sbatch with the user first.
 ---
 

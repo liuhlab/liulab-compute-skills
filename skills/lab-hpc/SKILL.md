@@ -1,12 +1,12 @@
 ---
 name: lab-hpc
 description: >-
-  Lab HPC clusters (arc/chimera GPU, ircbc CPU) and the lab's remote-compute workflow. Use whenever
-  a task involves ssh to a lab server, running or testing code remotely, Slurm jobs (sbatch, srun,
-  squeue, salloc), GPU/CPU compute or login nodes, the zhoulab_gpu_priority partition, transferring
-  files to a cluster, or syncing code local -> GitHub -> remote. Read it BEFORE the first ssh of a
-  session: it decides where every command runs. Covers host aliases, choosing a cluster, per-user
-  config, and the rule that work belongs on a compute node, never on the shared login node.
+  Lab HPC clusters (arc/chimera GPU, ircbc CPU) and remote compute on them. Use whenever a task
+  involves ssh to a lab server, Slurm jobs (sbatch, srun, squeue, salloc), compute or login nodes,
+  running code remotely, or moving files to a cluster. Read it BEFORE the first ssh of a session:
+  it decides where every command runs. Covers the zhoulab_gpu_priority partition, syncing code
+  local -> GitHub -> remote, host aliases, choosing a cluster, per-user config, and the rule that
+  work belongs on a compute node, never on the shared login node.
 ---
 
 # Lab HPC clusters & remote-compute workflow

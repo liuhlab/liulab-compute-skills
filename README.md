@@ -107,10 +107,12 @@ symlink won't do. Because they are links, `git pull` updates every install.
 `lab-containers` build on it. `lab-edison` stands alone and needs none of
 them.
 
-One caveat outside Claude Code: `lab-edison` is user-invoked via
-`disable-model-invocation: true`, a Claude Code frontmatter key. Other
-products ignore it and will trigger the skill like any other. It still
-refuses without a key file and still shows the job before submitting.
+`lab-edison` loads only when you type its name. Claude Code and Kimi Code
+read that from `disable-model-invocation: true` in its frontmatter. Codex
+ignores that key and reads the opt-out file beside the skill instead,
+`agents/openai.yaml`, which sets `allow_implicit_invocation: false`. Any
+other product may ignore both. There the skill still refuses without a key
+file and still shows the job before submitting.
 
 Install at the user level, not into a project. Claude Code users should use
 EITHER the plugin OR symlinks into `~/.claude/skills/` — never both (the
@@ -164,7 +166,10 @@ config, so they stay a pre-push control — run the gate locally before you push
 1. Create `skills/<new-skill>/SKILL.md` — frontmatter with `name` +
    `description` (open-standard core); keep the body lean and put long
    detail in `references/`. Add `disable-model-invocation: true` only when
-   a skill must never load on its own, as `lab-edison` does.
+   a skill must never load on its own, as `lab-edison` does, and copy its
+   `agents/openai.yaml` for Codex. Put the words that should trigger the
+   skill in the first 247 characters of its description, which is all Kimi
+   Code shows, and list them in `tests/lint.sh`.
 2. Name a skill you write `lab-*`, not `liulab-*`. A skill taken from another
    project keeps its own name and is recorded in `upstream/` (see
    `upstream/README.md`). Respect the security policy above:
