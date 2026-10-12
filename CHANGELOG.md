@@ -10,6 +10,14 @@ adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 The lab plugin now ships the whole skill set: the skills from mattpocock/skills under their
 own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 
+### Fixed
+
+- **`edison-cli` works through a link.** `/lab-setup` links `edison-cli` into a folder on
+  your PATH, so Codex and Kimi Code can run it too. Run through that link, it used to look
+  for its project next to the link and fail. Now it follows the link back to the plugin, and
+  the setup check prints the short `edison-cli` form there too. The note at the top of the
+  file no longer says Codex and Kimi Code install a plugin by symlink. (#78)
+
 ## 2026.10.3 — 2026-10-11
 
 No skill changed. This release writes down how the lab will take in skills from outside,
