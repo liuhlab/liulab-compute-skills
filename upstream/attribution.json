@@ -1,9 +1,11 @@
 {
   "skills/hq-mode/SKILL.md": {
     "from": [
-      {"upstream": "mattpocock", "item": "ask-matt", "commit": "49dd158d1076134a641b33efb035946536778336"}
+      {"upstream": "mattpocock", "item": "ask-matt", "commit": "49dd158d1076134a641b33efb035946536778336"},
+      {"upstream": "pstack", "item": "poteto-mode", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"},
+      {"upstream": "pstack", "item": "figure-it-out", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
     ],
-    "changes": "ask-matt's flow, folded into the router's trigger table in the lab's words beside the lab-* skills, unslop and technical-writing; wizard and the in-progress skills left out."
+    "changes": "poteto-mode's shape, a router over playbooks read with principles, with figure-it-out as the fallback, in the lab's words; ask-matt's flow, folded into the trigger table beside the lab-* skills, unslop and technical-writing; wizard and the in-progress skills left out."
   },
   "skills/hq-mode/references/benchmark-checklist.md": {
     "from": [

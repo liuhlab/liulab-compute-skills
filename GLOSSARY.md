@@ -1,4 +1,4 @@
-# Context
+# Glossary
 
 The words this repo uses, and nothing else. How the clusters actually work is in
 `skills/lab-hpc/references/`; why the repo is shaped the way it is is in `docs/adr/`.

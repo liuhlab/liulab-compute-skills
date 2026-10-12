@@ -1254,7 +1254,7 @@ else
   uncovered=""
   # Heredoc, not a pipe: a piped `while` runs in a subshell, where `err` would set `fail`
   # on a copy of it and every failure below would vanish at the closing `done`.
-  while IFS="$(printf '\t')" read -r cname cexp cdeny; do
+  while IFS="$(printf '\037')" read -r cname cexp cdeny calso; do
     [ -n "$cname" ] || continue
     hasfx=0
     if [ -f "$fixdir/$cname.pass.txt" ]; then
@@ -1265,6 +1265,16 @@ else
         if grep -qiE "$cdeny" "$fixdir/$cname.pass.txt"; then err "$cname: pass fixture trips its DENY"
         else ok "$cname: pass fixture clears its DENY"; fi
       fi
+      if [ -n "$calso" ]; then
+        if grep -qiE "$calso" "$fixdir/$cname.pass.txt"; then ok "$cname: pass fixture matches its ALSO"
+        else err "$cname: pass fixture does not match its ALSO regex"; fi
+      fi
+    fi
+    if [ -f "$fixdir/$cname.fail-also.txt" ]; then
+      hasfx=1
+      if [ -z "$calso" ]; then err "$cname: has a fail-also fixture but no ALSO assertion"
+      elif grep -qiE "$calso" "$fixdir/$cname.fail-also.txt"; then err "$cname: fail-also fixture wrongly matches its ALSO"
+      else ok "$cname: fail-also fixture correctly misses its ALSO"; fi
     fi
     if [ -f "$fixdir/$cname.fail-expect.txt" ]; then
       hasfx=1
@@ -1298,7 +1308,7 @@ else
   for f in tests/eval.sh AGENTS.md tests/README.md; do
     [ -f "$f" ] || { err "$f is missing, so its eval case list cannot be checked"; listfail=1; continue; }
     missing=""
-    while IFS="$(printf '\t')" read -r cname _rest; do
+    while IFS="$(printf '\037')" read -r cname _rest; do
       [ -n "$cname" ] || continue
       grep -qF -- "$cname" "$f" || missing="$missing $cname"
     done <<EOF

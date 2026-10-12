@@ -19,8 +19,8 @@ of spending is not a safeguard, it is a hope. The ordering is now structure: the
 first line of output, before anything in the process can block.
 
 Two more properties come with it. The command runs the preflight itself and relays its remedy,
-so a skipped step zero refuses instead of spending — which matters most in agent tools that
-ignore `disable-model-invocation` and will load this skill like any other.
+so a skipped step zero refuses instead of spending — which matters most in an agent tool that
+loads this skill unasked, as Codex did before the skill shipped Codex's opt-out file.
 
 ## Why submission takes a file
 

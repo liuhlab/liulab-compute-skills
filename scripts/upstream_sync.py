@@ -103,6 +103,18 @@ def _git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
     return run
 
 
+def _ls_tree(root: Path, ref: str, prefix: str) -> dict[str, tuple[str, str]]:
+    """Every file under `prefix` at `ref` in the repo at `root`, as path -> (mode, blob)."""
+    out = _git(root, "ls-tree", "-r", "-z", ref, "--", prefix).stdout.decode()
+    found: dict[str, tuple[str, str]] = {}
+    for record in filter(None, out.split("\0")):
+        meta, path = record.split("\t", 1)
+        mode, kind, sha = meta.split()
+        if kind == "blob":
+            found[path] = (mode, sha)
+    return found
+
+
 @dataclass(frozen=True)
 class Blob:
     """One file's content and its git mode, `100644` or `100755`."""
@@ -136,14 +148,7 @@ class Clone:
 
     def entries(self, commit: str, prefix: str) -> dict[str, tuple[str, str]]:
         """Every file under `prefix` at `commit`, as path -> (mode, blob)."""
-        out = _git(self.root, "ls-tree", "-r", "-z", commit, "--", prefix).stdout.decode()
-        found: dict[str, tuple[str, str]] = {}
-        for record in filter(None, out.split("\0")):
-            meta, path = record.split("\t", 1)
-            mode, kind, sha = meta.split()
-            if kind == "blob":
-                found[path] = (mode, sha)
-        return found
+        return _ls_tree(self.root, commit, prefix)
 
     def blob(self, sha: str) -> bytes:
         """Return the content of one blob, read once: most files are the same at both ends."""
@@ -281,10 +286,30 @@ class Pin:
         """Upstream item name to the lab path it feeds."""
         return self.data["items"]
 
+    @property
+    def repo(self) -> str:
+        """The upstream's clone URL."""
+        return self.data["repo"]
+
+    @property
+    def merges(self) -> bool:
+        """Whether its items are tracked skills, merged on each sync, rather than only reviewed."""
+        return self.data["sync"] == "merge"
+
+    @property
+    def skills_dir(self) -> str:
+        """Where the upstream keeps its skills, with no trailing slash."""
+        return self.data["skills_dir"].rstrip("/")
+
     def save(self) -> None:
         """Write the pin back, two-space indented as the README shows it."""
         text = json.dumps(self.data, indent=2, ensure_ascii=False) + "\n"
         self.path.write_text(text, encoding="utf-8")
+
+    def move_to(self, commit: str) -> None:
+        """Record `commit` as the one last synced or reviewed, and write the pin back."""
+        self.data["commit"] = commit
+        self.save()
 
 
 class Lab:
@@ -336,15 +361,13 @@ class Lab:
 
     def files_at(self, ref: str, path: str) -> Files:
         """Return the files under `path` as committed at `ref`, keyed by path inside it."""
-        out = _git(self.root, "ls-tree", "-r", "-z", ref, "--", path).stdout.decode()
-        found: Files = {}
-        for record in filter(None, out.split("\0")):
-            meta, rel = record.split("\t", 1)
-            mode, kind, sha = meta.split()
-            if kind == "blob" and mode != "120000":
-                data = _git(self.root, "cat-file", "blob", sha).stdout
-                found[rel.removeprefix(path + "/")] = Blob(mode, data)
-        return found
+        return {
+            rel.removeprefix(path + "/"): Blob(
+                mode, _git(self.root, "cat-file", "blob", sha).stdout
+            )
+            for rel, (mode, sha) in _ls_tree(self.root, ref, path).items()
+            if mode != "120000"
+        }
 
     def lines(self, path: str) -> set[str]:
         """Return every line of every text file under `path` as it is on disk."""
@@ -355,8 +378,8 @@ class Lab:
                 found.update(_lines(file.read_bytes()))
         return found
 
-    def text(self) -> list[str]:
-        """Return the lab text: every Markdown file git sees here, history and links left out.
+    def text_paths(self) -> list[str]:
+        """Return where the lab text is: every Markdown file git sees here, history and links out.
 
         Tracked or not yet added, wherever it lives, so a new lab page is covered the day it
         is written. A tracked skill's files are in the list too; the stale-word check reads only
@@ -421,7 +444,7 @@ def dump_attribution(records: dict[str, Any]) -> str:
     return "\n".join(out) + "\n"
 
 
-def regate(lab: Lab, add: set[str], drop: set[str]) -> list[str]:
+def update_gate_lists(lab: Lab, add: set[str], drop: set[str]) -> list[str]:
     """Add and drop names in the two gate lists that exempt upstream text.
 
     Returns a line for each list that could not be edited, for the maintainer to do by hand.
@@ -638,14 +661,20 @@ def _differing(a: Files, b: Files) -> list[str]:
     return sorted(rel for rel in set(a) | set(b) if a.get(rel) != b.get(rel))
 
 
+def _start(lab: Lab, pin: Pin, clone: Clone) -> Result:
+    """Read both ends of one pin's upstream: its tip, and the pin unless the clone has lost it."""
+    tip = clone.tip()
+    now = Snapshot(clone, tip, pin.skills_dir)
+    then = Snapshot(clone, pin.commit, pin.skills_dir) if clone.has(pin.commit) else None
+    rel_pin = pin.path.relative_to(lab.root).as_posix()
+    sync = "merge" if pin.merges else "review"
+    return Result(pin.upstream, rel_pin, pin.commit, tip, now, then, sync=sync)
+
+
 def sync_pin(lab: Lab, pin: Pin, clone: Clone, records: dict[str, Any]) -> Result:
     """Merge every skill one merge pin tracks, then move the pin to the tip."""
-    tip = clone.tip()
-    skills_dir = pin.data["skills_dir"]
-    now = Snapshot(clone, tip, skills_dir)
-    then = Snapshot(clone, pin.commit, skills_dir) if clone.has(pin.commit) else None
-    rel_pin = pin.path.relative_to(lab.root).as_posix()
-    result = Result(pin.upstream, rel_pin, pin.commit, tip, now, then)
+    result = _start(lab, pin, clone)
+    now, then = result.now, result.then
     result.forked = {
         path: source.get("item")
         for path, record in records.items()
@@ -727,7 +756,7 @@ def sync_pin(lab: Lab, pin: Pin, clone: Clone, records: dict[str, Any]) -> Resul
             arrived.add(name)
             result.added.append(f"`{name}`: added at `{path}` and mapped in the pin.")
 
-    result.notes += regate(lab, arrived, gone)
+    result.notes += update_gate_lists(lab, arrived, gone)
     names = {posixpath.basename(path) for path in pin.items.values()}
     for case in eval_cases(lab):
         # The longest name wins, so `implement-spec-*` is never `implement`'s case.
@@ -736,8 +765,7 @@ def sync_pin(lab: Lab, pin: Pin, clone: Clone, records: dict[str, Any]) -> Resul
             result.cases.append(
                 f"`{case}`: upstream changed `{owner}`. A case costs tokens: ask before running it."
             )
-    pin.data["commit"] = tip
-    pin.save()
+    pin.move_to(result.tip)
     return result
 
 
@@ -754,12 +782,8 @@ def review_pin(lab: Lab, pin: Pin, clone: Clone) -> Result:
     An item is named by its path under `skills_dir`. A directory item leaves out the files that
     are items of their own, so a change is counted once.
     """
-    tip = clone.tip()
-    skills_dir = pin.data["skills_dir"].rstrip("/")
-    now = Snapshot(clone, tip, skills_dir)
-    then = Snapshot(clone, pin.commit, skills_dir) if clone.has(pin.commit) else None
-    rel_pin = pin.path.relative_to(lab.root).as_posix()
-    result = Result(pin.upstream, rel_pin, pin.commit, tip, now, then, sync="review")
+    result = _start(lab, pin, clone)
+    now, then, tip, skills_dir = result.now, result.then, result.tip, pin.skills_dir
     if then is not None:
         for item, target in sorted(pin.items.items()):
             head = f"`{item}`, feeding `{target}`"
@@ -785,8 +809,7 @@ def review_pin(lab: Lab, pin: Pin, clone: Clone) -> Result:
                     f"`{name}`: new in {pin.upstream} at `{directory}`. "
                     "Take it as an idea, or leave it."
                 )
-    pin.data["commit"] = tip
-    pin.save()
+    pin.move_to(tip)
     return result
 
 
@@ -800,7 +823,7 @@ def _lines(data: bytes) -> list[str]:
 
 
 @dataclass
-class Checked:
+class Findings:
     """What the two lab checks found for one upstream, as report lines."""
 
     stale: list[str] = field(default_factory=list)
@@ -873,24 +896,24 @@ def dropped_edits(
     return out
 
 
-def check_lab(lab: Lab, since: str, clones: dict[str, Clone]) -> dict[str, Checked]:
+def check_lab(lab: Lab, since: str, clones: dict[str, Clone]) -> dict[str, Findings]:
     """Run the stale-word check for every upstream, and the dropped-edit check for merged ones.
 
     `since` is the lab as it was before the sync, so its pins name the old commits; the pins on
     disk name the new ones.
     """
     pins = {name: pin for name, pin in lab.pins().items() if name in clones}
-    checked = {name: Checked() for name in pins}
+    checked = {name: Findings() for name in pins}
     ends: dict[str, tuple[Snapshot | None, Snapshot]] = {}
     for name, pin in pins.items():
-        clone, skills_dir = clones[name], pin.data["skills_dir"]
+        clone, skills_dir = clones[name], pin.skills_dir
         if not clone.has(pin.commit):
             raise RefusalError(f"`{pin.commit}` is not in the clone of `{name}`: clone it again")
         before = lab.pin_at(since, name)
         old = before["commit"] if before else None
         then = Snapshot(clone, old, skills_dir) if old and clone.has(old) else None
         ends[name] = (then, Snapshot(clone, pin.commit, skills_dir))
-        merged = pin.data["sync"] == "merge"
+        merged = pin.merges
         if then is None:
             checked[name].notes.append(
                 ("Stale words and dropped edits" if merged else "Stale words")
@@ -902,7 +925,7 @@ def check_lab(lab: Lab, since: str, clones: dict[str, Clone]) -> dict[str, Check
     # A tracked skill's lines that upstream wrote, at either end, are upstream text.
     upstream_text: dict[str, set[str]] = {}
     for name, pin in pins.items():
-        if pin.data["sync"] != "merge":
+        if not pin.merges:
             continue
         for item, path in pin.items.items():
             for snapshot in ends[name]:
@@ -911,7 +934,7 @@ def check_lab(lab: Lab, since: str, clones: dict[str, Clone]) -> dict[str, Check
                         upstream_text.setdefault(f"{path}/{rel}", set()).update(_lines(blob.data))
     text = [
         (path, number, line)
-        for path in lab.text()
+        for path in lab.text_paths()
         for number, line in enumerate(_lines((lab.root / path).read_bytes()), 1)
         if line not in upstream_text.get(path, ())
     ]
@@ -929,11 +952,11 @@ def _section(title: str, lines: list[str]) -> list[str]:
     return [f"### {title}", "", *(f"- {line}" for line in lines), ""] if lines else []
 
 
-def render(results: list[Result], checked: dict[str, Checked]) -> str:
+def render(results: list[Result], checked: dict[str, Findings]) -> str:
     """Return the report in Markdown, so it can go into the pull request as it is."""
     out = ["# Upstream sync", ""]
     for r in results:
-        found = checked.get(r.upstream, Checked())
+        found = checked.get(r.upstream, Findings())
         out += [f"## {r.upstream}: `{_short(r.base)}` to `{_short(r.tip)}`", ""]
         moved = f"moved from `{_short(r.base)}` to `{_short(r.tip)}`"
         stayed = f"stays at `{_short(r.tip)}`: upstream has not moved"
@@ -1001,7 +1024,7 @@ def _clones(specs: list[str], pins: dict[str, Pin]) -> dict[str, Clone]:
     for name, pin in pins.items():
         if name not in clones:
             raise RefusalError(
-                f"no clone of `{name}`: run `git clone {pin.data['repo']} <dir>`, then pass "
+                f"no clone of `{name}`: run `git clone {pin.repo} <dir>`, then pass "
                 f"`--clone {name}=<dir>`"
             )
     return clones
@@ -1015,7 +1038,7 @@ def merge(lab: Lab, specs: list[str]) -> int:
     records = lab.attribution()
     results = [
         sync_pin(lab, pin, clones[name], records)
-        if pin.data["sync"] == "merge"
+        if pin.merges
         else review_pin(lab, pin, clones[name])
         for name, pin in sorted(pins.items())
     ]
@@ -1045,7 +1068,7 @@ def fork(lab: Lab, name: str, changes: str | None) -> int:
     tracked = [
         (pin, item)
         for pin in lab.pins().values()
-        if pin.data["sync"] == "merge"
+        if pin.merges
         for item, mapped in pin.items.items()
         if mapped == path
     ]
