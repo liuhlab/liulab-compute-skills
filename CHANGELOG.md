@@ -63,10 +63,10 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   upstream's text.
 - **The monthly upstream sync, for the maintainer.** `/lab-upstream-sync` brings upstream's
   changes into the skills the lab takes from mattpocock/skills, and ends in one pull request.
-  Its script merges each file from the pin to upstream's latest commit and keeps the lab's own
-  lines. It lists conflicts, removed skills and new ones. The skill lives in this repo's
-  `.claude/commands/`, so the plugin never ships it. The check for leaked secrets now reads
-  that folder too.
+  The new version is tagged on `main` once that pull request merges. Its script merges each
+  file from the pin to upstream's latest commit and keeps the lab's own lines. It lists
+  conflicts, removed skills and new ones. The skill lives in this repo's `.claude/commands/`,
+  so the plugin never ships it. The check for leaked secrets now reads that folder too.
 - **The sync reports what a clean merge hides.** It lists each line the lab added that the
   merge lost, and each lab page that still uses a name upstream dropped, such as an old file
   name. It runs both checks again once the conflicts are fixed, since that is where a line
@@ -116,7 +116,8 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   hand, run `claude plugin marketplace update liulab`, then `claude plugin update
   lab@liulab`. Releasing is now just pushing. (#77)
 - **The install pages** give the two commands, then `/lab-setup`. They no longer tell you to
-  link skills into other agents with `skills/install.py`.
+  link skills into other agents with `skills/install.py`. If you installed that way,
+  `/lab-setup` lists the links it left, for you to remove.
 - **`templates/CLAUDE-stub.md` is gone**, and so is the install step that told you to paste it
   into `~/.claude/CLAUDE.md`. The defaults page carries its three rules now. (#101)
 - **This repo's own issue and label pages are gone** from `docs/agents/`. They said what the
@@ -173,7 +174,8 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   now ships the small file Codex reads instead, `agents/openai.yaml`. The tests fail any skill
   that has the setting without the file, or the file without the setting. (#75)
 - **The docs said every other agent ignores that setting.** Claude Code and Kimi Code honour
-  it; only Codex needs the file. The README, the glossary and the `lab-edison` page now say so.
+  it; only Codex needs the file. The README, the glossary, the `lab-edison` page and decision
+  records 0007 and 0010 now say so.
 
 ### Upgrading
 
