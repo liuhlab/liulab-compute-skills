@@ -27,12 +27,11 @@ forks, copied at build time), and Codex's `agents/openai.yaml`.
 - The decisions already on the map: what comes in and in what form, the pstack review, the
   always-pause list, and the bias pass's provisional principle edits.
 
-## Choices to react to
+## Verdicts
 
-1. The 600-word cap moves `poteto-mode`'s inline sections into `working-style.md`, one more
-   read per session.
-2. How the mode turns on: user-invoked, plus a line in each agent's user-level file telling it
-   to read the working-style page for any non-trivial task.
-3. The playbook set, which leans on writing because the sessions do.
-4. Lab defaults in the mode, not only in the repo template.
-5. The merge rule: merge your own PR when told to land it; a loose "close it" is not enough.
+1. The 600-word cap stays. The core lives in `working-style.md`, read first.
+2. User-invoked, plus one always-on line on the lab defaults page that `/lab-setup` points
+   each agent at: for any non-trivial task, read the working-style page first.
+3. All 17 playbooks stay. The thin ones gain evidence from use.
+4. Lab defaults stay in the mode; a repo's own `AGENTS.md` wins.
+5. Merge your own PR when told to land it; a loose "close it" is not enough.
