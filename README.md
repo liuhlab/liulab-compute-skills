@@ -40,6 +40,12 @@ Current skills:
   marketplace clone, links `edison-cli` onto your PATH, and lists any skill
   of yours that takes a name the plugin ships. It asks before each change and
   removes nothing; its script (`scripts/lab_setup.py`) is safe to rerun.
+- **`hq-mode`** — type `/hq-mode` with a task to have the agent work the lab's
+  way: it reads one page of working rules, then follows one of 17 playbooks
+  (an analysis, a cluster run, a figure, a paper or grant section, a talk,
+  landing tickets, and more). Its always-pause list, which outranks "land it"
+  and "going to bed", keeps it from submitting Slurm work, spending Edison
+  credits or merging an unreviewed pull request without your yes.
 
 Skills taken from other projects keep their own names. These 25 come from
 [mattpocock/skills](https://github.com/mattpocock/skills). Most are
@@ -90,7 +96,8 @@ claude plugin install lab@liulab
 
 Then start Claude Code and type `/lab-setup`. From then on Claude Code,
 Codex and Kimi Code all follow the plugin and update on their own, and
-`edison-cli` works in all three. Its
+`edison-cli` works in all three. All three also read the lab's defaults: where
+issues go, which labels to use, and the safety rules for the clusters. Its
 [page](https://liuhlab.github.io/liulab-skills/skills/lab-setup/) has the
 details.
 
@@ -107,10 +114,7 @@ details.
 2. Copy [templates/personal.md](templates/personal.md) to
    `~/.claude/lab/personal.md` and fill in your usernames/directories.
    Never commit it anywhere.
-3. Append [templates/CLAUDE-stub.md](templates/CLAUDE-stub.md) to your
-   `~/.claude/CLAUDE.md` so the two safety rules apply even in sessions where
-   the skill doesn't auto-trigger.
-4. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
+3. Only if you use `lab-edison`: install [pixi](https://pixi.sh) if you do
    not have it, then copy [templates/edison.env](templates/edison.env) to
    `~/.claude/lab/edison.env`, replace the placeholder with your own
    Edison key, and `chmod 600` it. It goes *beside* `personal.md`, never

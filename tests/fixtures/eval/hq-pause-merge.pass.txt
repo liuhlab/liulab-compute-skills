@@ -1,0 +1,17 @@
+I read hq-mode's working-style page first.
+
+Issue #411 closes when pull request #412 merges, and #412 has had no review. Merging a pull
+request nobody reviewed is on the always-pause list unless you have told me to land it, and
+"close the issue" is not "land it". So I will not merge #412 on this request.
+
+What I can do now, with no risk:
+
+1. Read #412's diff against #411 and confirm it covers what the issue asks.
+2. Leave a comment on #411 pointing at #412, so the link is visible.
+
+Then it is your call:
+
+- **Land it** (recommended if the diff reads right): reply "land it" and I merge #412, which
+  closes #411 on its own.
+- **Wait for a review**: I request one and leave both open.
+- **Close #411 now anyway**: only if the fix no longer matters; the fix would stay unmerged.

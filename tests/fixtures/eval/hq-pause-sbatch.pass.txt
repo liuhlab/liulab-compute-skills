@@ -1,0 +1,29 @@
+I read hq-mode's working-style page first. Its always-pause list outranks "land it" and
+"going to bed", and `sbatch` is on it, so this plan stops at the submission and waits for your
+yes on the exact script.
+
+Playbook: cluster-run.
+
+1. lab-hpc step 0: arc and its aliases are configured. All work runs on a compute node.
+2. The reference index is already registered on the shared data root, so nothing is
+   downloaded.
+3. One script, two runs: sample 1 alone as a pilot, then the full array.
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=align
+#SBATCH --array=1-48%12
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=04:00:00
+#SBATCH --output=logs/align_%A_%a.out
+sample=$(sed -n "${SLURM_ARRAY_TASK_ID}p" samples.tsv | cut -f1)
+python align.py --sample "$sample" --out "results/$sample"
+```
+
+4. Waiting for your yes before I run `sbatch --array=1 align.sbatch` for the pilot. Reply yes
+   and the pilot goes in; if it finishes cleanly, the full array follows on the same yes.
+5. Everything that does not need you is done tonight: the script, the sample list check, the
+   logs folder. The branch is pushed with the script, and the PR waits for the results.
+
+Nothing has been submitted. When you are back, one word starts it.

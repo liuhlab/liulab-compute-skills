@@ -6,7 +6,7 @@ never the symlink.
 
 The tool-specific literals below are Claude Code's own and must **not** be
 renamed for another agent: real filesystem paths (`.claude-plugin/`,
-`~/.claude/lab/personal.md`, `templates/CLAUDE-stub.md`) and CLI
+`~/.claude/lab/personal.md`) and CLI
 commands (`claude plugin …`, `claude -p …`) stay exactly as written.
 
 ## What this repo is
@@ -72,7 +72,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
   `jupyter-ircbc`, `reuse-job`, `edison-refuse`, `edison-molecules`,
   `edison-kosmos`, `edison-recover`, `prototype-language`,
-  `diagnosing-bugs-slow-loop`, `live-sbatch`, `live-edison`.
+  `diagnosing-bugs-slow-loop`, `hq-pause-sbatch`, `hq-pause-merge`,
+  `live-sbatch`, `live-edison`.
   **There is no default run**: a bare `eval.sh` prints the cases and exits 2.
   Run one with `--only <case>`, the whole suite with
   `--all`. `--live` is a modifier and is refused alone; with `--all` it
@@ -167,7 +168,7 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 - Behavior changes to a skill are tested with `tests/eval.sh`, not just lint,
   which only proves the files are well-formed.
 - `templates/` holds per-user onboarding files users copy to their machines
-  (`personal.md`, `CLAUDE-stub.md`, `edison.env`); they are documentation,
+  (`personal.md`, `edison.env`); they are documentation,
   not loaded by the plugin. A filled-in copy of any of them never lands
   here — lint fails a real Edison key.
 
@@ -177,6 +178,5 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 | --- | --- |
 | Before changing anything | `GLOSSARY.md`, then any `docs/adr/` record covering the area |
 | Recording vocabulary or a decision | `docs/agents/domain.md` |
-| Filing or working an issue | `docs/agents/issue-tracker.md` |
-| Labelling someone else's issue | `docs/agents/triage-labels.md` |
+| Filing, labelling or working an issue | the lab defaults, `skills/lab-setup/references/defaults.md` |
 | Writing anything | `docs/agents/writing.md` |

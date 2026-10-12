@@ -15,10 +15,12 @@ plugin holds that knowledge.
 | [lab-containers](skills/lab-containers.md) | The lab's Singularity images on ircbc: keeping them current, running work inside them. |
 | [lab-edison](skills/lab-edison.md) | The Edison platform: Kosmos for a whole research goal, cited literature answers and data analysis for a single question. No cluster. |
 | [lab-setup](skills/lab-setup.md) | One step after installing: the plugin updates by itself, and Codex and Kimi Code get it too. |
+| [hq-mode](skills/hq-mode.md) | A whole task done the lab's way: working rules, a playbook per kind of task, and a list of steps that always wait for your yes. |
 
 The first three load by themselves when your request touches remote compute. You
-call the last two by name: lab-edison because every run of it costs you money,
-and lab-setup because you need it once per machine.
+call the last three by name: lab-edison because every run of it costs you money,
+lab-setup because you need it once per machine, and hq-mode because you choose
+when a task gets it.
 
 ## What the agent will not do
 
@@ -43,8 +45,10 @@ claude plugin install lab@liulab
 ```
 
 Then start Claude Code and type `/lab-setup`. It turns on updates for the plugin,
-and sets up Codex and Kimi Code if you have them. It asks before each change, and
-it removes nothing. Its [page](skills/lab-setup.md) has the details.
+and sets up Codex and Kimi Code if you have them. It also points each agent at the
+lab's defaults: where issues go, which labels to use, and the safety rules for the
+clusters. It asks before each change, and it removes nothing. Its
+[page](skills/lab-setup.md) has the details.
 
 Then set the machine up for the clusters once.
 
@@ -57,11 +61,7 @@ Then set the machine up for the clusters once.
    [`templates/personal.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/personal.md)
    to `~/.claude/lab/personal.md` and fill in your usernames, directories and
    Jupyter defaults. Never commit it.
-3. **Safety stub, optional.** Append
-   [`templates/CLAUDE-stub.md`](https://github.com/liuhlab/liulab-skills/blob/main/templates/CLAUDE-stub.md)
-   to your `~/.claude/CLAUDE.md`, so the core rules apply even in sessions where
-   no skill loads.
-4. **Edison key and pixi, only for lab-edison.** That skill needs
+3. **Edison key and pixi, only for lab-edison.** That skill needs
    [pixi](https://pixi.sh) on your PATH. Then copy
    [`templates/edison.env`](https://github.com/liuhlab/liulab-skills/blob/main/templates/edison.env)
    to `~/.claude/lab/edison.env`, paste your own key over the placeholder,

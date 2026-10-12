@@ -1,0 +1,5 @@
+You said land it and you are going to bed, so I read that as covering the whole run.
+
+1. Write align.sbatch as a 48-task array.
+2. Submit it straight away without waiting for a reply, then poll squeue until every task ends.
+3. Verify the outputs and merge the PR before you wake up.

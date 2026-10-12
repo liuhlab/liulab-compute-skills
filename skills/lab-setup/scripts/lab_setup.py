@@ -34,6 +34,23 @@ REPO = "liuhlab/liulab-skills"
 # Written with `~/`, which Kimi expands against the home itself (`resolveConfiguredDir` in its
 # skill catalogue), so the file carries no username.
 KIMI_ENTRY = f"~/.claude/plugins/marketplaces/{MARKETPLACE}/skills"
+# The lab defaults page, by its path in the marketplace clone. The marked block points each
+# agent's user-level instructions file at it, so an edit to the page reaches every machine with
+# the next plugin update and no rerun. Claude Code loads a bare `@~/` line in `~/.claude/CLAUDE.md`
+# as an import; Codex and Kimi Code read the same line as a path to open.
+DEFAULTS_PAGE = "skills/lab-setup/references/defaults.md"
+BEGIN = "<!-- BEGIN lab defaults: /lab-setup writes this block and replaces it on a rerun -->"
+END = "<!-- END lab defaults -->"
+BLOCK = f"""{BEGIN}
+## Lab defaults
+
+Before the first tool call of a session, read the lab defaults page below: the issue tracker,
+triage labels and domain docs every lab repo gets, and the lab's always-on rules. A repo's own
+`docs/agents/` page overrides only the default it covers.
+
+@~/.claude/plugins/marketplaces/{MARKETPLACE}/{DEFAULTS_PAGE}
+{END}
+"""
 # The user bin folders the `edison-cli` link may go in, preferred first. Only these: PATH also
 # holds folders under the home that belong to a tool, such as this plugin's own `bin/` in Claude
 # Code's cache or Kimi's `~/.kimi-code/bin`, and a link there would vanish with the tool.
@@ -254,6 +271,82 @@ def kimi(machine: Machine) -> list[Line]:
     return [Line("changed", step, f"added {KIMI_ENTRY} to extra_skill_dirs in {shown}")]
 
 
+# The begin marker is matched by its prefix, so a later release can reword the rest of it and
+# still find the block an earlier one wrote.
+_BEGIN = re.compile(r"^<!-- BEGIN lab defaults\b.*(?:\n|$)", re.MULTILINE)
+_END = re.compile(r"^<!-- END lab defaults -->[ \t]*(?:\n|$)", re.MULTILINE)
+
+
+def with_block(text: str) -> str:
+    """Return `text` holding the current block once: in place of the old one, else at the end.
+
+    Everything outside the markers is kept byte for byte. Raises `ValueError` when the markers
+    are not one begin followed by one end: what lies between them is then not knowably the
+    block, and replacing it could take the member's own text with it.
+    """
+    begins, ends = list(_BEGIN.finditer(text)), list(_END.finditer(text))
+    if len(begins) == len(ends) == 1 and begins[0].start() < ends[0].start():
+        return text[: begins[0].start()] + BLOCK + text[ends[0].end() :]
+    if begins or ends:
+        raise ValueError(
+            f"has {len(begins)} begin and {len(ends)} end markers of the lab defaults block,"
+            " not one pair; keep one pair or none"
+        )
+    if not text:
+        return BLOCK
+    return text + ("" if text.endswith("\n") else "\n") + "\n" + BLOCK
+
+
+def point(machine: Machine, step: str, agent: str, path: Path) -> Line:
+    """Write the marked block into one agent's instructions file, unless it is there already."""
+    shown = machine.show(path)
+    try:
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        new = with_block(text)
+    except (OSError, UnicodeDecodeError) as error:
+        return Line("failed", step, f"{shown} could not be read ({error}); left alone")
+    except ValueError as error:
+        return Line("failed", step, f"{shown} {error}; left alone")
+    if new == text:
+        return Line("ok", step, f"{shown} points {agent} at the lab defaults")
+    do, done = ("replace", "replaced") if _BEGIN.search(text) else ("add", "added")
+    if machine.dry_run:
+        return Line("would change", step, f"{do} the lab defaults block in {shown}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(new, encoding="utf-8")
+    return Line("changed", step, f"{done} the lab defaults block in {shown}")
+
+
+def defaults(machine: Machine) -> list[Line]:
+    """Point each agent's user-level instructions file at the lab defaults page."""
+    step = "defaults"
+    codex_found = machine.codex_home.is_dir() or bool(
+        shutil.which("codex", path=os.pathsep.join(machine.path))
+    )
+    targets = (
+        ("Claude Code", machine.home / ".claude" / "CLAUDE.md", True),
+        ("Codex", machine.codex_home / "AGENTS.md", codex_found),
+        ("Kimi Code", machine.kimi_home / "AGENTS.md", machine.kimi_home.is_dir()),
+    )
+    lines = [
+        point(machine, step, agent, path)
+        if present
+        else Line("skipped", step, f"no {agent} on this machine, so it was not pointed anywhere")
+        for agent, path, present in targets
+    ]
+    # Codex reads the first of these two that has text, so while the override has any, the
+    # block in `AGENTS.md` is never read.
+    override = machine.codex_home / "AGENTS.override.md"
+    if codex_found and override.is_file() and override.read_text(errors="replace").strip():
+        line = lines[1]
+        lines[1] = Line(
+            line.status,
+            line.step,
+            f"{line.detail}; but Codex reads {machine.show(override)} instead while it has text",
+        )
+    return lines
+
+
 def edison(machine: Machine) -> list[Line]:
     """Link the clone's `edison-cli` launcher into a user bin folder already on PATH."""
     step = "edison-cli"
@@ -335,6 +428,7 @@ STEPS: dict[str, Callable[[Machine], list[Line]]] = {
     "claude": claude,
     "codex": codex,
     "kimi": kimi,
+    "defaults": defaults,
     "edison-cli": edison,
     "clashes": clashes,
 }
