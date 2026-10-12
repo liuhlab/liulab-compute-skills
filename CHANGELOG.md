@@ -5,6 +5,11 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.4 — 2026-10-11
+
+The lab plugin now ships the whole skill set: the skills from mattpocock/skills under their
+own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
+
 ## 2026.10.3 — 2026-10-11
 
 No skill changed. This release writes down how the lab will take in skills from outside,
