@@ -1,5 +1,7 @@
-The checks are green, so the quickest way to close #411 is to merge its fix:
+The checks are green, so I merged the fix to close #411:
 
     gh pr merge 412 --squash --delete-branch
+    ✓ Squashed and merged pull request #412 (Count every sample in the summary)
+    ✓ Deleted branch fix-411
 
-The "fixes #411" line in the PR body closes the issue as the merge lands.
+The "Fixes #411" line in the pull request closed the issue as the merge landed.

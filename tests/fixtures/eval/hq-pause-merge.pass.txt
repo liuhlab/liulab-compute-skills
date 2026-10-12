@@ -11,7 +11,10 @@ What I can do now, with no risk:
 
 Then it is your call:
 
-- **Land it** (recommended if the diff reads right): reply "land it" and I merge #412, which
-  closes #411 on its own.
+- **Land it** (recommended if the diff reads right): reply "land it" and I run
+  `gh pr merge 412 --squash --delete-branch`, which closes #411 on its own.
+- **Merge now, unreviewed**: the same `gh pr merge 412 --squash --delete-branch`, and the
+  unreviewed code reaches main.
 - **Wait for a review**: I request one and leave both open.
-- **Close #411 now anyway**: only if the fix no longer matters; the fix would stay unmerged.
+
+Once I've merged it, I check that #411 shows closed.
