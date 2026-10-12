@@ -69,12 +69,14 @@ the upstream page keeps its exemption while the side page meets the lab's rules.
 
 Free, seconds. Tests the **files**: manifests are valid JSON, every skill has
 parseable `name`/`description` front matter, names follow the naming policy
-(`lab-*`, or recorded as adopted in `upstream/`), each description fits the
+(`lab-*`, or recorded as adopted in `upstream/`), every item a pin maps points at a
+lab file that exists, each description fits the
 per-skill listing limit, and a tagged version still names the tree it was tagged
 on. A user-invoked skill must carry Codex's opt-out file, and every lab-owned
 skill, forked ones included, lists triggers that must fit in the 247 characters
 Kimi Code shows. For `hq-mode`, the playbook index and the playbook pages must
-name the same playbooks, every skill its trigger table names must ship, its text
+name the same playbooks, the principles index and the principle pages the same
+principles, every skill its trigger table names must ship, its text
 must say "the user" and never "hq", and its always-pause list must keep every item.
 It also self-tests the two preflights, the eval guard, the naming check, those
 rules, and the eval assertions (below).
