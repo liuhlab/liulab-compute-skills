@@ -91,8 +91,8 @@ nothing automatic checks that an edit removed no line: read the diff against the
   `[skills/*/*.lab.md]` section and the markdownlint override's `!**/*.lab.md` line hold it
   to the rules for any page beside a skill body. `tests/test_side_pages.py` checks both.
 - An edit that pushes against upstream's own steer gets an eval case named `<name>-*` in
-  `tests/eval.sh`. An upstream rewording can undo it without a conflict, so a sync that
-  changes the skill reruns that case.
+  `tests/eval.sh`'s `CASES` list. An upstream rewording can undo it without a conflict, so a
+  sync that changes the skill lists that case, and reruns it on the maintainer's yes.
 
 ## What reads these
 
@@ -103,7 +103,10 @@ nothing automatic checks that an edit removed no line: read the diff against the
   tracked skill, disagree, or name a skill nobody adopted.
 - The upstream sync, `scripts/upstream_sync.py`, which the maintainer runs through
   `/lab-upstream-sync` in `.claude/commands/`. It writes both files back in the layouts above,
-  and adopts a skill new upstream by the three steps above.
+  and adopts a skill new upstream by the three steps above. It also reports lab text that
+  still uses a name upstream removed. Lab text is every Markdown file in the repo but
+  `CHANGELOG.md` and `docs/adr/`, so a new lab page needs no entry anywhere; in a tracked
+  skill it is only the lines upstream did not write.
 - Bash, through a one-liner. This prints the tracked names:
 
   ```bash

@@ -41,8 +41,11 @@ small upstream and a lab tree as git repos in a temporary directory, runs the
 script at its command line, and reads what a person would: the files it wrote, the
 report it printed and its exit status. There is one case each for a clean merge, a
 conflict, a deletion with and without a fork, a rename, a new skill, a forked skill
-left alone, a lost pin, the moved pin and a fork. Nothing reaches the network, and
-git reads none of your own settings.
+left alone, a lost pin, the moved pin and a fork. Then the reports a clean merge
+hides: stale words, in a lab edit and on any lab page, the defaults page among them;
+dropped edits, at the merge and again in `recheck` after a resolution; what upstream
+did to a forked skill's original; the pstack section; and which eval cases to rerun.
+Nothing reaches the network, and git reads none of your own settings.
 
 ## Unit tests — the setup script: `tests/lab_setup/`
 
