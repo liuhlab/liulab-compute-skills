@@ -41,6 +41,14 @@ Current skills:
   of yours that takes a name the plugin ships. It asks before each change and
   removes nothing; its script (`scripts/lab_setup.py`) is safe to rerun.
 
+Skills taken from other projects keep their own names:
+
+- **`grilling`** — from [mattpocock/skills](https://github.com/mattpocock/skills),
+  unchanged. It asks you about a plan, one round of questions at a time, until
+  you agree on every decision.
+
+Each project's MIT license is in `upstream/<project>/LICENSE`.
+
 ## Security policy (hard rule)
 
 This repo is **public**; what makes that safe is that it must **never**
@@ -101,9 +109,11 @@ plugin from `.claude-plugin/` and upgrades it at every startup. Kimi Code reads
 the skills live from Claude Code's marketplace clone through `extra_skill_dirs`,
 so it follows every Claude Code update. No other agent tool is supported.
 
-A user-invoked skill stays user-invoked in all three: Claude Code and Kimi Code
-honour `disable-model-invocation: true`, and Codex reads the skill's
-`agents/openai.yaml`, which sets `allow_implicit_invocation: false`.
+A user-invoked skill, such as `lab-edison` or `lab-setup`, loads only when you
+type its name. Claude Code and Kimi Code read that from
+`disable-model-invocation: true` in its frontmatter. Codex ignores that key and
+reads the opt-out file beside the skill instead, `agents/openai.yaml`, which
+sets `allow_implicit_invocation: false`.
 
 ## Updating
 
@@ -156,8 +166,13 @@ config, so they stay a pre-push control — run the gate locally before you push
 1. Create `skills/<new-skill>/SKILL.md` — frontmatter with `name` +
    `description` (open-standard core); keep the body lean and put long
    detail in `references/`. Add `disable-model-invocation: true` only when
-   a skill must never load on its own, as `lab-edison` does.
-2. Name things `lab-*`, not `liulab-*`. Respect the security policy above:
+   a skill must never load on its own, as `lab-edison` does, and copy its
+   `agents/openai.yaml` for Codex. Put the words that should trigger the
+   skill in the first 247 characters of its description, which is all Kimi
+   Code shows, and list them in `tests/lint.sh`.
+2. Name a skill you write `lab-*`, not `liulab-*`. A skill taken from another
+   project keeps its own name and is recorded in `upstream/` (see
+   `upstream/README.md`). Respect the security policy above:
    no IPs, usernames, keys, or passwords — resolve per-user detail from
    `~/.ssh/config` / `~/.claude/lab/personal.md`.
 3. Run `pixi run check`; bump `version` (CalVer `YYYY.M.PATCH`) in

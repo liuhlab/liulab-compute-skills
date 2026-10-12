@@ -1,0 +1,5 @@
+interface:
+  display_name: "Lab Edison"
+  short_description: "Cited answers from the Edison platform"
+policy:
+  allow_implicit_invocation: false

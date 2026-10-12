@@ -26,10 +26,11 @@ other; if you cannot tell which, it is human-facing. See `docs/agents/writing.md
 A directory under `skills/` holding a `SKILL.md` whose frontmatter carries `name` and
 `description` — the open Agent Skills standard — plus optional `references/` and
 `scripts/`. The description is the trigger signal an agent matches a request against; the
-body is what it reads once triggered. One skill here carries a key beyond the standard:
-`lab-edison` sets `disable-model-invocation: true`, which makes it user-invoked only. That
-key is Claude Code's, and other agent tools ignore it and will trigger the skill as they
-would any other. See `docs/adr/0007-edison-key-file-and-never-transmit.md`.
+body is what it reads once triggered. A user-invoked skill, such as `lab-edison`, also sets
+`disable-model-invocation: true`, a key beyond the standard. Claude Code and Kimi Code
+honour it. Codex ignores it and needs the opt-out file instead: `agents/openai.yaml` beside
+the `SKILL.md`, setting `policy.allow_implicit_invocation: false`. The gate fails a skill
+that has one without the other. See `docs/adr/0007-edison-key-file-and-never-transmit.md`.
 
 ### Alias
 
@@ -46,6 +47,14 @@ reviewed, making private material public, and the rest, written once on the work
 page. It outranks every session override ("headless", "land it", "going to bed") and every
 principle. A lab safety rule lives here or in a lab-owned skill, and never inside upstream
 text.
+
+### Attribution record
+
+The record that a forked item came from an upstream: the item's lab path, the upstream item
+and commit it was taken from, and optionally what the lab changed. Records live in
+`upstream/attribution.json`, and lint reads one as proof that a forked skill is adopted. The
+upstream's license sits in `upstream/<upstream>/LICENSE`. A tracked skill needs no record,
+because its pin maps it. Format: `upstream/README.md`.
 
 ### CalVer
 
@@ -97,8 +106,11 @@ the platform's limit on a single entry in the skill listing — and the gate fai
 description longer than that. The other is the share of the model's context window the
 listing occupies: genuinely shared, but across every skill installed on a machine rather
 than the ones in this repo, so no count taken here measures it. The gate prints the total
-of this repo's descriptions as information and fails nothing on it. Keeping each one
-keyword-dense is still the point; that is a judgement, not a threshold.
+of this repo's descriptions as information and fails nothing on it. Other agents cut each
+entry sooner: Codex at 1024 characters, Kimi Code at 250, of which it shows 247 and an
+ellipsis. So a lab-owned skill puts its triggers first, and the gate fails one whose
+recorded triggers fall past Kimi's cut. A tracked skill is exempt, its description being
+upstream text. Keeping each one keyword-dense is still the point.
 
 ### Digest sidecar
 
@@ -268,8 +280,8 @@ preflights refuse and print the move rather than read either copy.
 Per upstream, the commit last synced (mattpocock/skills) or reviewed (pstack), plus a map
 from each upstream item to the lab file it feeds. The repo stores only the pin, never a copy
 of upstream: a sync fetches upstream and reads both ends from that one clone. Moving a pin
-forward goes in the sync's pull request. See
-`docs/adr/0012-upstream-skills-merge-from-a-pin.md`.
+forward goes in the sync's pull request. It lives at `upstream/<upstream>/pin.json`, in the
+format `upstream/README.md` gives. See `docs/adr/0012-upstream-skills-merge-from-a-pin.md`.
 
 ### Playbook
 

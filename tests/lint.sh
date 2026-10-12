@@ -35,10 +35,7 @@ for d in skills/*/; do
   fm_name=$(awk 'f && $1=="name:"{print $2; exit} /^---$/{f++}' "$s")
   if [ "$fm_name" = "$name" ]; then ok "$s frontmatter name matches dir"
   else err "$s frontmatter name '$fm_name' != dir '$name'"; fi
-  case "$name" in
-    lab-*) ok "skill '$name' follows lab-* policy" ;;
-    *)     err "skill '$name' must be lab-* (not liulab-*)" ;;
-  esac
+  # The naming policy is its own section, `== adopted skill names ==`, below.
   dlen=$(python3 - "$s" <<'EOF'
 import sys
 lines = open(sys.argv[1]).read().splitlines()
@@ -70,6 +67,255 @@ done
 # — not this plugin's. No number here can measure that, so nothing here may fail on it, and
 # adding a skill must not fail the gate. Do not reinstate the sum.
 ok "descriptions total ${total_desc} chars across ${n_skills} skills (informational)"
+
+echo "== adopted skill names =="
+# ADR 0013. A skill the lab wrote or derived is named `lab-*`. An adopted skill keeps its
+# upstream name, and passes only when `upstream/` records it: in a merged upstream's pin
+# (tracked) or in an attribution record (forked). `hq-mode` is the one derived skill without a
+# `lab-*` name. The record formats are in upstream/README.md.
+adopted_check() { # <root>: prints ok/FAIL lines, exits 1 on any FAIL
+  python3 - "$1" <<'EOF'
+import json
+import os
+import re
+import sys
+
+root = sys.argv[1]
+oks, problems = [], []
+HOW = ("a skill the lab wrote or derived is named lab-*; a skill taken from an upstream is "
+       "recorded in upstream/: tracked, under `items` in upstream/<upstream>/pin.json; forked, "
+       "as a record in upstream/attribution.json. Formats: upstream/README.md")
+SHA = re.compile(r"^[0-9a-f]{40}$")
+SKILL_PATH = re.compile(r"^skills/([^/]+)$")
+
+
+def here(rel):
+    return os.path.join(root, rel)
+
+
+def load(rel):
+    """The parsed JSON at `rel`, or None when it is absent or unreadable (reported)."""
+    if not os.path.exists(here(rel)):
+        return None
+    try:
+        with open(here(rel), encoding="utf-8") as f:
+            return json.load(f)
+    except ValueError as e:
+        problems.append(f"{rel} is not valid JSON: {e}")
+        return None
+
+
+tracked = {}  # skill name -> the upstream whose pin maps it
+upstreams = os.listdir(here("upstream")) if os.path.isdir(here("upstream")) else []
+for u in sorted(d for d in upstreams if os.path.isdir(here(f"upstream/{d}"))):
+    if not os.path.isfile(here(f"upstream/{u}/LICENSE")):
+        problems.append(f"upstream/{u}/ has no LICENSE: an upstream's license travels with "
+                        "what the lab takes from it, so copy it there verbatim")
+    rel = f"upstream/{u}/pin.json"
+    pin = load(rel)
+    if pin is None:
+        continue
+    bad = []
+    if not isinstance(pin, dict):
+        pin, bad = {}, ["it is not a JSON object"]
+    if not isinstance(pin.get("repo"), str):
+        bad.append("`repo` is not a string")
+    if not SHA.match(str(pin.get("commit", ""))):
+        bad.append("`commit` is not a full 40-character commit")
+    if pin.get("sync") not in ("merge", "review"):
+        bad.append("`sync` is not `merge` or `review`")
+    if not isinstance(pin.get("skills_dir"), str):
+        bad.append("`skills_dir` is not a string")
+    items = pin.get("items")
+    if not isinstance(items, dict) or not all(isinstance(v, str) for v in items.values()):
+        bad.append("`items` is not a map from upstream item to lab path")
+        items = {}
+    for b in bad:
+        problems.append(f"{rel}: {b} (format: upstream/README.md)")
+    if pin.get("sync") != "merge":
+        continue  # a reviewed upstream's items are all forked, so its pin admits no name
+    for item, path in sorted(items.items()):
+        m = SKILL_PATH.match(path)
+        if not m or not os.path.isdir(here(path)):
+            problems.append(f"{rel} maps `{item}` to `{path}`, which is not a skills/<name> "
+                            "directory here: a tracked item is a whole skill")
+            continue
+        tracked[m.group(1)] = u
+if tracked:
+    oks.append(f"{len(tracked)} tracked skill(s) in the merged upstreams' pins")
+
+forked = {}  # skill name -> the upstreams it was taken from
+rel = "upstream/attribution.json"
+records = load(rel)
+if records is not None and not isinstance(records, dict):
+    problems.append(f"{rel} is not a JSON object keyed by lab path (format: upstream/README.md)")
+    records = None
+for path, rec in sorted((records or {}).items()):
+    sources = rec.get("from") if isinstance(rec, dict) else None
+    if not isinstance(sources, list) or not sources:
+        problems.append(f"{rel}: `{path}` has no `from` list naming where it came from")
+        continue
+    if not os.path.exists(here(path)):
+        problems.append(f"{rel} records `{path}`, which does not exist here")
+    names = []
+    for src in sources:
+        src = src if isinstance(src, dict) else {}
+        u = str(src.get("upstream", ""))
+        if not isinstance(src.get("item"), str) or not SHA.match(str(src.get("commit", ""))):
+            problems.append(f"{rel}: a source of `{path}` lacks `item` or a full 40-character "
+                            "`commit` (format: upstream/README.md)")
+        if not u or not os.path.isfile(here(f"upstream/{u}/LICENSE")):
+            problems.append(f"{rel}: `{path}` comes from `{u}`, and there is no "
+                            f"upstream/{u}/LICENSE for its license to travel in")
+        names.append(u)
+    m = SKILL_PATH.match(path)
+    if m:
+        forked[m.group(1)] = ", ".join(names)
+for name in sorted(set(tracked) & set(forked)):
+    problems.append(f"skill '{name}' is both tracked and forked: forking moves it out of "
+                    f"upstream/{tracked[name]}/pin.json's `items`, so delete it there")
+
+skills_dir = here("skills")
+for name in sorted(os.listdir(skills_dir)):
+    if not os.path.isdir(os.path.join(skills_dir, name)):
+        continue
+    if name.startswith("lab-"):
+        oks.append(f"skill '{name}' is lab-written or derived (lab-*)")
+    elif name == "hq-mode":
+        oks.append(f"skill '{name}' is the mode, the one derived skill without a lab-* name")
+    elif name in tracked:
+        oks.append(f"skill '{name}' is tracked from {tracked[name]} "
+                   f"(upstream/{tracked[name]}/pin.json)")
+    elif name in forked:
+        oks.append(f"skill '{name}' is forked from {forked[name]} (upstream/attribution.json)")
+    else:
+        problems.append(f"skill '{name}' is not lab-* and is recorded nowhere as adopted: {HOW}")
+
+
+# Upstream text passes vale and markdownlint through configuration, never by editing it: one
+# `.vale.ini` section and one markdownlint override, each listing the adopted skills by name.
+def read(rel):
+    try:
+        with open(here(rel), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+
+VALE = ".vale.ini's adopted-skill section [skills/{...}/*.md]"
+MDL = ".markdownlint-cli2.yaml's adopted-skill override (a `- \"skills/<name>/**\"` filter line)"
+heads = re.findall(r"^\[skills/\{([^}]*)\}/\*\.md\][ \t]*$", read(".vale.ini"), re.M)
+if len(heads) > 1:
+    problems.append(f".vale.ini has {len(heads)} adopted-skill sections; keep one")
+vale = {n.strip() for h in heads for n in h.split(",") if n.strip()}
+mdl = set(re.findall(r'^[ \t]*-[ \t]*"skills/([^/"*{}]+)/\*\*"[ \t]*$',
+                     read(".markdownlint-cli2.yaml"), re.M))
+for name in sorted(tracked):
+    for listed, where in ((vale, VALE), (mdl, MDL)):
+        if name not in listed:
+            problems.append(f"tracked skill '{name}' is missing from {where}: upstream text "
+                            "passes the gate through configuration, never by editing it")
+for name in sorted((vale ^ mdl) - set(tracked)):
+    have, lack = (".vale.ini's adopted-skill section", ".markdownlint-cli2.yaml") \
+        if name in vale else (".markdownlint-cli2.yaml's adopted-skill override", ".vale.ini")
+    problems.append(f"'{name}' is in {have} but not in {lack}: the two lists must agree")
+for name in sorted((vale | mdl) - set(tracked) - set(forked)):
+    problems.append(f"the gate exempts '{name}', which is not recorded as adopted: the "
+                    "exemption is for upstream text, and lab text meets the gate")
+if vale and vale == mdl:
+    oks.append(f"vale and markdownlint exempt the same {len(vale)} adopted skill(s)")
+
+for line in oks:
+    print(f"  ok: {line}")
+for line in problems:
+    print(f"FAIL: {line}")
+sys.exit(1 if problems else 0)
+EOF
+}
+
+# Self-tests first, on fixture trees built here and deleted on the way out, in both
+# directions: a check that can no longer fail looks exactly like one that passes.
+an_fx=$(mktemp -d "${TMPDIR:-/tmp}/lab-adopted.XXXXXX")
+trap 'rm -rf "$an_fx"' EXIT
+adopted_case() { # <label> <root> <expected-exit> <substring the output must hold>
+  local label="$1" root="$2" wantrc="$3" want="$4" out rc
+  out=$(adopted_check "$root" 2>&1)
+  rc=$?
+  if [ "$rc" -eq "$wantrc" ] && printf '%s\n' "$out" | grep -qF -- "$want"; then
+    ok "naming self-test: $label"
+  else
+    err "naming self-test: $label — wanted exit $wantrc and '$want', got exit $rc: $out"
+  fi
+}
+an_tree() { # <fixture> <skill>...: a fixture repo holding lab-x and the named skill dirs
+  local root="$an_fx/$1"; shift
+  mkdir -p "$root/skills/lab-x"
+  for s in "$@"; do mkdir -p "$root/skills/$s"; done
+  printf '%s' "$root"
+}
+
+adopted_case "an unrecorded name fails and says how to record it" "$(an_tree unrecorded foo)" 1 \
+  "skill 'foo' is not lab-* and is recorded nowhere as adopted"
+adopted_case "the failure points at the formats" "$an_fx/unrecorded" 1 "upstream/README.md"
+adopted_case "hq-mode passes unrecorded" "$(an_tree mode hq-mode)" 0 "skill 'hq-mode' is the mode"
+
+an_pin() { # <root> <upstream> <merge|review> <item>: a pin mapping one item to skills/<item>
+  mkdir -p "$1/upstream/$2"
+  printf 'MIT License\n' >"$1/upstream/$2/LICENSE"
+  printf '{"repo": "https://example.org/%s", "commit": "%s", "sync": "%s", "skills_dir": "skills", "items": {"%s": "skills/%s"}}\n' \
+    "$2" "0123456789abcdef0123456789abcdef01234567" "$3" "$4" "$4" >"$1/upstream/$2/pin.json"
+}
+an_lists() { # <root> <vale names, comma-separated> <markdownlint names...>: the two exemptions
+  local root="$1" vale="$2"; shift 2
+  printf '[skills/{%s}/*.md]\nBasedOnStyles = Lab\n' "$vale" >"$root/.vale.ini"
+  { printf 'overrides:\n  - filter:\n'
+    for s in "$@"; do printf '      - "skills/%s/**"\n' "$s"; done
+    printf '    combine: merge\n    config:\n      MD041: false\n'; } >"$root/.markdownlint-cli2.yaml"
+}
+an_root=$(an_tree tracked foo); an_pin "$an_root" up merge foo; an_lists "$an_root" foo foo
+adopted_case "a name a merged upstream's pin maps passes as tracked" "$an_fx/tracked" 0 \
+  "skill 'foo' is tracked from up"
+an_pin "$(an_tree reviewed foo)" up review foo
+adopted_case "a reviewed upstream's pin admits no name" "$an_fx/reviewed" 1 \
+  "skill 'foo' is not lab-* and is recorded nowhere as adopted"
+
+an_record() { # <root> <upstream> <item>: an attribution record forking skills/<item>
+  printf '{"skills/%s": {"from": [{"upstream": "%s", "item": "%s", "commit": "%s"}], "changes": "fixture"}}\n' \
+    "$3" "$2" "$3" "0123456789abcdef0123456789abcdef01234567" >"$1/upstream/attribution.json"
+}
+an_root=$(an_tree forked bar); mkdir -p "$an_root/upstream/up"; printf 'MIT License\n' >"$an_root/upstream/up/LICENSE"
+an_record "$an_root" up bar
+adopted_case "a name an attribution record lists passes as forked" "$an_root" 0 \
+  "skill 'bar' is forked from up"
+an_root=$(an_tree unlicensed bar); mkdir -p "$an_root/upstream"
+an_record "$an_root" nowhere bar
+adopted_case "a record whose upstream has no license fails" "$an_root" 1 \
+  "no upstream/nowhere/LICENSE"
+an_root=$(an_tree both foo); an_pin "$an_root" up merge foo; an_record "$an_root" up foo
+adopted_case "a skill both tracked and forked fails" "$an_root" 1 "both tracked and forked"
+
+# The gate passes upstream text through two lists of names, one in `.vale.ini` and one in
+# `.markdownlint-cli2.yaml`. Two lists that must agree drift unless something checks them.
+an_root=$(an_tree unlisted foo); an_pin "$an_root" up merge foo
+adopted_case "a tracked skill missing from the vale section fails" "$an_root" 1 \
+  "tracked skill 'foo' is missing from .vale.ini"
+an_root=$(an_tree halflisted bar); mkdir -p "$an_root/upstream/up"
+printf 'MIT License\n' >"$an_root/upstream/up/LICENSE"; an_record "$an_root" up bar; an_lists "$an_root" bar
+adopted_case "a vale name the markdownlint override misses fails" "$an_root" 1 \
+  "'bar' is in .vale.ini's adopted-skill section but not in .markdownlint-cli2.yaml"
+an_root=$(an_tree overlisted foo); an_pin "$an_root" up merge foo; an_lists "$an_root" foo,lab-x foo lab-x
+adopted_case "an exemption for a skill nobody adopted fails" "$an_root" 1 \
+  "exempts 'lab-x', which is not recorded as adopted"
+
+rm -rf "$an_fx"
+trap - EXIT
+
+# Then this tree. stderr is captured too, so a crash in the check is a FAIL, never a pass.
+an_out=$(adopted_check . 2>&1)
+an_rc=$?
+printf '%s\n' "$an_out"
+if [ "$an_rc" -ne 0 ]; then fail=1
+elif [ -z "$an_out" ]; then err "the naming check printed nothing, so it checked nothing"; fi
 
 echo "== no-secrets sweep =="
 # Publishable tree only (what git tracks + working copies), minus this test
@@ -430,6 +676,217 @@ done
 if [ "$prov_n" -eq 0 ]; then
   err "no pages under skills/lab-edison/references/, so the provenance rule checked nothing"
 fi
+
+# ======================= Codex and Kimi Code =======================
+# Two rules for the agents beside Claude Code, from #91. Both go through one checker,
+# `agent_check <rule> <skills-dir> [triggers]`, which prints a `FAIL<TAB>` or `ok<TAB>` line per
+# finding. Probes run each rule on fixture trees first, both ways, because a check that can no
+# longer fire looks exactly like one that passes. Standard library only, like the rest of this
+# file, so `bash tests/lint.sh` runs outside pixi.
+agent_check() {
+  python3 - "$1" "$2" "${3:-}" <<'EOF'
+import pathlib
+import re
+import sys
+
+rule, root, table = sys.argv[1], pathlib.Path(sys.argv[2]), sys.argv[3]
+skills = {p.parent.name: p for p in sorted(root.glob("*/SKILL.md"))}
+
+
+def frontmatter(path):
+    keys, key = {}, None
+    for ln in path.read_text(encoding="utf-8").splitlines()[1:]:
+        if ln == "---":
+            break
+        m = re.match(r"([A-Za-z0-9_-]+):\s*(.*)$", ln)
+        if m:
+            key = m[1]
+            keys[key] = [m[2].strip()]
+        elif key and (ln.startswith(" ") or not ln.strip()):
+            keys[key].append(ln.strip())
+    out = {}
+    for k, parts in keys.items():
+        v = re.sub(r"^[>|][+-]?\s*", "", " ".join(p for p in parts if p))
+        if len(v) > 1 and v[0] == v[-1] and v[0] in "\"'":
+            v = v[1:-1]
+        out[k] = v
+    return out
+
+
+def held_back_in_codex(path):
+    """True when agents/openai.yaml sets policy.allow_implicit_invocation: false."""
+    if not path.is_file():
+        return False
+    in_policy = False
+    for ln in path.read_text(encoding="utf-8").splitlines():
+        if not ln.strip() or ln.lstrip().startswith("#"):
+            continue
+        if not ln[0].isspace():
+            in_policy = ln.split("#")[0].strip() == "policy:"
+        elif in_policy and re.fullmatch(r"\s+allow_implicit_invocation:\s*false\s*(#.*)?", ln):
+            return True
+    return False
+
+
+def units(s):
+    return len(s.encode("utf-16-le")) // 2
+
+
+def kimi_sees(desc, listing_max=250, ellipsis=3):
+    """Kimi Code lists a description over 250 UTF-16 units as its first 247 plus '...'."""
+    if units(desc) <= listing_max:
+        return desc
+    seen = ""
+    for ch in desc:
+        if units(seen + ch) > listing_max - ellipsis:
+            break
+        seen += ch
+    return seen
+
+
+if rule == "invocation":
+    for name, skill in skills.items():
+        keyed = frontmatter(skill).get("disable-model-invocation", "").lower() == "true"
+        filed = held_back_in_codex(skill.parent / "agents" / "openai.yaml")
+        if keyed and not filed:
+            print(f"FAIL\t{name} sets disable-model-invocation: true, but no agents/openai.yaml"
+                  " sets policy.allow_implicit_invocation: false, so Codex can invoke it"
+                  " unasked. Copy the shape of skills/lab-edison/agents/openai.yaml")
+        elif filed and not keyed:
+            print(f"FAIL\t{name}: agents/openai.yaml holds it back in Codex, but without"
+                  " disable-model-invocation: true Claude Code and Kimi Code still invoke it."
+                  " Set both or neither")
+        elif keyed:
+            print(f"ok\t{name} is user-invoked in Claude Code, Kimi Code and Codex")
+
+if rule == "frontload":
+    triggers = {}
+    for ln in table.splitlines():
+        if ln.strip():
+            name, _, words = ln.partition(":")
+            triggers[name.strip()] = [w.strip() for w in words.split(",") if w.strip()]
+    for name in sorted(set(triggers) - set(skills)):
+        print(f"FAIL\ttriggers are recorded for {name}, which is not a skill. Drop its row")
+    for name, skill in skills.items():
+        if name not in triggers:
+            if name.startswith("lab-") or name == "hq-mode":
+                print(f"FAIL\t{name} is lab-owned and has no triggers recorded. Add a row"
+                      " naming the words a request uses when it wants this skill")
+            continue
+        seen = kimi_sees(frontmatter(skill).get("description", ""))
+        # From a word start, so `arc` is not found inside `search` but `node` finds `nodes`.
+        late = [w for w in triggers[name]
+                if not re.search(r"(?<![A-Za-z0-9_])" + re.escape(w), seen, re.IGNORECASE)]
+        if late:
+            print(f"FAIL\t{name}: Kimi Code's listing ends at '...{seen[-40:]}', so it never"
+                  f" sees: {', '.join(late)}. Move them forward")
+        else:
+            print(f"ok\t{name}: Kimi Code's listing keeps all {len(triggers[name])} triggers")
+EOF
+}
+agent_report() { # <checker output>
+  while IFS="$(printf '\t')" read -r verdict msg; do
+    case "$verdict" in
+      ok)   ok "$msg" ;;
+      FAIL) err "$msg" ;;
+    esac
+  done <<EOF
+$1
+EOF
+}
+ag=$(mktemp -d "${TMPDIR:-/tmp}/lab-agent-fixtures.XXXXXX")
+trap 'rm -rf "$ag"' EXIT
+fx_skill() { # <case> <name> <description> [extra frontmatter line]
+  mkdir -p "$ag/$1/$2"
+  { printf -- '---\nname: %s\ndescription: %s\n' "$2" "$3"
+    [ -z "${4:-}" ] || printf '%s\n' "$4"
+    printf -- '---\n\n# %s\n' "$2"; } >"$ag/$1/$2/SKILL.md"
+}
+fx_openai() { # <case> <name> <file body>
+  mkdir -p "$ag/$1/$2/agents"
+  printf '%s\n' "$3" >"$ag/$1/$2/agents/openai.yaml"
+}
+agent_probe() { # <label> <trips|clears> <rule> <case> [triggers]
+  local label="$1" want="$2" out got
+  out=$(agent_check "$3" "$ag/$4" "${5:-}" | grep '^FAIL')
+  if [ -n "$out" ]; then got=trips; else got=clears; fi
+  if [ "$got" = "$want" ]; then ok "probe: $label $want the check"
+  else err "probe: $label — wanted '$want', got '$got': $out"; fi
+}
+
+echo "== user-invoked in every agent =="
+# Claude Code and Kimi Code honour `disable-model-invocation: true`. Codex ignores the key and
+# holds a skill back only when `agents/openai.yaml` beside its SKILL.md sets
+# `policy.allow_implicit_invocation: false`, the file upstream's user-invoked skills carry.
+# Without it, Codex may run `lab-edison` unasked and spend a credit. Both ways, as upstream's
+# own rule has it: a skill is user-invoked in every agent or in none.
+fx_ui='disable-model-invocation: true'
+fx_optout='interface:
+  display_name: "Fixture"
+  short_description: "A fixture skill"
+policy:
+  allow_implicit_invocation: false'
+fx_skill no-file fixture "A user-invoked fixture skill with no opt-out file." "$fx_ui"
+fx_skill no-policy fixture "A user-invoked fixture skill whose file has no policy." "$fx_ui"
+fx_openai no-policy fixture 'interface:
+  display_name: "Fixture"'
+fx_skill allowed fixture "A user-invoked fixture skill that Codex may still invoke." "$fx_ui"
+fx_openai allowed fixture 'policy:
+  allow_implicit_invocation: true'
+fx_skill paired fixture "A user-invoked fixture skill paired the way upstream pairs it." "$fx_ui"
+fx_openai paired fixture "$fx_optout"
+fx_skill codex-only fixture "A model-invoked fixture skill that only Codex holds back."
+fx_openai codex-only fixture "$fx_optout"
+agent_probe "a user-invoked skill with no opt-out file"   trips  invocation no-file
+agent_probe "an opt-out file with no policy"              trips  invocation no-policy
+agent_probe "allow_implicit_invocation: true"             trips  invocation allowed
+agent_probe "the key paired with upstream's opt-out file" clears invocation paired
+agent_probe "an opt-out file on a model-invoked skill"    trips  invocation codex-only
+agent_report "$(agent_check invocation skills)"
+
+echo "== front-loaded descriptions =="
+# Kimi Code lists a description over 250 characters as its first 247 and an ellipsis, so a
+# trigger past that point never reaches it. Every lab-owned skill records the words a request
+# uses when it wants that skill, and lint FAILS when Kimi's listing drops one. A report would
+# change nothing: Kimi's cut is silent, and a skill it cannot find just never loads. The rows
+# restate part of each description on purpose, so dropping a trigger takes a visible edit here.
+#
+# Lab-owned means every `lab-*` skill and `hq-mode`, which fail without a row, and each forked
+# skill, which adds its row when it lands. A tracked skill gets no row: its description is
+# upstream text, merged at each sync and never edited here. A trigger matches from a word
+# start, ignoring case.
+LAB_TRIGGERS='
+lab-hpc: HPC, cluster, arc, chimera, ircbc, ssh, Slurm, sbatch, srun, squeue, compute, login, GPU, remote, files
+lab-jupyter: Jupyter, notebook, tunnel, port forward, reconnect, cluster, compute node, GPU, arc, ircbc
+lab-containers: Singularity, container, image, SIF, liulab-runtime, ircbc, pull, build, pixi, Jupyter, LIU_LAB_PACKAGES
+lab-edison: Edison, literature, precedent, molecules, data analysis, Kosmos, dataset, recover, API key
+lab-setup: set up, installing, Claude Code, auto-update, Codex, Kimi Code, marketplace clone, edison-cli, PATH
+'
+fx_fill() { printf '%*s' "$1" '' | tr ' ' w; } # <n>: one filler word, n characters long
+fx_skill early lab-fixture "Slurm $(fx_fill 300)"
+fx_skill late lab-fixture "$(fx_fill 259) Slurm"
+fx_skill ellipsis lab-fixture "$(fx_fill 244) Slurm $(fx_fill 20)"
+fx_skill exact lab-fixture "$(fx_fill 244) Slurm"
+fx_skill inside-word lab-fixture "Search the literature for this fixture."
+fx_skill unrecorded lab-fixture "A lab-owned fixture skill with no triggers recorded."
+fx_skill mode hq-mode "A mode fixture with no triggers recorded."
+fx_skill tracked grilling "An adopted fixture skill, upstream text, so exempt."
+fx_skill stale-row lab-fixture "Slurm fixture."
+fx_row='lab-fixture: Slurm'
+agent_probe "a trigger at the start"                    clears frontload early "$fx_row"
+agent_probe "a trigger at character 261"                trips  frontload late "$fx_row"
+agent_probe "a trigger under Kimi's ellipsis (246-250)" trips  frontload ellipsis "$fx_row"
+agent_probe "a 250-character description, trigger last" clears frontload exact "$fx_row"
+agent_probe "a trigger found only inside a word"        trips  frontload inside-word 'lab-fixture: arc'
+agent_probe "a lab-* skill with no row"                 trips  frontload unrecorded
+agent_probe "hq-mode with no row"                       trips  frontload mode
+agent_probe "a tracked skill with no row"               clears frontload tracked
+agent_probe "a row for a skill that is not there"       trips  frontload stale-row "$fx_row
+lab-gone: Slurm"
+agent_report "$(agent_check frontload skills "$LAB_TRIGGERS")"
+
+rm -rf "$ag"
+trap - EXIT
 
 echo "== release =="
 # The version has to identify the content. This plugin's source is the repo ROOT, so

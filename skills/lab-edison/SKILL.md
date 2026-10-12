@@ -1,14 +1,14 @@
 ---
 name: lab-edison
 description: >-
-  Run Edison research platform work (the platform is run by Edison Scientific) from a lab machine
-  through `edison-cli`, this plugin's command around the `edison-client` package: literature
-  search, precedent, molecules, data analysis, dataset upload, task history and recovering a lost
-  run, and what to do about Kosmos. Use when the user asks to search the literature with Edison,
+  Run Edison research platform work from a lab machine: literature search, precedent, molecules,
+  data analysis, Kosmos, dataset upload, task history and recovering a lost run, and setting up the
+  Edison API key. User-invoked only. Use when the user asks to search the literature with Edison,
   submit or follow up an Edison task, check or recover a run they already started, upload data to
-  the platform, or set up their Edison API key. Covers the machine-local key file, its preflight,
-  and the rule that the key never reaches the conversation, a command line, a cluster, or a job
-  script. User-invoked only.
+  the platform, or set up their Edison API key. The platform is run by Edison Scientific; the skill
+  reaches it through `edison-cli`, this plugin's command around the `edison-client` package. Covers
+  the machine-local key file, its preflight, and the rule that the key never reaches the
+  conversation, a command line, a cluster, or a job script.
 disable-model-invocation: true
 ---
 

@@ -40,9 +40,10 @@ by policy).
 
 ## Naming policy
 
-Internal names are `lab`/`lab-*` (`lab-hpc`, `lab-jupyter`,
-`lab-containers`, `lab-edison`), never `liulab-*`. The lab identity lives only in the
-repo name, the GitHub org, and the marketplace name `liulab`.
+A skill the lab wrote or derived is `lab-*`; `liulab` names only the repo, the GitHub org
+and the marketplace. An adopted skill keeps its upstream name (`docs/adr/0013-adopted-skills-keep-upstream-names.md`): lint admits a name
+outside `lab-*` only when `upstream/` records it (see `upstream/README.md`), or for
+`hq-mode`. Never edit upstream text to pass the gate.
 
 ## Commands
 
@@ -58,13 +59,11 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   `scripts/check.sh`) + `skill-lint` (`tests/lint.sh`). The static steps start
   together and **every** failure is reported in one run, so read to the bottom.
   The step list lives in the `check-static` task in `pyproject.toml` and
-  nowhere else — not here either, which is why this sentence does not repeat
-  it. `.github/workflows/ci.yml` invokes the task by name, so the local gate
+  nowhere else. `.github/workflows/ci.yml` invokes the task by name, so the local gate
   and CI cannot drift. Add a step there, not in the workflow.
 - The writing gates: vale reads language, markdownlint reads structure. The
   caps, the per-file-class sections of `.vale.ini` and how to measure against
-  them are in `docs/agents/writing.md`. Read it before writing anything — this
-  file is subject to one of the caps.
+  them are in `docs/agents/writing.md`. Read it before writing anything.
 - `tests/preflight.sh` and `tests/eval.sh` deliberately **never run in CI**
   (one reads a real ssh config, the other spends API tokens). The no-secrets
   sweep is also half-blind in CI — its username/hostname checks read the local
@@ -73,8 +72,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
 - Eval cases: `trigger`, `explicit`, `reject`, `containers`,
   `jupyter-ircbc`, `reuse-job`, `edison-refuse`, `edison-molecules`,
   `edison-kosmos`, `edison-recover`, `live-sbatch`, `live-edison`.
-  **There is no default run**: a bare `eval.sh` prints the cases and exits 2,
-  having spent nothing. Run one with `--only <case>`, the whole suite with
+  **There is no default run**: a bare `eval.sh` prints the cases and exits 2.
+  Run one with `--only <case>`, the whole suite with
   `--all`. `--live` is a modifier and is refused alone; with `--all` it
   submits and cleans up a real tiny Slurm job on arc and spends one of the
   user's Edison credits, and any `live-*` name turns it on by itself. Cases
@@ -133,8 +132,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   choosing one, and submitting.
 - `skills/lab-edison/` is the one skill with no cluster in it — the Edison
   cloud platform — and is **user-invoked only**, as `lab-setup` is
-  (`disable-model-invocation: true`, a Claude Code key other agent tools
-  ignore), so it never triggers on its own and never spends a credit
+  (`disable-model-invocation: true`, plus the `agents/openai.yaml` Codex
+  needs), so it never triggers on its own and never spends a credit
   unprompted. Its spend path is the `src/edison_cli/` package run through
   pixi, not a script, typed as the bare `edison-cli` because Claude Code puts
   `bin/` on PATH; step 0 is `edison-cli preflight`, which refuses on a
@@ -164,8 +163,8 @@ pixi run docs-build                     # build the site strictly (`docs` enviro
   `df -h`", not "81% used"). A version is configuration when behavior depends
   on it (Slurm 18.08 is why ircbc needs `squeue -u $USER`), a measurement
   otherwise. The README and the browsable docs pages follow this rule too.
-- Behavior changes to a skill are tested with `tests/eval.sh` (agent evals),
-  not just lint — lint only proves the files are well-formed.
+- Behavior changes to a skill are tested with `tests/eval.sh`, not just lint,
+  which only proves the files are well-formed.
 - `templates/` holds per-user onboarding files users copy to their machines
   (`personal.md`, `CLAUDE-stub.md`, `edison.env`); they are documentation,
   not loaded by the plugin. A filled-in copy of any of them never lands

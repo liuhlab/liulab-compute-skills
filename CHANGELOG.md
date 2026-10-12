@@ -12,6 +12,12 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 
 ### Added
 
+- **`/grilling`**, the first skill from mattpocock/skills. It ships exactly as upstream
+  wrote it, under its own name. Its MIT license is in `upstream/mattpocock/LICENSE`.
+- **`upstream/`**, where the repo records what it takes from outside. Each upstream has a
+  pin there: the commit last merged or read, and which lab file each upstream skill feeds.
+  A skill the lab changes for good gets an attribution record instead.
+  `upstream/README.md` gives both formats.
 - **`/lab-setup`.** Type it once in Claude Code after the two install commands. It turns on
   updates for the `liulab` marketplace, installs the plugin in Codex, points Kimi Code at the
   copy Claude Code keeps current, and links `edison-cli` into a folder on your PATH. It asks
@@ -27,6 +33,16 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   lab@liulab`. Releasing is now just pushing. (#77)
 - **The install pages** give the two commands, then `/lab-setup`. They no longer tell you to
   link skills into other agents with `skills/install.py`.
+- **Each lab skill's description now starts with its triggers.** Kimi Code shows only the
+  first 247 characters of a description, so the words that should load a skill now come
+  first. The tests list those words for every lab skill and fail when one falls past that
+  point. (#79)
+- **Naming.** A `lab-*` name now marks a skill the lab wrote. Lint accepts any other name
+  only if `upstream/` records the skill, or if it is `hq-mode`. The error says how to
+  record it.
+- **The writing checks take upstream text as it is.** vale and markdownlint each skip the
+  rules upstream text breaks, for the skills `upstream/` records and no others. Lab pages
+  beside a skill body and in playbook folders now carry the 1200-word cap.
 
 ### Fixed
 
@@ -35,6 +51,12 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   for its project next to the link and fail. Now it follows the link back to the plugin, and
   the setup check prints the short `edison-cli` form there too. The note at the top of the
   file no longer says Codex and Kimi Code install a plugin by symlink. (#78)
+- **Codex no longer starts `lab-edison` unasked.** Codex ignores the setting that keeps the
+  skill waiting for you, so it could spend your Edison credits without being asked. The skill
+  now ships the small file Codex reads instead, `agents/openai.yaml`. The tests fail any skill
+  that has the setting without the file, or the file without the setting. (#75)
+- **The docs said every other agent ignores that setting.** Claude Code and Kimi Code honour
+  it; only Codex needs the file. The README, the glossary and the `lab-edison` page now say so.
 
 ## 2026.10.3 — 2026-10-11
 

@@ -78,9 +78,9 @@ Codex gets the same plugin and checks for a new release each time it starts. Kim
 Code reads the skills from the copy Claude Code keeps up to date. No other agent
 tool is supported.
 
-lab-edison still waits to be called by name in all three. Claude Code and Kimi Code
-follow the skill's own setting for that, and Codex reads a small file the skill
-ships for it.
+lab-edison waits for you to type its name in all three. Claude Code and Kimi Code
+read that from its settings. Codex reads it from a small opt-out file the skill
+also ships, `agents/openai.yaml`.
 
 ## Updating
 
