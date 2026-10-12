@@ -68,7 +68,7 @@ or one file, such as a reference page.
 - `changes` is optional.
 
 Forking a tracked skill is one step: delete it from its pin's `items` and add its record
-here, with the pin's `commit`.
+here, with the pin's `commit`. `python scripts/upstream_sync.py fork <name>` does both.
 
 ## Adopting a tracked skill
 
@@ -100,7 +100,9 @@ nothing automatic checks that an edit removed no line: read the diff against the
   a `merge` pin maps it, when a record lists it, or when it is `hq-mode`. The section also
   fails a source with no `LICENSE`, a skill both tracked and forked, and the two gate lists
   above when they miss a tracked skill, disagree, or name a skill nobody adopted.
-- The upstream sync, from Python, with `json.load`.
+- The upstream sync, `scripts/upstream_sync.py`, which the maintainer runs through
+  `/lab-upstream-sync` in `.claude/commands/`. It writes both files back in the layouts above,
+  and adopts a skill new upstream by the three steps above.
 - Bash, through a one-liner. This prints the tracked names:
 
   ```bash

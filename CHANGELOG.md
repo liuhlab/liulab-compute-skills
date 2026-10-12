@@ -61,6 +61,12 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   upstream rewording could undo either change without a merge conflict, so the upstream
   sync reruns the case when upstream touches that skill. Both changes only add lines to
   upstream's text.
+- **The monthly upstream sync, for the maintainer.** `/lab-upstream-sync` brings upstream's
+  changes into the skills the lab takes from mattpocock/skills, and ends in one pull request.
+  Its script merges each file from the pin to upstream's latest commit and keeps the lab's own
+  lines. It lists conflicts, removed skills and new ones. The skill lives in this repo's
+  `.claude/commands/`, so the plugin never ships it. The check for leaked secrets now reads
+  that folder too.
 
 ### Changed
 
