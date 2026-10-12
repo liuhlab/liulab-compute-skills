@@ -40,6 +40,12 @@ Current skills:
   marketplace clone, links `edison-cli` onto your PATH, and lists any skill
   of yours that takes a name the plugin ships. It asks before each change and
   removes nothing; its script (`scripts/lab_setup.py`) is safe to rerun.
+- **`hq-mode`** — type `/hq-mode` with a task to have the agent work the lab's
+  way: it reads one page of working rules, then follows one of 17 playbooks
+  (an analysis, a cluster run, a figure, a paper or grant section, a talk,
+  landing tickets, and more). Its always-pause list, which outranks "land it"
+  and "going to bed", keeps it from submitting Slurm work, spending Edison
+  credits or merging an unreviewed pull request without your yes.
 
 Skills taken from other projects keep their own names. These 25 come from
 [mattpocock/skills](https://github.com/mattpocock/skills), unchanged:

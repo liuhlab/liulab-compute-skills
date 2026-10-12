@@ -15,10 +15,12 @@ plugin holds that knowledge.
 | [lab-containers](skills/lab-containers.md) | The lab's Singularity images on ircbc: keeping them current, running work inside them. |
 | [lab-edison](skills/lab-edison.md) | The Edison platform: Kosmos for a whole research goal, cited literature answers and data analysis for a single question. No cluster. |
 | [lab-setup](skills/lab-setup.md) | One step after installing: the plugin updates by itself, and Codex and Kimi Code get it too. |
+| [hq-mode](skills/hq-mode.md) | A whole task done the lab's way: working rules, a playbook per kind of task, and a list of steps that always wait for your yes. |
 
 The first three load by themselves when your request touches remote compute. You
-call the last two by name: lab-edison because every run of it costs you money,
-and lab-setup because you need it once per machine.
+call the last three by name: lab-edison because every run of it costs you money,
+lab-setup because you need it once per machine, and hq-mode because you choose
+when a task gets it.
 
 ## What the agent will not do
 
