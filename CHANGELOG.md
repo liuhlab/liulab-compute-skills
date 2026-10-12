@@ -10,6 +10,28 @@ adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 The lab plugin now ships the whole skill set: the skills from mattpocock/skills under their
 own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
 
+### Added
+
+- **`/grilling`**, the first skill from mattpocock/skills. It ships exactly as upstream
+  wrote it, under its own name. Its MIT license is in `upstream/mattpocock/LICENSE`.
+- **`upstream/`**, where the repo records what it takes from outside. Each upstream has a
+  pin there: the commit last merged or read, and which lab file each upstream skill feeds.
+  A skill the lab changes for good gets an attribution record instead.
+  `upstream/README.md` gives both formats.
+
+### Changed
+
+- **Each lab skill's description now starts with its triggers.** Kimi Code shows only the
+  first 247 characters of a description, so the words that should load a skill now come
+  first. The tests list those words for every lab skill and fail when one falls past that
+  point. (#79)
+- **Naming.** A `lab-*` name now marks a skill the lab wrote. Lint accepts any other name
+  only if `upstream/` records the skill, or if it is `hq-mode`. The error says how to
+  record it.
+- **The writing checks take upstream text as it is.** vale and markdownlint each skip the
+  rules upstream text breaks, for the skills `upstream/` records and no others. Lab pages
+  beside a skill body and in playbook folders now carry the 1200-word cap.
+
 ### Fixed
 
 - **`edison-cli` works through a link.** `/lab-setup` links `edison-cli` into a folder on
@@ -23,13 +45,6 @@ own names, three skills from pstack, `/hq-mode` and `/lab-setup`.
   that has the setting without the file, or the file without the setting. (#75)
 - **The docs said every other agent ignores that setting.** Claude Code and Kimi Code honour
   it; only Codex needs the file. The README, the glossary and the `lab-edison` page now say so.
-
-### Changed
-
-- **Each lab skill's description now starts with its triggers.** Kimi Code shows only the
-  first 247 characters of a description, so the words that should load a skill now come
-  first. The tests list those words for every lab skill and fail when one falls past that
-  point. (#79)
 
 ## 2026.10.3 — 2026-10-11
 
