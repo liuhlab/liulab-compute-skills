@@ -5,6 +5,13 @@ The words this repo uses, and nothing else. How the clusters actually work is in
 
 ## Glossary
 
+### Adopted skill
+
+A skill that came from an upstream rather than being written here. It keeps its upstream
+name, typed bare, and is either tracked or forked. Its upstream's MIT license and attribution
+travel with it. Contrast a derived skill, which the lab owns from the start. See
+`docs/adr/0013-adopted-skills-keep-upstream-names.md`.
+
 ### Agent-facing document
 
 A document written for a machine that has to act on it: `AGENTS.md`, `CONTEXT.md`, the
@@ -30,6 +37,15 @@ The name a lab host is called by in this repo: `arc`, `ircbc`, `chimera-transfer
 `cpu01`. An alias resolves to a real hostname and username only in the user's own
 `~/.ssh/config`, on their own machine, at run time. This repo never records what one
 resolves to, and the no-secrets sweep fails a commit that does.
+
+### Always-pause list
+
+The actions the mode never takes without the user's yes: submitting or cancelling Slurm
+work, spending Edison credits, force-pushing, deleting data, merging a pull request nobody
+reviewed, making private material public, and the rest, written once on the working-style
+page. It outranks every session override ("headless", "land it", "going to bed") and every
+principle. A lab safety rule lives here or in a lab-owned skill, and never inside upstream
+text.
 
 ### CalVer
 
@@ -66,6 +82,12 @@ multiplies whichever was picked; a Kosmos run pays for every task it fans out to
 anywhere in this repo. The platform's own billing page is the only current source, and a
 price written into a skill goes stale in silence — so send the user to their balance
 instead of quoting one.
+
+### Derived skill
+
+A skill the lab owns from the start but built from upstream skills or ideas, carrying their
+attribution. It takes a `lab-*` name, except the mode. Contrast a forked skill, which began
+as an adopted copy and keeps its upstream name.
 
 ### Description budget
 
@@ -122,6 +144,14 @@ rest. Each is a full headless agent session run against the *installed* plugin, 
 loose key phrases on the transcript. Evals test behavior; lint only proves the files are
 well-formed.
 
+### Forked skill
+
+An adopted item the lab now owns: a skill or a reference page. It keeps its upstream name
+and attribution, leaves the pin, and may change freely. Upstream changes to its original
+reach it only as ideas in the upstream sync's summary, ported by hand. Every pstack item is
+forked from day one; a mattpocock skill is forked when merging it costs more than it saves.
+Contrast a tracked skill. See `docs/adr/0012-upstream-skills-merge-from-a-pin.md`.
+
 ### Gate
 
 `pixi run check`: the one command that must be green before a commit, and what CI runs on
@@ -147,6 +177,31 @@ is also unbounded before the run starts, which is why a skill never starts one u
 user asks for that run in those words; drafting the objective, checking the dataset and
 reading a run that already exists are free, and are usually what was wanted.
 
+### Lab defaults
+
+The issue tracker, triage labels and domain layout every lab machine provides, so a repo
+needs no setup for them. They live on one lab-owned page in the marketplace clone, which
+`/lab-setup` points each agent's user-level instructions file at, so an update reaches it
+with no rerun. The page indexes upstream's own seed pages and adds a few lab lines, among
+them the always-on rules from `templates/CLAUDE-stub.md` and the line that turns on the
+working-style page. A repo's own `docs/agents/<page>` overrides that one default and no
+other.
+
+### Lab edit
+
+A capability added to the upstream text of a tracked skill: a template, a branch, a loop
+path. Never a safety rule, which lives on the always-pause list or in a lab-owned skill, and
+never a rename. A whole new section goes in a lab-only side page with a one-line pointer from
+the upstream file; a branch or a loop path goes in place. Its only record is the diff against
+the pin, with its reason in the commit message and the changelog.
+
+### `lab-*` name
+
+The mark of a skill the lab wrote, such as `lab-hpc` or `lab-setup`, or derived. An adopted
+skill never takes one, tracked or forked. The mode is the one exception: `hq-mode`. Lint
+admits any other name only when the repo records the skill as adopted. See
+`docs/adr/0013-adopted-skills-keep-upstream-names.md`.
+
 ### liulab-runtime
 
 The lab's environment repo: pixi environments (`default`, `ml`, `align-rna`, and others)
@@ -158,6 +213,21 @@ pulled and built into SIFs. This repo teaches how to consume them and does not d
 The shared node an ssh login alias lands on. Light commands only — file browsing, Slurm
 control, small transfers, non-bulk `git`. On ircbc it is also the only node with a route
 out to the internet, so staging downloads belong there.
+
+### Marketplace clone
+
+Claude Code's git clone of the `liulab` marketplace, under `~/.claude/plugins/marketplaces/`,
+which its update pass keeps on `main`. Kimi Code reads its skills from it, and the
+`edison-cli` link on the user's PATH points into it. It is the catalogue, not the installed
+plugin, so for a while after an update the two can differ. See
+`docs/adr/0014-installed-copies-update-on-their-own.md`.
+
+### Mode
+
+`hq-mode`: a user-invoked router over playbooks, with a working-style page that every session
+reads first. Its name follows pstack's `<handle>-mode` convention, and it is the one derived
+skill without a `lab-*` name. Its text says "the user", so any lab member who types
+`/hq-mode` gets that way of working applied to their own work.
 
 ### Name cache
 
@@ -193,6 +263,20 @@ means reading it into context, which is why the Edison key file sits beside it. 
 plugin was renamed it lived in `~/.claude/compute/`; while that directory exists, both
 preflights refuse and print the move rather than read either copy.
 
+### Pin
+
+Per upstream, the commit last synced (mattpocock/skills) or reviewed (pstack), plus a map
+from each upstream item to the lab file it feeds. The repo stores only the pin, never a copy
+of upstream: a sync fetches upstream and reads both ends from that one clone. Moving a pin
+forward goes in the sync's pull request. See
+`docs/adr/0012-upstream-skills-merge-from-a-pin.md`.
+
+### Playbook
+
+The mode's step list for one kind of task, such as an analysis, a cluster run or a paper
+section, at `references/playbooks/<name>.md` inside `hq-mode`. A session copies the steps
+verbatim into its todo list.
+
 ### Plugin marketplace
 
 This repo, `liulab-skills`: the home of every Liu Lab agent skill, whether or not it touches
@@ -227,6 +311,14 @@ each other with nothing to catch it. `tests/lint.sh` fails a reference page carr
 and a block whose date will not parse; no check can tell whether a date is honest. See
 `docs/adr/0009-facts-carry-their-provenance.md`.
 
+### Reference page
+
+A page under a skill's `references/`, read by path when the skill body points at it and never
+triggered on its own. `lab-hpc`'s cluster pages and `lab-edison`'s vendor pages are reference
+pages, and so is most of what pstack contributes to the mode: its principles,
+`show-me-your-work` and `benchmark-checklist`. Reading by path works in all three agents and
+costs no place in the skill listing.
+
 ### Reservation job
 
 A long-lived Slurm job a user keeps to hold a node on a reserved partition. Never cancel
@@ -252,14 +344,42 @@ references instead of repeating a cluster fact. `lab-edison` has no cluster to d
 it carries its own facts in its own `references/`. See
 `docs/adr/0002-facts-vs-recipes.md`.
 
+### Tracked skill
+
+An adopted skill merged from its upstream on every upstream sync. Its upstream text changes
+only by a lab edit. Every mattpocock skill starts tracked, and no pstack item ever is.
+Contrast a forked skill. See `docs/adr/0012-upstream-skills-merge-from-a-pin.md`.
+
 ### Transfer node
 
 The alias for a cluster's data-mover host — `chimera-transfer`, `ircbc-transfer`. Use it
 for bulk copies instead of the login node. On ircbc it does not mount the same storage the
 login node does, so a file landed there has to be copied onward.
 
+### Upstream
+
+A repo the lab takes skills from and keeps following: mattpocock/skills, whose skills are
+tracked or forked, and cursor/plugins' `pstack`, whose items are all forked and only
+reviewed. No third one is followed. Any other skill installed on a machine is not an
+upstream: it stays on its own channel or retires.
+
+### Upstream sync
+
+One run of the maintainer-only sync skill in this repo's `.claude/skills/`, which is not
+shipped, started by hand about monthly. It merges every tracked skill from its pin to
+upstream's tip, and reports conflicts, deletions, stale words (a token upstream removed that
+lab text still uses) and dropped edits (a line the lab added that the merge lost). It
+summarises what is new in both upstreams and opens one pull request, so one version under
+`docs/adr/0008-version-identifies-the-content.md`.
+
 ### Waiver
 
 A conformance rule this repo declines, recorded by rule name in `pyproject.toml` with the
 reason beside it. Waivers are per rule and never per file, they do not expire, and every
 conformance run prints them — so the reason is where a reader meets it.
+
+### Working-style page
+
+`hq-mode`'s `references/working-style.md`: the rules every session reads first. Asking,
+autonomy and the always-pause list, delegation, the reply, the user's documents. The lab
+defaults turn it on for any non-trivial task. A repo's own `AGENTS.md` wins over it.

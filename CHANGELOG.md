@@ -5,6 +5,21 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.3 — 2026-10-11
+
+No skill changed. This release writes down how the lab will take in skills from outside,
+ahead of the release that does it.
+
+### Added
+
+- **Three decision records.** Skills taken from mattpocock/skills will be merged from a
+  recorded commit, and pstack will only be read for ideas (ADR 0012). Those skills keep their
+  own names, such as `/grilling` (ADR 0013). Installed copies will update on their own in
+  Claude Code, Codex and Kimi Code, once a new setup skill turns that on (ADR 0014). That
+  replaces the half of ADR 0004 that kept updates manual.
+- **New glossary terms** in `CONTEXT.md` for the same work: upstream, tracked and forked
+  skills, the pin, the mode and its playbooks, and the lab defaults.
+
 ## 2026.10.2 — 2026-10-10
 
 You now call a skill by its own name, `/lab-edison`, with no `lab:` in front.
