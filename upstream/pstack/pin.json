@@ -6,6 +6,7 @@
   "items": {
     "automate-me": "skills/hq-mode/references/working-style.md",
     "benchmark-checklist": "skills/hq-mode/references/benchmark-checklist.md",
+    "bro": "skills/bro",
     "create-verification-skill": "skills/hq-mode/references/verification.md",
     "figure-it-out": "skills/hq-mode/references/playbooks/figure-it-out.md",
     "how": "skills/hq-mode/references/playbooks/investigation.md",
@@ -46,6 +47,7 @@
     "recall": "skills/hq-mode/references/playbooks/long-run.md",
     "show-me-your-work": "skills/hq-mode/references/show-me-your-work.md",
     "show-me-your-work/scripts/log.sh": "skills/hq-mode/scripts/log.sh",
+    "tdd": "skills/tdd/SKILL.md",
     "technical-writing": "skills/technical-writing",
     "unslop": "skills/unslop",
     "why": "skills/hq-mode/references/working-style.md"

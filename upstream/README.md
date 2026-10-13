@@ -73,12 +73,15 @@ Forking a tracked skill is one step: delete it from its pin's `items` and add it
 here, with the pin's `commit`. `python scripts/upstream_sync.py fork <name>` does both.
 
 A forked skill is lab text and meets the gate, as `ketchup` does, unless meeting it would
-reshape the upstream text. `unslop` and `technical-writing` stay in both gate lists below:
-each body runs past the 600-word skill cap, and `unslop` numbers its rules as ids the text
-cites, which markdownlint's MD029 rejects. Fitting them would move much of upstream's text
-into `references/`, so every upstream change would be ported by hand into another shape. The
-cost is small: in a skill body vale checks only that cap, and markdownlint still applies every
-rule outside the override's ten. Take a fork out of both lists once it fits.
+reshape the upstream text. `unslop`, `technical-writing` and `bro` stay in both gate lists
+below. The first two each run past the 600-word skill cap, and `unslop` numbers its rules as
+ids the text cites, which markdownlint's MD029 rejects. Fitting them would move much of
+upstream's text into `references/`, so every upstream change would be ported by hand into
+another shape. `bro`'s body opens on prose with no heading, which MD041 rejects, and a heading
+would change upstream's text; it meets vale's cap, and is on vale's list because lint wants
+the two lists to agree. The cost is small: in a skill body vale checks only that cap, and
+markdownlint still applies every rule outside the override's ten. Take a fork out of both
+lists once it fits.
 
 ## Adopting a tracked skill
 
@@ -103,6 +106,10 @@ nothing automatic checks that an edit removed no line: read the diff against the
 - An edit that pushes against upstream's own steer gets an eval case named `<name>-*` in
   `tests/eval.sh`'s `CASES` list. An upstream rewording can undo it without a conflict, so a
   sync that changes the skill lists that case, and reruns it on the maintainer's yes.
+
+Every edit to upstream text, a lab edit or a change to a fork, names the failure it answers:
+one seen in a lab session or an eval, never a guess that an agent might miss something. An
+edit made before this rule need not name one, and returning to upstream's text needs none.
 
 ## What reads these
 

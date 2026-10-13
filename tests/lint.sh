@@ -888,9 +888,10 @@ lab-containers: Singularity, container, image, SIF, liulab-runtime, ircbc, pull,
 lab-edison: Edison, literature, precedent, molecules, data analysis, Kosmos, dataset, recover, API key
 lab-setup: set up, installing, Claude Code, auto-update, Codex, Kimi Code, marketplace clone, edison-cli, PATH
 hq-mode: hq-mode, whole task, analysis, cluster run, figure, paper, grant, talk, experiment plan, tickets, working-style, playbook
+bro: restate, last message, plain, jargon
 ketchup: ketchup, catch, last message, action item, summary
 technical-writing: technical, docs, README, RFC, protocol, PR description, commit message
-unslop: unslop, AI tells, AI-isms, AI writing, sound less like AI, prose, draft, rewrite
+unslop: AI tells, writing
 '
 fx_fill() { printf '%*s' "$1" '' | tr ' ' w; } # <n>: one filler word, n characters long
 fx_skill early lab-fixture "Slurm $(fx_fill 300)"
