@@ -2,8 +2,8 @@
 
 **You own a page a reader can act on, where every claim matches the repo.**
 
-1. Name the reader and the kind of page: a tutorial, a how-to, a reference or an explanation.
-   Follow the sibling pages' structure and register.
+1. Name the reader, and pick the kind of page with `technical-writing`. Follow the sibling
+   pages' structure and register.
 2. Read the sources the page describes: the code, the config, the decision records. Trace
    every claim to a file in the repo.
 3. Write the prose with `technical-writing`, then `unslop` as the last pass.

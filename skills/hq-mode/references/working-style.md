@@ -58,7 +58,7 @@ never the yes an item on the list needs. "Just discussing" → change nothing.
 
 - **You orchestrate.** Subagents take the parallel units and the independent checks, such as a
   claim-by-claim fact-check or a trail review. Keep work whose sources you have already read: a
-  subagent would read them again, and one writer keeps one voice and one diagram style. You
+  subagent would read them again, and one writer keeps one voice and one style. You
   split, brief, monitor, verify their claims on the artifact, and keep merge, close and cleanup
   for yourself. A subagent's report is a claim, not evidence.
 - **Brief with pointers.** The issue, the files, the scope, the host rule from `lab-hpc`, and

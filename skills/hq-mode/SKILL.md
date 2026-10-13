@@ -47,14 +47,14 @@ grill, spec or research session: the user types the next step.
 ## Principles
 
 [references/principles.md](references/principles.md) indexes the principles, each with when it
-applies. Name a principle in the reply only after reading its page in full. A principle seen
-only in the index has not been applied.
+applies. Name each principle that shaped a decision in the reply, and only after reading its
+page in full.
 
 ## Playbooks
 
 Copy the matched playbook's steps into the todo list, verbatim, before any task todos. With no
-todo tool, list them as a checklist in your first reply and give each step's state in your
-last. A step you skip stays with `skip: <reason>`. Each lives at
+todo tool, list them as a checklist in your first reply and give each step's state, done or
+`skip: <reason>`, in your last. A step you skip stays with `skip: <reason>`. Each lives at
 `references/playbooks/<name>.md`.
 
 ### Science

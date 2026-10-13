@@ -286,8 +286,7 @@ format `upstream/README.md` gives. See `docs/adr/0012-upstream-skills-merge-from
 ### Playbook
 
 The mode's step list for one kind of task, such as an analysis, a cluster run or a paper
-section, at `references/playbooks/<name>.md` inside `hq-mode`. A session copies the steps
-verbatim into its todo list, or, with no todo tool, into its first reply as a checklist.
+section, at `references/playbooks/<name>.md` inside `hq-mode`.
 
 ### Plugin marketplace
 
