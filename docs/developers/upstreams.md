@@ -7,8 +7,8 @@ projects:
 - [mattpocock/skills](https://github.com/mattpocock/skills), a set of agent skills for
   planning and building software, such as `grilling`, `to-spec`, `tdd` and `code-review`.
 - [pstack](https://github.com/cursor/plugins/tree/main/pstack), a skill pack in
-  cursor/plugins. Its `poteto-mode` and its principles shaped `hq-mode`, and three of its
-  skills ship here: `unslop`, `technical-writing` and `ketchup`.
+  cursor/plugins. Its `poteto-mode` and its principles shaped `hq-mode`, and four of its
+  skills ship here: `unslop`, `technical-writing`, `ketchup` and `bro`.
 
 Both are MIT licensed. Their licenses sit in `upstream/<project>/LICENSE`.
 

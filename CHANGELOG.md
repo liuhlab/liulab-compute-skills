@@ -5,6 +5,42 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.8 — 2026-10-13
+
+`/bro` comes from pstack, three skills move back toward the text their authors wrote, and
+`/tdd` warns against tests that slow the checks or prove nothing new.
+
+### Added
+
+- **`/bro`**, as pstack wrote it. Type it after a dense reply, and the agent says the same
+  thing again in plain words. It runs only when you type it, in every agent.
+- **`/tdd` watches what a test costs.** Two mistakes join its list. The first is writing
+  more tests than the plan agreed on, such as one per helper or one that proves what
+  another test already proves. Every test is code someone has to keep up, so no new test is
+  better than one that adds nothing. The second is a test that slows the checks you run on
+  every change. The agent uses the smallest input that shows the behavior, or moves the
+  test to a slower set of checks that the repo lists. It times the checks before and after
+  its change, and tells you when they got slower and by how much. The `/hq-mode` page on
+  checks now says a check must be worth its cost.
+- **A rule for changing upstream text.** Every edit to a skill taken from mattpocock/skills
+  or pstack now has to name a failure seen in a lab session or an eval. A guess that the
+  agent might miss something is not enough. Older edits stand, and going back to upstream's
+  text needs no reason. `upstream/README.md` has the rule.
+
+### Changed
+
+- **`/ketchup` talks like `/bro` again**, as pstack's does. It still checks Slurm jobs and
+  Edison runs.
+- **`unslop` is closer to pstack's.** It takes pstack's short description and makes one
+  pass, so a reply no longer ends with a report on a second one. It keeps two lab rules. A
+  paper or a grant keeps its field's style, and a science word used in its real sense, such
+  as a viral vector or a genetic locus, stays. Its own exceptions for citations,
+  statistics, units and number ranges are gone. In a paper or a grant, the style rule keeps
+  them. Your agent can still use it without being asked.
+- **`to-tickets` is upstream's text again.** The lab's line that a data pipeline's stages
+  are its layers is gone. A review of every lab edit to upstream text found no session that
+  needed it.
+
 ## 2026.10.7 — 2026-10-13
 
 A Developers section on the docs site, after Skills.
