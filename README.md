@@ -64,8 +64,8 @@ These four come from [pstack](https://github.com/cursor/plugins/tree/main/pstack
 three of them changed for lab work:
 
 - **`unslop`** takes the tells of AI writing out of a draft. It leaves science
-  words such as vector, locus and modality alone, and keeps citations,
-  statistics and units.
+  words such as vector, locus and modality alone, and keeps a paper or a grant
+  in its field's style.
 - **`technical-writing`** sets the standard for docs, protocols, pull requests
   and commit messages. Papers and grants keep their own style, and a protocol
   gives every amount its unit.

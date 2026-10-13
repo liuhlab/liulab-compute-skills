@@ -891,7 +891,7 @@ hq-mode: hq-mode, whole task, analysis, cluster run, figure, paper, grant, talk,
 bro: restate, last message, plain, jargon
 ketchup: ketchup, catch, last message, action item, summary
 technical-writing: technical, docs, README, RFC, protocol, PR description, commit message
-unslop: unslop, AI tells, AI-isms, AI writing, sound less like AI, prose, draft, rewrite
+unslop: AI tells, writing
 '
 fx_fill() { printf '%*s' "$1" '' | tr ' ' w; } # <n>: one filler word, n characters long
 fx_skill early lab-fixture "Slurm $(fx_fill 300)"
