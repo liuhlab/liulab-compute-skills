@@ -5,6 +5,18 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.10 — 2026-10-13
+
+`/hq-mode`'s improve-a-metric playbook gives its table of attempts its own name.
+
+### Fixed
+
+- **An attempt log, not a decision log.** The improve-a-metric playbook keeps a table with
+  one row per attempt, on every run. It called that table a decision log, the same name as
+  the log of choices that the agent keeps only when you step away. So the playbook seemed to
+  ask for that log on every run, with its own columns. The table is now the attempt log, and
+  it keeps its columns. (#125)
+
 ## 2026.10.9 — 2026-10-13
 
 `/hq-mode` gets a playbook for docs pages, and five of its rules that did not fit a docs task
