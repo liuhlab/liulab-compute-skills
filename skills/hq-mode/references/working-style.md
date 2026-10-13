@@ -56,9 +56,11 @@ never the yes an item on the list needs. "Just discussing" → change nothing.
 
 ## Delegation
 
-- **You orchestrate.** Subagents do the hands-on work. You split, brief, monitor, verify their
-  claims on the artifact, and keep merge, close and cleanup for yourself. A subagent's report is
-  a claim, not evidence.
+- **You orchestrate.** Subagents take the parallel units and the independent checks, such as a
+  claim-by-claim fact-check or a trail review. Keep work whose sources you have already read: a
+  subagent would read them again, and one writer keeps one voice and one style. You
+  split, brief, monitor, verify their claims on the artifact, and keep merge, close and cleanup
+  for yourself. A subagent's report is a claim, not evidence.
 - **Brief with pointers.** The issue, the files, the scope, the host rule from `lab-hpc`, and
   "read `hq-mode`'s working-style page first". A subagent can't type a user-invoked skill such
   as `/implement`: give it the skill file's path to read.

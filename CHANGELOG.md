@@ -5,6 +5,32 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.9 — 2026-10-13
+
+`/hq-mode` gets a playbook for docs pages, and five of its rules that did not fit a docs task
+now do.
+
+### Added
+
+- **A docs page playbook in `/hq-mode`**, for a page on a repo's docs site. The agent names
+  the reader and checks every claim against a file in the repo. It draws diagrams as text, so
+  a diagram changes in the same edit as the words around it. Then it builds the site
+  strictly and looks at every changed page in the light and the dark theme. The figure
+  playbook now sends a docs diagram here, not to image generation.
+
+### Changed
+
+- **Steps without a to-do list.** An agent with no to-do tool lists the playbook's steps in
+  its first reply. Its last reply says which steps it did and which it skipped.
+- **Helpers take checks and side-by-side work.** The agent keeps the work whose sources it
+  has already read. It hands helpers the pieces that can run at the same time, and the
+  checks that need fresh eyes, such as a fact-check.
+- **The decision log is for work you leave.** The agent keeps a log of its choices, and has
+  a helper review it, only when you step away. Before, it did so on every task that no
+  playbook fit.
+- **Principles are read before they are named.** The agent names a working principle in its
+  reply only after reading that principle's page.
+
 ## 2026.10.8 — 2026-10-13
 
 `/bro` comes from pstack, three skills move back toward the text their authors wrote, and

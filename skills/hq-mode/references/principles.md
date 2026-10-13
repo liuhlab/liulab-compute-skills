@@ -1,8 +1,9 @@
 # Principles
 
-Read a principle's page in full before you apply it: `references/principles/<name>.md`. Each
-entry says when it applies. Name each principle that shaped a decision in the reply, with the
-choice it changed. The always-pause list in `working-style.md` outranks every principle here.
+Each entry says when a principle applies; its page, `references/principles/<name>.md`, says
+how. Name each principle that shaped a decision in the reply, with the choice it changed, and
+only after reading its page in full. A principle seen only in this index has not been applied.
+The always-pause list in `working-style.md` outranks every principle here.
 
 Forked from pstack's `principle-*` skills (MIT, cursor/plugins). Pages marked *lab edit* carry
 a change for science work. A **system boundary** is where outside data enters. For the shape

@@ -1,6 +1,6 @@
 # Show me your work
 
-Keep a reviewable decision trail for long-running or unattended work: a TSV log with one row
+Keep a reviewable decision trail for work the user steps away from: a TSV log with one row
 per decision (what, why, evidence, result). Local by default; commit it when a reviewer needs
 the trail to trust the result.
 

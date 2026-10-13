@@ -9,7 +9,7 @@
 3. Run: each unit is an experiment. State the hypothesis, make the smallest change, measure on
    the real artifact, keep or revert. A verdict is verified, not verified, or inconclusive;
    inconclusive is not a pass.
-4. Log each step per `references/show-me-your-work.md`.
+4. When the user steps away, log each step per `references/show-me-your-work.md`.
 5. Check the whole against the predicate, then encode any repeated correction as a check.
 
 **Reply:** the playbook you designed, what's verified, and what's open.
