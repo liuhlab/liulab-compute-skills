@@ -15,12 +15,13 @@ find the answer itself, what it may do without asking, how it splits work betwee
 and how it writes its reply. A rule in your repo's own `AGENTS.md` wins over that page.
 
 Then it picks the playbook that fits your task and copies its steps into its to-do list, so
-you can see what it will do and how far it has got. The playbooks:
+you can see what it will do and how far it has got. An agent with no to-do list puts the steps
+in its first reply instead. The playbooks:
 
 | Kind | Playbooks |
 | --- | --- |
 | Science | analysis, cluster run, method research, experiment plan, figure |
-| Writing | paper section, grant section, talk, review a document, message |
+| Writing | paper section, grant section, talk, review a document, message, docs page |
 | Code | land the tickets, improve a metric, refactor analysis code, investigation |
 | Any task | long run, close the session |
 
