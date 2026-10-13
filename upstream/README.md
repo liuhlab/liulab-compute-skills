@@ -95,6 +95,10 @@ Nothing in this directory records one: its record is the diff against the pin, w
 reason in the commit message and the changelog (ADR 0012). Lint never reads upstream, so
 nothing automatic checks that an edit removed no line: read the diff against the pin.
 
+Every edit to upstream text, a lab edit or a change to a fork, names the failure it answers:
+one seen in a lab session or an eval, never a guess that an agent might miss something. The
+rule applies to new edits; those already made stay.
+
 - A branch or a loop path goes in place, in the upstream file.
 - A whole new section goes in a side page beside that file, named `<topic>.lab.md`, with a
   one-line pointer from it. The suffix tells the gate it is lab text: `.vale.ini`'s

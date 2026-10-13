@@ -46,6 +46,7 @@
     "recall": "skills/hq-mode/references/playbooks/long-run.md",
     "show-me-your-work": "skills/hq-mode/references/show-me-your-work.md",
     "show-me-your-work/scripts/log.sh": "skills/hq-mode/scripts/log.sh",
+    "tdd": "skills/tdd",
     "technical-writing": "skills/technical-writing",
     "unslop": "skills/unslop",
     "why": "skills/hq-mode/references/working-style.md"
