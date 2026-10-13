@@ -38,10 +38,10 @@ This repo has a fourth home the template does not, and it takes most of the traf
 | How a vendor platform behaves | the owning skill's `references/`, under a provenance block |
 | A repeatable procedure | the task-recipe skill that owns it |
 | How the repo is worked on | `AGENTS.md` and the pages its read-next table names |
+| What is still open | a GitHub issue |
 
 A recipe never repeats a cluster fact; it points at the reference page
 (`docs/adr/0002-facts-vs-recipes.md`).
-| What is still open | a GitHub issue |
 
 **A cluster fact is not a decision.** Partition names, Slurm versions, which nodes reach
 the internet — those are observations, and they belong in a reference page, verified on the

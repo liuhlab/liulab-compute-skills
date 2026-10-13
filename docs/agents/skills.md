@@ -21,8 +21,9 @@ Agent Skills standard), and the pages it needs beside it.
   600-word cap (`writing.md`). Long detail goes in `references/`, and executable checks in
   `scripts/`.
 - **A user-invoked skill never triggers on its own.** It carries
-  `disable-model-invocation: true` in its front matter for Claude Code, and an
-  `agents/openai.yaml` that turns off implicit invocation for Codex. Lint checks the pair.
+  `disable-model-invocation: true` in its front matter, which Claude Code and Kimi Code
+  honour, and an `agents/openai.yaml` that turns off implicit invocation for Codex. Lint
+  checks the pair.
 
 ## Names
 
@@ -35,8 +36,9 @@ admits a name outside `lab-*` only then, or for `hq-mode`
 
 - **Show the job first.** A skill never submits `sbatch` or `srun` work for the user without
   showing the exact script and getting a yes (`lab-hpc`'s hard rules).
-- **A change in behaviour gets an eval case**, run with `tests/eval.sh`. Lint only proves the
-  files are well-formed.
+- **A change in behaviour is tested with `tests/eval.sh`**, not only with lint, which proves
+  just that the files are well-formed. Run an eval for a behaviour change you need to verify,
+  never as a routine check.
 - **`templates/` is documentation.** It holds the per-user files a member copies to their
   machine (`personal.md`, `edison.env`), and the plugin never loads them. A filled-in copy
   never lands in the repo, and lint fails a real Edison key.
@@ -46,7 +48,7 @@ admits a name outside `lab-*` only then, or for `hq-mode`
 
 ### `lab-hpc`
 
-The core skill. Step 0 runs `scripts/check-hpc-config.sh` and refuses an HPC request on an
+The core skill. Its preflight, `scripts/check-hpc-config.sh`, refuses an HPC request on an
 unconfigured machine. Each cluster fact lives in one place: hosts, network, toolchain and
 storage in `arc-hpc.md` or `ircbc-hpc.md`; partitions, choosing one and submitting in
 `arc-slurm.md` or `ircbc-slurm.md`. The two clusters differ sharply, so read a cluster's
@@ -65,8 +67,8 @@ triggers on its own and never spends a credit unprompted
 (`docs/adr/0006-edison-one-skill-in-the-lab-plugin.md`).
 
 - The spend path is the `src/edison_cli/` package, run through pixi and typed as the bare
-  `edison-cli`, because Claude Code puts `bin/` on PATH. Step 0 is `edison-cli preflight`,
-  which refuses on a machine with no key (`docs/adr/0011-the-spend-path-became-a-package.md`).
-- The key lives in a machine-local file beside `personal.md`, never inside it. It is never
+  `edison-cli`, because Claude Code puts `bin/` on PATH. Its preflight, `edison-cli preflight`,
+  refuses on a machine with no key (`docs/adr/0011-the-spend-path-became-a-package.md`).
+- The Edison key file sits beside the per-user config, never inside it. Its contents are never
   sent, printed or asked for (`docs/adr/0007-edison-key-file-and-never-transmit.md`).
 - Each of its reference pages carries a provenance block (`domain.md`).

@@ -1,6 +1,6 @@
 # Word cap for skill bodies: skills/*/SKILL.md, and nothing else. The reference pages behind
-# them and the repo's own agent guidance keep Lab.LengthDoc at 1200; ADRs keep Lab.LengthAdr
-# at 400.
+# them and docs/agents/* keep Lab.LengthDoc at 1200, AGENTS.md has Lab.LengthAgents at 300,
+# and ADRs keep Lab.LengthAdr at 400.
 #
 # Split out of Lab.LengthDoc, which is what that rule's own comment asked for. One dial used
 # to govern skill bodies, reference pages and AGENTS.md together, so raising it because

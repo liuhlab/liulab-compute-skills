@@ -27,7 +27,7 @@ fails a tagged version whose files have moved since the tag.
 
 ```mermaid
 flowchart LR
-    merge["A change merges to main"] --> ver["A new version,<br/>tagged on the bump commit"]
+    merge["A change merges to main"] --> ver["A new version,<br/>tagged on main after the merge"]
     ver --> cc["Claude Code:<br/>autoUpdate on the marketplace"]
     ver --> codex["Codex:<br/>upgrades at startup"]
     ver --> kimi["Kimi Code:<br/>reads Claude Code's clone"]

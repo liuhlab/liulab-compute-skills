@@ -13,7 +13,7 @@ release.
   and no usernames, hostnames, key names, key material or passwords: not in a file, a commit,
   an issue or a PR body. Name a host only by its lab ssh alias. A skill reads everything else
   from `~/.ssh/config` and `~/.claude/lab/personal.md` when it runs.
-- **Run the gate before you push.** The no-secrets sweep looks for the usernames and hosts in
+- **Run the gate before every commit.** The no-secrets sweep looks for the usernames and hosts in
   your own ssh config, so CI's run of it is half-blind and yours is the real one.
 - **A tracked skill's upstream text only gains lines.** A lab edit adds; it never cuts,
   rewords or renames, even to pass the gate. The tracked skills are the `items` in
