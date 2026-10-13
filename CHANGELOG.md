@@ -5,6 +5,19 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.7 — 2026-10-13
+
+A Developers section on the docs site, after Skills.
+
+### Added
+
+- **Pages for people who change the repo.** Three pages, mostly diagrams. How the repo is
+  laid out and how a change ships. How the skills from mattpocock/skills and pstack arrive,
+  change and keep their names, and what `hq-mode` took from each. The design choices behind
+  the layout, each linked to the decision record that argues it.
+- **Mermaid diagrams on the site.** `mkdocs.yml` turns on the `mermaid` code fence, so a
+  diagram is text that changes in the same diff as the prose around it.
+
 ## 2026.10.6 — 2026-10-12
 
 `edison-cli` now runs on Intel Macs, and `/hq-mode` is clearer about two of its pauses.
