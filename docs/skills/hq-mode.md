@@ -40,7 +40,8 @@ agent suggests it rather than running it.
 
 Some steps wait for your yes, every time:
 
-- submitting, running or cancelling a Slurm job, after it shows you the exact script;
+- submitting, running or cancelling a Slurm job, after it shows you the exact script in its
+  reply, not a link to it;
 - spending Edison credits;
 - writing to or deleting from the lab's shared package store;
 - force-pushing, or deleting data;
@@ -52,7 +53,8 @@ Some steps wait for your yes, every time:
 
 This list wins over everything else you say in the session. "I'm going to bed, land it" lets
 the agent keep going on its own. It still stops at a Slurm job and waits for you, and you
-find the script ready in the morning. "Close the issue" is not "merge it".
+find the script ready in the morning. "Close the issue" is not "merge it": while the fix is
+not merged, the agent leaves the issue open and asks you.
 
 ## Where the rules came from
 
