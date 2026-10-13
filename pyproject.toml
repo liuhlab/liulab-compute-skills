@@ -259,7 +259,7 @@ reportMissingTypeStubs = "none"
 # `docs/research/` is absent because this repo has no research notes; declaring a key for a
 # directory nobody wrote would fail rule 3 on the section that has no key to pair with.
 [tool.liulab.agent-docs]
-"AGENTS.md" = "LengthDoc"
+"AGENTS.md" = "LengthAgents"          # in context on every turn, so the tightest cap
 "GLOSSARY.md" = false                  # capped per entry by conformance rule 4, not per file
 "docs/agents/" = "LengthDoc"
 "upstream/README.md" = "LengthDoc"     # the pin and attribution formats

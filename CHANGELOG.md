@@ -5,6 +5,28 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.10 — 2026-10-13
+
+The guide an agent reads on every turn in this repo is now a short page of pointers. The
+rules that serve one kind of task moved to the page that task reads.
+
+### Changed
+
+- **`AGENTS.md` is a short page of pointers.** It keeps what every task needs: what the repo
+  is, the hard rules, the checks, the release steps and a table of where to read next. It is
+  about a fifth of its old length.
+- **The skill rules have a page of their own**, `docs/agents/skills.md`. It covers the shape of
+  a skill, its name, the rules every lab skill keeps, and what `lab-hpc`, `lab-jupyter`,
+  `lab-containers` and `lab-edison` must keep true.
+- **The rules for writing down a fact moved to `docs/agents/domain.md`.** A fact is checked
+  and dated, and a page records settings, never measurements.
+- **`AGENTS.md` has its own word cap of 300**, so it stays short. Vale does not count table
+  text, so the cap limits prose and the pointer rows can grow.
+- **The list of eval cases lives in `tests/eval.sh` and `tests/README.md` only.** Lint checks
+  those two.
+- **`tests/README.md` names both commands to run before an eval:**
+  `claude plugin marketplace update liulab`, then `claude plugin update lab@liulab`.
+
 ## 2026.10.9 — 2026-10-13
 
 `/hq-mode` gets a playbook for docs pages, and five of its rules that did not fit a docs task

@@ -17,7 +17,8 @@ targets.
 
 | Files | Cap |
 | --- | --- |
-| `AGENTS.md`, `docs/agents/*`, `upstream/README.md`, `skills/*/references/*`, other pages beside a skill body, `skills/*/playbooks/*` | 1200 (`Lab.LengthDoc`) |
+| `AGENTS.md` | 300 (`Lab.LengthAgents`) |
+| `docs/agents/*`, `upstream/README.md`, `skills/*/references/*`, other pages beside a skill body, `skills/*/playbooks/*` | 1200 (`Lab.LengthDoc`) |
 | `skills/*/SKILL.md`, the maintainer-only skill in `.claude/commands/` | 600 (`Lab.LengthSkill`) |
 | An adopted skill's pages | none — upstream text passes unchanged (`upstream/README.md`); a lab side page beside them, `*.lab.md`, takes the 1200 cap |
 | `docs/adr/*` | 400 (`Lab.LengthAdr`) |
@@ -29,6 +30,10 @@ body is an interface — what must be true before the first tool call — so it 
 body that outgrows that is detail belonging in `references/`. The reference pages are this
 repo's densest agent-facing prose and keep the document cap; the lab template's
 `skills/*/SKILL.md` glob does not reach them at all.
+
+`AGENTS.md` has the tightest cap because every word of it is in context on every turn of
+every session. It holds what every task needs and points at the rest. Vale skips table
+text, so the cap limits its prose and leaves the read-next rows free to grow.
 
 `GLOSSARY.md` has no file cap. A glossary grows one term at a time and never shrinks, so a
 file-level count measures how big the domain is, not how well the entries are written — a

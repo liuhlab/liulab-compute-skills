@@ -1301,16 +1301,17 @@ EOF
 fi
 
 echo "== eval case lists =="
-# Four places name the eval cases: the usage comment, the "no cases matched" line, AGENTS.md
-# and tests/README.md. All four were stale before anyone noticed — tests/README.md had been
-# missing `reuse-job` through two releases — because keeping them in step was a habit and
-# not a check. It is a check now. Lives here rather than in the conformance checker because
-# the case list comes from `--dump`, which is this file's business.
+# Three places name the eval cases: the usage comment, the "no cases matched" line and
+# tests/README.md. AGENTS.md was a fourth until it became a page of pointers. All four were
+# stale before anyone noticed — tests/README.md had been missing `reuse-job` through two
+# releases — because keeping them in step was a habit and not a check. It is a check now.
+# Lives here rather than in the conformance checker because the case list comes from
+# `--dump`, which is this file's business.
 if [ -z "${dump:-}" ]; then
   err "no case list to check (tests/eval.sh --dump printed nothing)"
 else
   listfail=0
-  for f in tests/eval.sh AGENTS.md tests/README.md; do
+  for f in tests/eval.sh tests/README.md; do
     [ -f "$f" ] || { err "$f is missing, so its eval case list cannot be checked"; listfail=1; continue; }
     missing=""
     while IFS="$(printf '\037')" read -r cname _rest; do
@@ -1324,7 +1325,7 @@ EOF
       listfail=1
     fi
   done
-  [ "$listfail" -eq 0 ] && ok "every eval case is named in eval.sh, AGENTS.md and tests/README.md"
+  [ "$listfail" -eq 0 ] && ok "every eval case is named in eval.sh and tests/README.md"
 fi
 
 echo
