@@ -60,8 +60,8 @@ and the changelog names each one:
 - **Learn and write:** `research`, `teach`, `writing-for-agents`, `wait-what`.
 - **Set up a repo:** `setup-matt-pocock-skills`.
 
-These three come from [pstack](https://github.com/cursor/plugins/tree/main/pstack),
-changed for lab work:
+These four come from [pstack](https://github.com/cursor/plugins/tree/main/pstack),
+three of them changed for lab work:
 
 - **`unslop`** takes the tells of AI writing out of a draft. It leaves science
   words such as vector, locus and modality alone, and keeps citations,
@@ -71,6 +71,8 @@ changed for lab work:
   gives every amount its unit.
 - **`ketchup`**: type `/ketchup` to hear what happened since your last
   message, and what waits on you.
+- **`bro`**, as pstack wrote it: type `/bro` after a dense reply to hear it
+  again in plain words.
 
 Each project's MIT license is in `upstream/<project>/LICENSE`.
 
