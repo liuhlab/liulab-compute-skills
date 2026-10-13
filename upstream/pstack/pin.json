@@ -6,6 +6,7 @@
   "items": {
     "automate-me": "skills/hq-mode/references/working-style.md",
     "benchmark-checklist": "skills/hq-mode/references/benchmark-checklist.md",
+    "bro": "skills/bro",
     "create-verification-skill": "skills/hq-mode/references/verification.md",
     "figure-it-out": "skills/hq-mode/references/playbooks/figure-it-out.md",
     "how": "skills/hq-mode/references/playbooks/investigation.md",
