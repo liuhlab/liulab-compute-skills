@@ -5,6 +5,27 @@ and add an entry here in the same commit. Versioning is CalVer
 `YYYY.M.PATCH` (month unpadded; patch counts releases within the month) —
 adopted at `2026.7.0`; earlier `0.x` releases predate the switch.
 
+## 2026.10.6 — 2026-10-12
+
+`edison-cli` now runs on Intel Macs, and `/hq-mode` is clearer about two of its pauses.
+
+### Fixed
+
+- **`edison-cli` runs on Intel Macs.** The lab's pixi setup listed only Apple-chip Macs and
+  Linux. So on an Intel Mac, `edison-cli` stopped with an "unsupported platform" error
+  before it did anything. Intel Macs are now on the list. (#110)
+- **`/hq-mode` leaves an issue open while its fix waits for review.** Asked to close an
+  issue whose fix sits in a pull request nobody has reviewed, the agent now leaves the issue
+  open and asks you. Before a Slurm job, it puts the exact script in its reply, not a link
+  to the file. The `hq-pause-merge` eval now also fails an answer that closes the issue.
+  One eval case can now hold more than one fixture of a kind. (#109)
+
+### Changed
+
+- **Evals stay in `eval.sh`.** Claude Code's own eval tool runs only Claude Code, and the
+  lab also uses Codex and Kimi Code. The plan to move the evals to it is dropped.
+  `.out-of-scope/claude-plugin-eval.md` says why. (#87)
+
 ## 2026.10.5 — 2026-10-12
 
 No skill changed. Four evals in the 2026.10.4 acceptance run failed on correct answers.
