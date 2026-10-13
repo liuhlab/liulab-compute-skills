@@ -93,7 +93,7 @@ Every merged change is a release, even one that only touches a test.
 flowchart TB
     edit["Edit on a branch, run pixi run check"] --> bump["Bump plugin.json and add a CHANGELOG entry,<br/>in the same commit"]
     bump --> pr["Open a pull request: CI runs the same gate"]
-    pr --> merge["Merge to main, tag the bump commit, push"]
+    pr --> merge["Merge to main, tag main, push"]
     merge --> machines["Every agent takes the release at its next launch"]
 ```
 
