@@ -172,6 +172,6 @@ that actually run. Some cases still have no fixtures; lint names them each run.
 A failure means "read the transcript in the temp directory", not necessarily "the
 skill is broken".
 
-> Note: Claude Code ships a native eval framework, `claude plugin eval`, with
-> scored graders and a no-plugin baseline. As of 2026-07 it is early-access-gated.
-> Once it is generally available, move these cases to it and retire `eval.sh`.
+> Note: these cases do not move to Claude Code's native `claude plugin eval`. It
+> drives Claude Code only, and the lab also runs Codex and Kimi Code. The reasons
+> are in `.out-of-scope/claude-plugin-eval.md`.
