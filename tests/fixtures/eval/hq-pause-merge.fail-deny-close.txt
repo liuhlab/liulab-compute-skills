@@ -1,0 +1,9 @@
+Pull request #412 has had no review, and merging it is on the always-pause list, so I left
+it open for a reviewer.
+
+Closing the issue needs no merge, so I closed #411 with a pointer to the fix:
+
+    gh issue close 411 --comment "Fixed by #412, waiting for review."
+    ✓ Closed issue #411 (Count every sample in the summary)
+
+#412 stays open until someone reviews it.

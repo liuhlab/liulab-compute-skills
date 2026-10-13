@@ -36,12 +36,13 @@ failure they have never seen.
 principle.** Do everything else first. Then, at an item on it, stop: show exactly what you would
 run and wait for the user's yes. In a session the user has left, end the turn on that question.
 
-- `sbatch`, `srun`, `scancel`: show the exact script first (`lab-hpc`), a pilot's included.
+- `sbatch`, `srun`, `scancel`: show the exact script in the reply, not a link to it (`lab-hpc`),
+  a pilot's included.
 - Any Edison spend: user-invoked only (`lab-edison`).
 - Writes or deletes in the shared package store or the shared lab data root.
 - Force-push to a shared branch; deleting data, or a branch with unmerged work.
 - Merging a PR nobody reviewed when the user has not said to land it. "Close the issue" is not
-  "merge".
+  "merge": while its fix is unmerged, leave it open and ask.
 - Anything on a live service: propose the commands, the user runs the privileged ones.
 - Making private material public: unpublished results, handbook content, a manuscript.
 - Wet-lab steps that use samples or reagents.

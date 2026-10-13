@@ -11,6 +11,10 @@ assertions, so these test the regexes that actually run rather than copies that 
 | `.fail-deny.txt` | match the DENY |
 | `.fail-also.txt` | NOT match the ALSO |
 
+A suffix may carry a label before `.txt`, as in `hq-pause-merge.fail-deny-close.txt`. Lint tests
+each labelled fixture on its own, with its suffix's rule, so one case can hold two transcripts
+that one regex must each catch. Lint fails a fixture whose suffix is none of these.
+
 Nothing here is a real transcript and nothing here contains a real credential. Several are
 regressions: a case that once reported a correct run as failed keeps its transcript here so
 the assertion can never drift back.

@@ -1257,36 +1257,40 @@ else
   while IFS="$(printf '\037')" read -r cname cexp cdeny calso; do
     [ -n "$cname" ] || continue
     hasfx=0
-    if [ -f "$fixdir/$cname.pass.txt" ]; then
+    # Every fixture the case has, each tested on its own. A suffix may carry a label,
+    # `<case>.fail-deny-close.txt`, so one rule can hold two transcripts that it must each
+    # catch: one fixture holding both would pass with only half of the regex working.
+    for fixture in "$fixdir/$cname".*.txt; do
+      [ -f "$fixture" ] || continue
       hasfx=1
-      if grep -qiE "$cexp" "$fixdir/$cname.pass.txt"; then ok "$cname: pass fixture matches expect"
-      else err "$cname: pass fixture does not match its expect regex"; fi
-      if [ -n "$cdeny" ]; then
-        if grep -qiE "$cdeny" "$fixdir/$cname.pass.txt"; then err "$cname: pass fixture trips its DENY"
-        else ok "$cname: pass fixture clears its DENY"; fi
-      fi
-      if [ -n "$calso" ]; then
-        if grep -qiE "$calso" "$fixdir/$cname.pass.txt"; then ok "$cname: pass fixture matches its ALSO"
-        else err "$cname: pass fixture does not match its ALSO regex"; fi
-      fi
-    fi
-    if [ -f "$fixdir/$cname.fail-also.txt" ]; then
-      hasfx=1
-      if [ -z "$calso" ]; then err "$cname: has a fail-also fixture but no ALSO assertion"
-      elif grep -qiE "$calso" "$fixdir/$cname.fail-also.txt"; then err "$cname: fail-also fixture wrongly matches its ALSO"
-      else ok "$cname: fail-also fixture correctly misses its ALSO"; fi
-    fi
-    if [ -f "$fixdir/$cname.fail-expect.txt" ]; then
-      hasfx=1
-      if grep -qiE "$cexp" "$fixdir/$cname.fail-expect.txt"; then err "$cname: fail-expect fixture wrongly matches expect"
-      else ok "$cname: fail-expect fixture correctly misses expect"; fi
-    fi
-    if [ -f "$fixdir/$cname.fail-deny.txt" ]; then
-      hasfx=1
-      if [ -z "$cdeny" ]; then err "$cname: has a fail-deny fixture but no DENY assertion"
-      elif grep -qiE "$cdeny" "$fixdir/$cname.fail-deny.txt"; then ok "$cname: fail-deny fixture trips its DENY"
-      else err "$cname: fail-deny fixture does not trip its DENY"; fi
-    fi
+      kind=${fixture##*/}; kind=${kind#"$cname".}; kind=${kind%.txt}
+      case "$kind" in
+        pass | pass-?*)
+          if grep -qiE "$cexp" "$fixture"; then ok "$cname: $kind fixture matches expect"
+          else err "$cname: $kind fixture does not match its expect regex"; fi
+          if [ -n "$cdeny" ]; then
+            if grep -qiE "$cdeny" "$fixture"; then err "$cname: $kind fixture trips its DENY"
+            else ok "$cname: $kind fixture clears its DENY"; fi
+          fi
+          if [ -n "$calso" ]; then
+            if grep -qiE "$calso" "$fixture"; then ok "$cname: $kind fixture matches its ALSO"
+            else err "$cname: $kind fixture does not match its ALSO regex"; fi
+          fi ;;
+        fail-also | fail-also-?*)
+          if [ -z "$calso" ]; then err "$cname: has a $kind fixture but no ALSO assertion"
+          elif grep -qiE "$calso" "$fixture"; then err "$cname: $kind fixture wrongly matches its ALSO"
+          else ok "$cname: $kind fixture correctly misses its ALSO"; fi ;;
+        fail-expect | fail-expect-?*)
+          if grep -qiE "$cexp" "$fixture"; then err "$cname: $kind fixture wrongly matches expect"
+          else ok "$cname: $kind fixture correctly misses expect"; fi ;;
+        fail-deny | fail-deny-?*)
+          if [ -z "$cdeny" ]; then err "$cname: has a $kind fixture but no DENY assertion"
+          elif grep -qiE "$cdeny" "$fixture"; then ok "$cname: $kind fixture trips its DENY"
+          else err "$cname: $kind fixture does not trip its DENY"; fi ;;
+        # A misspelt suffix would otherwise be a fixture that nothing reads.
+        *) err "$cname: $fixture has no fixture suffix lint knows (see $fixdir/README.md)" ;;
+      esac
+    done
     if [ "$hasfx" -eq 1 ]; then covered=$((covered + 1)); else uncovered="$uncovered $cname"; fi
   done <<EOF
 $dump
