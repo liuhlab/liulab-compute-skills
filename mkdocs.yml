@@ -47,6 +47,10 @@ nav:
       - lab-edison: skills/lab-edison.md
       - lab-setup: skills/lab-setup.md
       - hq-mode: skills/hq-mode.md
+  - Developers:
+      - Repo layout: developers/index.md
+      - Upstream skills: developers/upstreams.md
+      - Design choices: developers/design.md
 
 # `not_found:` and `anchors:` are zensical's defaults, spelled out because they are the two
 # keys mkdocs also understands. The five under them are zensical's own and mkdocs rejects
@@ -78,7 +82,14 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  # The `mermaid` fence draws the diagrams on the Developers pages; the browser loads the
+  # library from a CDN at page view. No `format:` key on purpose: superfences then uses its
+  # own `fence_code_format`, so mkdocs reads this block unchanged and no `!!python/name`
+  # tag is needed.
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
   - toc:
       permalink: true
 
