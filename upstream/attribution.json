@@ -181,7 +181,7 @@
     "from": [
       {"upstream": "pstack", "item": "ketchup", "commit": "978ca6e9c0e012047cd5058b8e829240336e704e"}
     ],
-    "changes": "Plain words through unslop instead of the skipped /bro voice; Slurm jobs and Edison runs are checked beside PRs and CI runs; Codex's opt-out file added."
+    "changes": "Slurm jobs and Edison runs are checked beside PRs and CI runs; Codex's opt-out file added."
   },
   "skills/technical-writing": {
     "from": [
